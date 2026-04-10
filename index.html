@@ -2690,6 +2690,191 @@ var PRESETS=[
     ]},
 ];
 
+// ═══ PROGRAM PHILOSOPHY / STYLE GUIDE (Fix 5) ═══
+// Each key matches a PRESETS[].id. Custom builds fall through to a generator function.
+var PROGRAM_PHILOSOPHY={
+  "ax1":{
+    title:"AX1 TRAINING CAMP",
+    sections:[
+      {h:"SPLIT RATIONALE",t:"AX1 runs a 5-day rotation hitting the full body through movement patterns rather than isolated muscle groups. The split is designed so every session trains pushing, pulling, and lower-body work in a balanced dose. This prevents the common bodybuilding trap of over-developing mirror muscles while under-training posterior chains and legs."},
+      {h:"PERIODIZATION MODEL",t:"Three progressive phases across 12 weeks. Phase 1 (Foundation) uses straight sets with short rest to build work capacity. Phase 2 (Progression) layers in pre-exhaust supersets that increase time under tension and metabolic stress without adding external load. Phase 3 (Peak) combines conditioning circuits with strength work. Volume stays moderate while intensity and density increase across phases."},
+      {h:"TRAINING METHOD PHILOSOPHY",t:"AX1 is a conditioning-forward program. Jeff Cavaliere designed it as an entry point for athletes who want to build muscle while improving general fitness. The emphasis on movement quality over load distinguishes it from pure hypertrophy programs. Every session includes elements of strength, stability, and cardiovascular work."},
+      {h:"WHY IT WORKS",t:"For novice-to-intermediate lifters, the hybrid approach works because untrained muscle responds to almost any stimulus above habitual loading. By rotating methods across phases, AX1 avoids accommodation (the repeated-bout effect) while building the work capacity needed for more advanced programs later."}
+    ]
+  },
+  "ax2":{
+    title:"AX2 X-TREME",
+    sections:[
+      {h:"SPLIT RATIONALE",t:"AX2 uses a push/pull smart split across 5 days. This groups synergistic muscles together so you can train with higher intensity per movement pattern. Upper-body push and pull days alternate with lower-body and full-body conditioning sessions."},
+      {h:"PERIODIZATION MODEL",t:"Three escalating phases. Performance Phase introduces burst training with hybrid sets. Retro Rep Phase adds tempo variations and mechanical drop sets for controlled eccentrics. Metabolic Overload Phase pushes giant set circuits to the limit. Each phase is harder than the last, but because work capacity was built in the previous phase, the body can handle it."},
+      {h:"TRAINING METHOD PHILOSOPHY",t:"AX2 is built around metabolic overload and variable resistance. Retro reps (slow eccentrics with explosive concentrics) create disproportionate mechanical tension on the eccentric phase, which is the primary driver of muscle damage and remodeling. The program assumes you already have the movement competence from AX1."},
+      {h:"WHY IT WORKS",t:"Advanced stimulus techniques like mechanical drop sets and giant circuits exploit the size principle of motor unit recruitment. By extending sets past initial failure through angle changes or reduced rest, you recruit high-threshold motor units that straight sets at moderate intensity never touch."}
+    ]
+  },
+  "jacked":{
+    title:"JACKED",
+    sections:[
+      {h:"SPLIT RATIONALE",t:"JACKED runs a 5-day smart push/pull split optimized for dumbbell-only training. The split ensures each muscle group gets hit with sufficient weekly volume (14-20 direct sets) while respecting recovery windows. Pushing and pulling patterns are separated so tricep and bicep fatigue does not limit compound performance."},
+      {h:"PERIODIZATION MODEL",t:"Three 4-week phases. Foundation Strength builds a base with heavy straight sets in the 4-6 rep range. The JACKED System phase introduces pre-exhaust supersets with rep range cycling (4-6 for strength, 6-10 for hypertrophy, 12-20 for metabolic stress). Peak Hypertrophy combines ignitor sets, compound peaks, and isolation finishers in a full hybrid system. Volume ramps via a Pelland 2025 square-root curve, front-loading adaptation early in the mesocycle."},
+      {h:"TRAINING METHOD PHILOSOPHY",t:"JACKED is a classic hypertrophy program that respects progressive overload as the primary growth driver. Rep range specialization across phases prevents accommodation and targets all three mechanisms of hypertrophy: mechanical tension (4-6 reps), metabolic stress (12-20 reps), and muscle damage (eccentric emphasis in pre-exhaust pairings)."},
+      {h:"WHY IT WORKS",t:"The research is clear (Schoenfeld 2017, Pelland 2025): volume is the primary driver of hypertrophy up to MRV, and progressive overload within a structured mesocycle is the most reliable way to accumulate that volume. JACKED does not rely on advanced techniques as a crutch. It builds the load-bearing foundation first, then layers intensity techniques on top when the body is ready for them."}
+    ]
+  },
+  "maxsize":{
+    title:"MAX/SIZE",
+    sections:[
+      {h:"SPLIT RATIONALE",t:"MAX/SIZE uses a PHAT-style 5-day split: power upper, power lower, hypertrophy push, hypertrophy pull, hypertrophy legs. This frequency model hits every muscle group twice per week, which meta-analyses (Schoenfeld 2016) show is superior to once-per-week for hypertrophy when volume is equated."},
+      {h:"PERIODIZATION MODEL",t:"Two phases. Ignition runs a modified 10x10 German Volume Training approach (XV-10) with progressive loading and Propain finishers to build raw volume tolerance. Inferno shifts to giant set circuits and isometric holds. Max Overload peaks with myo-rep activation sets and extended eccentrics. Each phase increases intensity while strategically managing fatigue through the deload system."},
+      {h:"TRAINING METHOD PHILOSOPHY",t:"This is a high-volume mass builder. The XV-10 system accumulates enormous training volume in a time-efficient format. Propain finishers (high-rep metabolic work at the end of sessions) exploit the fact that sarcoplasmic hypertrophy responds well to metabolic stress, even at lighter loads, as long as proximity to failure is maintained."},
+      {h:"WHY IT WORKS",t:"Volume is king for hypertrophy, and MAX/SIZE pushes weekly set counts toward the upper end of the dose-response curve. The PHAT structure ensures you are training both the strength and size ends of the spectrum, which cross-potentiate each other. Heavy work builds the neural efficiency that lets you handle more weight on hypertrophy days."}
+    ]
+  },
+  "builtsize":{
+    title:"BUILT FOR SIZE",
+    sections:[
+      {h:"SPLIT RATIONALE",t:"Upper/Lower 4-day split. This is the most researched and proven split structure in exercise science. Each muscle group trains twice per week with 48-72 hours between sessions, which aligns perfectly with the protein synthesis window measured in trained lifters (48-72h, Damas 2015)."},
+      {h:"PERIODIZATION MODEL",t:"QC Foundation uses Quality Control sets with strict 90-second rest and perfect form. EPF Development introduces Effective Partials to Failure, extending sets past the point of form failure with partial-range reps in the stretched position. Peak QC layers pre-exhaust into the Quality Control framework for maximum hypertrophy stimulus."},
+      {h:"TRAINING METHOD PHILOSOPHY",t:"Quality Control is about intentional reps. Every rep has a defined eccentric tempo, a pause at the stretch, and a controlled concentric. The philosophy is that 8 perfect reps with mind-muscle connection outperform 12 sloppy reps at the same load. EPFs exploit the finding that partial reps at long muscle lengths produce disproportionate hypertrophy (Pedrosa 2023, Maeo 2022)."},
+      {h:"WHY IT WORKS",t:"Stretch-mediated hypertrophy is one of the strongest findings in recent exercise science. Training a muscle at its longest position produces more growth than at short or mid-range positions. BUILT FOR SIZE builds this principle into every phase, and the Upper/Lower split provides the frequency and recovery balance to sustain it."}
+    ]
+  },
+  "aam":{
+    title:"ALL AMERICAN MUSCLE",
+    sections:[
+      {h:"SPLIT RATIONALE",t:"PPL (Push/Pull/Legs) across 5-6 days. This is the bodybuilder-standard split for maximizing per-session volume on related muscle groups. Pushing day trains chest, shoulders, and triceps together. Pulling day trains back and biceps. Leg day trains quads, hamstrings, and glutes. Each muscle gets direct work twice per week."},
+      {h:"PERIODIZATION MODEL",t:"Four phases across 16 weeks. Form Failure Foundation builds baseline strength to form failure with touch-up sets. Triple Doubles introduce 6/12/24-rep chains with speed reps. Shot Clock applies 5-second eccentrics and lengthened isometrics. Sudden Death peaks with 100+ rep AMRAP challenges. Each phase emphasizes a different hypertrophy mechanism."},
+      {h:"TRAINING METHOD PHILOSOPHY",t:"AAM borrows from athletic training: CAT-5 (Compensatory Acceleration Training) means every concentric is performed as explosively as possible, which maximizes motor unit recruitment regardless of load. The eccentric-focused phases create the mechanical tension that drives remodeling. Speed reps build rate of force development alongside size."},
+      {h:"WHY IT WORKS",t:"By rotating through high-rep metabolic work, controlled eccentrics, explosive concentrics, and density challenges, AAM ensures no single mechanism of hypertrophy is under-served. The long 16-week cycle allows genuine periodization rather than just phase-hopping. The research supports this approach for intermediate-to-advanced lifters who need varied stimuli to keep growing."}
+    ]
+  },
+  "critmas":{
+    title:"CRITICAL MASS",
+    sections:[
+      {h:"SPLIT RATIONALE",t:"5-day bro split targeting one major muscle group per session. While bro splits get criticized for low frequency, Critical Mass compensates with extremely high per-session intensity. When volume per session is high enough, the once-per-week frequency can match twice-per-week programs (Schoenfeld 2015) because the muscle damage from each session extends the anabolic signaling window."},
+      {h:"PERIODIZATION MODEL",t:"Two phases. Pre-Exhaust Chains pair isolation pre-exhaustion with compound movements and Mindful Mass tempo (3 seconds down, 3-second hold at stretch, 1 second up). Chain Reactions shift to triple-chain supersets with drop sets and minimal rest. The tempo emphasis in Phase 1 builds the time under tension base that makes Phase 2 survivable."},
+      {h:"TRAINING METHOD PHILOSOPHY",t:"Low volume, high intensity. Critical Mass bets on intensity over volume. The Mindful Mass tempo is not arbitrary: 3 seconds eccentric maximizes mechanical tension, the 3-second hold at the stretched position exploits stretch-mediated hypertrophy, and the explosive concentric ensures high-threshold motor units fire. Every rep is designed to extract maximum growth stimulus."},
+      {h:"WHY IT WORKS",t:"For lifters who respond better to intensity than volume, this approach is highly effective. The pre-exhaust chains ensure the target muscle fails before synergists, solving the common dumbbell training problem of grip or stabilizer fatigue limiting the stimulus to the actual target muscle."}
+    ]
+  },
+  "oldschool":{
+    title:"OLD SCHOOL IRON",
+    sections:[
+      {h:"SPLIT RATIONALE",t:"Classic 6-day Arnold-style split. Chest/Back, Shoulders/Arms, Legs, repeat. High frequency, high volume, high commitment. This is the split that built the Golden Era physiques. Each muscle gets hit twice per week with enormous per-session volume."},
+      {h:"PERIODIZATION MODEL",t:"Two phases. Classic Mass uses straight sets to failure with supersets and 120-rep finishers. Detention Sets shift to myo-rep activation with extended sets and School's Out high-rep gauntlets. The progression is from brute volume to metabolic intensity."},
+      {h:"TRAINING METHOD PHILOSOPHY",t:"Old School Iron embraces the classic bodybuilding philosophy: more is more, as long as you can recover. The 120-rep finishers serve as both a hypertrophy tool (high metabolic stress) and a mental toughness challenge. The program is intentionally demanding because it assumes you are eating, sleeping, and recovering like a serious lifter."},
+      {h:"WHY IT WORKS",t:"High-frequency, high-volume training works when recovery supports it. The Arnold split has produced more elite physiques than any other split in history. Modern research (Schoenfeld 2017) confirms that higher weekly volume drives more hypertrophy up to MRV, and this split pushes toward those upper limits for each muscle group."}
+    ]
+  },
+  "xero":{
+    title:"XERO",
+    sections:[
+      {h:"SPLIT RATIONALE",t:"5-day full-body rotation using bodyweight only. Without external load as a progression lever, the program rotates through movement complexity and time under tension to create progressive overload."},
+      {h:"PERIODIZATION MODEL",t:"Three phases: X-Tended Failure builds bodyweight strength endurance, Decay Protocol introduces half-rep progressions and mechanical advantage drops, and XERO SUM peaks with accumulative circuits. Each phase makes the same exercises harder without adding weight."},
+      {h:"TRAINING METHOD PHILOSOPHY",t:"Bodyweight training creates overload through leverage manipulation, tempo changes, and volume accumulation. X-Tended Failure uses extended sets where you continue past concentric failure with isometric holds and slow eccentrics. This maximizes time under tension, which is the primary hypertrophy driver when external load is fixed."},
+      {h:"WHY IT WORKS",t:"Research shows muscle does not know whether resistance comes from a dumbbell or gravity acting on your bodyweight. The stimulus is mechanical tension, and bodyweight progressions can generate sufficient tension for hypertrophy in all but the most advanced lifters. XERO works because it systematically increases that tension through movement complexity."}
+    ]
+  },
+  "xero2":{
+    title:"XERO 2",
+    sections:[
+      {h:"SPLIT RATIONALE",t:"Advanced 5-day bodyweight program building on XERO. Same full-body rotation but with significantly harder progressions and conditioning demands."},
+      {h:"PERIODIZATION MODEL",t:"Three phases escalating from Contagion Circuits (station-based lactic acid challenges) through Decay Advanced (quarter and eighth reps) to Killswitch (maximum conditioning with timed density blocks). The progression assumes XERO-level work capacity as a baseline."},
+      {h:"TRAINING METHOD PHILOSOPHY",t:"XERO 2 exploits partial-range reps at the hardest portion of each movement. Quarter reps and eighth reps at the bottom of a push-up or the top of a pull-up target the stretch position where mechanical tension is highest. Combined with circuit-style training, this creates simultaneous hypertrophy and conditioning stimulus."},
+      {h:"WHY IT WORKS",t:"For bodyweight-only trainees who have exhausted the gains from XERO, this program provides the novel stimulus needed to continue progressing. The density-block approach in the final phase forces more work in less time, which is a form of progressive overload that does not require external load."}
+    ]
+  },
+  "elastx":{
+    title:"ELAST-X",
+    sections:[
+      {h:"SPLIT RATIONALE",t:"5-day rotation using resistance bands plus bodyweight. Bands provide accommodating resistance, meaning the load increases as the band stretches, which matches the human strength curve on most exercises."},
+      {h:"PERIODIZATION MODEL",t:"Three phases. Tension Foundation teaches band positions and constant-tension reps. Accommodating Overload adds pre-exhaust supersets with band isolation before band compounds. Elastic Circuits finishes with giant set circuits for maximum metabolic stress."},
+      {h:"TRAINING METHOD PHILOSOPHY",t:"Bands create a unique loading profile. Unlike dumbbells where load is constant through the range of motion, bands increase resistance toward lockout. This means you get accommodating resistance for free. The constant tension (no resting at the top or bottom) keeps the muscle under load for the entire set duration."},
+      {h:"WHY IT WORKS",t:"Research on accommodating resistance (Soria-Gila 2015, Calatayud 2015) shows that bands can produce comparable EMG activation to free weights when effort is matched. The constant-tension property of bands also means no dead spots in the range of motion, which increases effective rep count per set."}
+    ]
+  },
+  "builtlong":{
+    title:"BUILT FOR LONGEVITY",
+    sections:[
+      {h:"SPLIT RATIONALE",t:"3-day full-body split focused on sustainable strength and long-term health. Lower frequency allows more recovery between sessions, which is critical for the longevity-focused lifter who prioritizes joint health and cardiovascular fitness alongside muscle maintenance."},
+      {h:"PERIODIZATION MODEL",t:"Two phases with longer mesocycles (5 weeks). Foundation builds total-body strength with Zone 2 cardio and movement quality focus. Capacity adds progressive loading alongside balance and mobility work. The slower progression respects the fact that longevity training is a decades-long endeavor, not a 12-week sprint."},
+      {h:"TRAINING METHOD PHILOSOPHY",t:"Straight sets with conservative loading. The philosophy is minimum effective dose for muscle maintenance, maximum emphasis on movement quality and cardiovascular health. Every session includes mobility work and cardio alongside resistance training."},
+      {h:"WHY IT WORKS",t:"The research on exercise for longevity (Ruiz 2008, Stamatakis 2018) shows that moderate-intensity resistance training 2-3 times per week, combined with cardiovascular exercise, provides the best all-cause mortality reduction. This program is designed for lifters who want to be strong and healthy at 70, not just big at 30."}
+    ]
+  },
+  "maxfx":{
+    title:"MAX FX",
+    sections:[
+      {h:"SPLIT RATIONALE",t:"3-day full-body rotation. Minimal frequency for maximum time efficiency. Each session rotates emphasis so every muscle group gets adequate weekly stimulus across only 3 workouts."},
+      {h:"PERIODIZATION MODEL",t:"Two phases. Foundation uses ramp-up sets plus working sets with minimal volume. Intensification shifts to myo-reps, which deliver the same hypertrophy stimulus as traditional sets in roughly 40% less time (Fagerli 2012, Krieger 2010). This makes each session extremely time-efficient."},
+      {h:"TRAINING METHOD PHILOSOPHY",t:"Minimal effective dose. MAX FX is designed for people who have 30-45 minutes, three days per week, and need every minute to count. The shift to myo-reps in Phase 2 is not a gimmick; it is the most time-efficient evidence-based hypertrophy method available."},
+      {h:"WHY IT WORKS",t:"The meta-analyses on training frequency (Schoenfeld 2016) show diminishing returns beyond 2x/week per muscle group. Three full-body sessions hit every muscle 3x/week, which is at or above the optimal frequency curve. Combined with myo-reps that maximize effective reps per unit time, MAX FX delivers a surprising amount of growth stimulus in very little time."}
+    ]
+  },
+  "hollywood":{
+    title:"BUILT FOR HOLLYWOOD",
+    sections:[
+      {h:"SPLIT RATIONALE",t:"PHAT-style 5-day split tuned for aesthetics and conditioning. The focus is lean muscle with low body fat, which means every session includes both resistance training and interval conditioning."},
+      {h:"PERIODIZATION MODEL",t:"Two phases. PHAT-30 Circuits use 30-second timed circuits with heart rate recovery monitoring. Interval Shred shifts to density blocks and sprint intervals. Both phases maintain muscle while maximizing fat loss through elevated EPOC (excess post-exercise oxygen consumption)."},
+      {h:"TRAINING METHOD PHILOSOPHY",t:"Hollywood physiques require simultaneous muscle retention and fat loss. The circuit structure keeps heart rate elevated throughout the session, creating a cardiovascular training effect alongside the hypertrophy stimulus. Density blocks force more work into less time, which research shows elevates metabolic rate for up to 48 hours post-exercise."},
+      {h:"WHY IT WORKS",t:"Concurrent training (resistance plus conditioning in the same session) is effective for body recomposition when programmed correctly. The key is keeping resistance training intensity high enough to preserve muscle while adding metabolic work on top. Hollywood achieves this by using compound movements in circuit format rather than isolated cardio."}
+    ]
+  },
+  "maxshred":{
+    title:"MAX/SHRED",
+    sections:[
+      {h:"SPLIT RATIONALE",t:"5-day full rotation designed for maximum fat loss while maintaining muscle mass. The Athlean Inferno system uses mobilization circuits and descending rep schemes to create enormous metabolic demand."},
+      {h:"PERIODIZATION MODEL",t:"Two phases. Mobilization uses 5-alarm circuits with descending reps and fire escape swap-outs. Metabolization shifts to Burst Classix: Slow Burn, Flash Burn, and Rug Burn circuits layered with Fire Drills for peak fat incineration. The progression increases metabolic intensity while maintaining the resistance training stimulus."},
+      {h:"TRAINING METHOD PHILOSOPHY",t:"Shredding requires a caloric deficit, but training should not just burn calories. It should create metabolic disruption that elevates your metabolism for hours after the session. The circuit-based approach keeps heart rate in the fat-burning zone while the resistance component preserves lean mass. Every exercise is compound and multi-joint."},
+      {h:"WHY IT WORKS",t:"High-intensity resistance circuits produce greater EPOC than steady-state cardio (Paoli 2012). By combining strength movements with minimal rest, MAX/SHRED creates a metabolic environment that burns fat while the resistance load sends a muscle-preservation signal. The result is a leaner physique without the flat, depleted look of cardio-only cutting."}
+    ]
+  },
+  "builtperf":{
+    title:"BUILT FOR PERFORMANCE",
+    sections:[
+      {h:"SPLIT RATIONALE",t:"PPL 6-day split with SAQ (Speed, Agility, Quickness) conditioning days. This is an athletic performance program, not a bodybuilding program. The split alternates between power-focused strength work and movement-quality conditioning."},
+      {h:"PERIODIZATION MODEL",t:"Two phases. Power Foundation uses banded power sets at 70% with variable speed combos. Speed and Agility shifts to SAQ circuits, reactive jumps, and sprint progressions. The power phase builds the force production capacity that the speed phase converts into athletic performance."},
+      {h:"TRAINING METHOD PHILOSOPHY",t:"Athletic training requires force production at speed. Banded power sets combine accommodating resistance with explosive intent. Variable speed combos alternate heavy-slow and light-fast reps within the same set, training both ends of the force-velocity curve. Bulletproof shoulders programming is built into every session because overhead athletes need it."},
+      {h:"WHY IT WORKS",t:"Power training with accommodating resistance has strong research support (Soria-Gila 2015). The rate of force development adaptations from this style of training transfer directly to sport performance. The SAQ component adds the movement pattern specificity that pure strength training lacks."}
+    ]
+  },
+  "builtstr":{
+    title:"BUILT FOR STRENGTH",
+    sections:[
+      {h:"SPLIT RATIONALE",t:"Upper/Lower 4-day split with heavy primary lifts and accessory rotations. This is a strength program first. Hypertrophy is a secondary benefit of the volume accumulated through accessory work."},
+      {h:"PERIODIZATION MODEL",t:"Two phases. Primary Lifts focuses on the big five (squat, bench, deadlift, OHP, hang clean) at RPE 8 with 3-5 reps and AMRAP back-off sets. Accessory Waves rotate through choose-one accessories that address individual weak points in the main lifts."},
+      {h:"TRAINING METHOD PHILOSOPHY",t:"Strength is a skill. The primary lifts are practiced at sub-maximal loads (RPE 8) to build technique consistency while accumulating sufficient mechanical tension for strength gains. AMRAP back-offs add volume without grinding through failed reps. The choose-one accessory system lets you target your specific weak points."},
+      {h:"WHY IT WORKS",t:"Sub-maximal training (RPE 7-8) drives the same strength gains as maximal training with far less fatigue accumulation (Helms 2018, Zourdos 2016). The AMRAP back-offs autoregulate volume to your daily readiness. This program builds real, transferable strength."}
+    ]
+  },
+  "onlytwo":{
+    title:"ONLY TWO",
+    sections:[
+      {h:"SPLIT RATIONALE",t:"5-day split, two muscle groups per session. The choose-1 exercise system means you pick one movement per function (vertical push, horizontal push, etc.) each session, which prevents decision fatigue and ensures balanced muscle development through function-based selection."},
+      {h:"PERIODIZATION MODEL",t:"Two phases. Target Map uses function-based exercise selection with vertical/horizontal and heavy/focused sub-splits per muscle. Progressive Overload intensifies with pyramid loading (15/10/8/6 reps) and bodyweight finishers. Peak contraction emphasis in Phase 2 targets the squeeze at the shortened position."},
+      {h:"TRAINING METHOD PHILOSOPHY",t:"Simplicity through constraint. By limiting each session to only two muscle groups and using a choose-one system, the program eliminates paralysis of choice while ensuring progressive overload. Pyramid rep schemes hit every fiber type: high-rep sets for slow-twitch, low-rep sets for fast-twitch."},
+      {h:"WHY IT WORKS",t:"Training two muscle groups per session allows high per-session volume without excessive fatigue. The pyramid loading scheme provides a built-in warm-up and ensures exposure to multiple rep ranges, which the research shows is beneficial for both hypertrophy and strength (Schoenfeld 2017)."}
+    ]
+  },
+  "ironbonus":{
+    title:"OLD SCHOOL IRON BONUS",
+    sections:[
+      {h:"SPLIT RATIONALE",t:"6-day Arnold-style split (Monster Maker variant). Same proven Chest/Back, Shoulders/Arms, Legs structure as Old School Iron, but with superset pairs and a different finisher progression."},
+      {h:"PERIODIZATION MODEL",t:"Two phases. School's Out uses superset pairs (3A/3B), drop sets, and high-rep gauntlets. Detention replaces School's Out finishers with myo-rep extended sets and 120-rep challenges. The gauntlet system is a structured high-rep test that forces mental toughness alongside physical adaptation."},
+      {h:"TRAINING METHOD PHILOSOPHY",t:"This is Old School Iron turned up. The superset pairing system (3A/3B) keeps rest times short by alternating between agonist and antagonist muscles, increasing training density without sacrificing per-set intensity. The 5x5 basics ensure that heavy compound strength is maintained alongside the high-volume finisher work."},
+      {h:"WHY IT WORKS",t:"Antagonist supersets have strong research support for maintaining performance while reducing session duration (Paz 2017). By pairing chest with back, or biceps with triceps, you train more muscle in less time while the opposing muscle recovers. The finisher progression from straight sets to myo-reps adds a novel stimulus that prevents accommodation."}
+    ]
+  }
+};
+// Generate philosophy for custom builds based on split + method + session length
+function getCustomPhilosophy(splitObj, methodObj, goalObj, mins) {
+  var sections = [];
+  sections.push({h:"YOUR SPLIT: " + splitObj.n.toUpperCase(), t:"You chose a " + splitObj.n + " split" + (splitObj.desc ? " — " + splitObj.desc.toLowerCase() : "") + ". This structure determines how your weekly training volume is distributed across sessions. " + (splitObj.freq >= 5 ? "At " + splitObj.freq + " sessions per week, each muscle group gets trained with high frequency, which research shows is optimal for hypertrophy when recovery supports it." : splitObj.freq >= 3 ? "At " + splitObj.freq + " sessions per week, you hit each muscle group 2-3 times, which aligns with the optimal frequency range identified in meta-analyses (Schoenfeld 2016)." : "At " + splitObj.freq + " sessions per week, the program maximizes per-session volume to compensate for lower frequency. Each session needs to deliver a strong enough stimulus to drive growth across the longer recovery window.")});
+  sections.push({h:"YOUR METHOD: " + methodObj.n.toUpperCase(), t:methodObj.d + " " + (methodObj.id === "straight" ? "Straight sets are the most researched and proven training method. Progressive overload through weight and rep increases is the primary growth driver." : methodObj.id === "myo" ? "Myo-reps maximize effective reps per unit time by keeping the muscle near failure throughout. Research suggests comparable hypertrophy to straight sets in 40% less time." : methodObj.id === "giant" ? "Giant sets create enormous metabolic stress and training density. The reduced rest between exercises increases caloric expenditure while maintaining hypertrophy stimulus." : methodObj.id === "preexh" ? "Pre-exhaust supersets ensure the target muscle reaches failure before synergists give out. This is especially valuable in dumbbell training where grip and stabilizer fatigue can be limiting factors." : methodObj.id === "dc" ? "Rest-pause training maximizes motor unit recruitment in minimal time. Each mini-set after the initial failure recruits the same high-threshold motor units, making every rep an effective rep." : methodObj.id === "mech" ? "Mechanical drop sets extend the set by shifting to an easier movement angle when you fail. Same weight, same equipment, more effective reps." : methodObj.id === "density" ? "Density training measures progress by total work done in a fixed time. This autoregulates fatigue while driving progressive overload through rep accumulation." : methodObj.id === "hybrid" ? "The hybrid method combines multiple training styles in a single session: primers for activation, heavy compounds for mechanical tension, isolation for targeted hypertrophy, and correctives for joint health." : methodObj.id === "dup" ? "Daily Undulating Periodization varies rep ranges within the same week, exposing muscles to different stimuli and preventing accommodation. Research supports DUP for both strength and hypertrophy in intermediate-to-advanced lifters." : "This method is designed to create progressive overload through structured intensity management.")});
+  sections.push({h:"YOUR GOAL: " + goalObj.n.toUpperCase(), t:goalObj.desc + " FORGE adjusts volume multipliers per muscle group to match this goal. Muscles with higher priority get more weekly sets, pushing them closer to MAV (Maximum Adaptive Volume), while maintenance muscles stay near MEV (Minimum Effective Volume) to manage total fatigue."});
+  sections.push({h:"SESSION DESIGN (" + mins + " MIN)", t:"At " + mins + " minutes per session, FORGE allocates approximately " + Math.floor(mins / 3) + " working sets per session (assuming ~3 minutes per set including rest). " + (mins <= 35 ? "With a shorter session, the program prioritizes compound movements and time-efficient methods. Primers and correctives may be trimmed to preserve time for growth-driving work." : mins <= 50 ? "This is the sweet spot for most lifters. Enough time for a complete session with primers, compounds, isolation work, and correctives without rushing." : "With " + mins + " minutes available, the program can include the full tier structure: primers, heavy compounds, hypertrophy isolation, correctives, and grit finishers. Recovery between sets can be longer, which supports strength expression on heavy sets.")});
+  return sections;
+}
+
 // ═══ GOALS with descriptions ═══
 var GOALS=[
   {id:"beach",n:"Beach Body",desc:"Chest, shoulders, arms emphasized. Legs maintained, not prioritized. The classic show-off physique.",cat:"build",vol:{chest:1.5,back:1,shoulders:1.4,biceps:1.4,triceps:1.3,quads:0.6,hams:0.5,core:0.8},cd:0},
@@ -6121,6 +6306,7 @@ function Forge(props){
   var _adjSwap=useState(false),adjustSwapMode=_adjSwap[0],setAdjustSwapMode=_adjSwap[1]; // swap UI visible inside adjust popup
   var _mlAdj=useState(false),mesoLenAdjustOpen=_mlAdj[0],setMesoLenAdjustOpen=_mlAdj[1]; // modal for meso length change
   var _mlNew=useState(5),mesoLenNewPick=_mlNew[0],setMesoLenNewPick=_mlNew[1]; // picker within modal
+  var _editSess=useState(null),editingSession=_editSess[0],setEditingSession=_editSess[1]; // null or {weekNum,dayIdx,date,data} for editing past workouts
   var _reviewMode=useState(false),reviewMode=_reviewMode[0],setReviewMode=_reviewMode[1]; // true after generate, shows edit before dashboard
   var _methodOverride=useState(null),methodOverride=_methodOverride[0],setMethodOverride=_methodOverride[1]; // {original,alternatives} for time conflict
   var _calPick=useState(null),calPick=_calPick[0],setCalPick=_calPick[1];
@@ -6874,6 +7060,116 @@ function Forge(props){
     }
 
     setSessionSaved(true);
+  }
+
+  // ═══ EDIT PAST WORKOUT (Fix 8) ═══
+  // Load a completed session into edit mode
+  function loadPastSession(wk, dayIdx, date) {
+    var sessKey = "forge_s_" + date + "_" + dayIdx;
+    var raw = sGet(sessKey, null);
+    if (!raw) { alert("Session data not found for " + date); return; }
+    var day = program[dayIdx];
+    if (!day) { alert("Day " + dayIdx + " not found in current program."); return; }
+    // Build log entries from saved session data
+    var newLog = {};
+    var exData = raw.exercises || [];
+    for (var ei = 0; ei < day.exercises.length; ei++) {
+      var ex = day.exercises[ei];
+      var k = dayIdx + "-" + ei;
+      // Find matching exercise in saved data
+      var saved = null;
+      for (var si = 0; si < exData.length; si++) {
+        if (exData[si].name === ex.name) { saved = exData[si]; break; }
+      }
+      if (!saved) continue;
+      var entry = { done: true, sets: [] };
+      if ((ex.tech === "myo" || ex.tech === "restpause") && saved.sets && saved.sets.length > 0) {
+        var ss = saved.sets[0];
+        var miniArr = [];
+        if (ss.miniSets) {
+          for (var mi = 0; mi < ss.miniSets.length; mi++) {
+            miniArr.push({ r: ss.miniSets[mi].r || 0 });
+          }
+        }
+        entry.myo = {
+          w: ss.w || 0,
+          activationReps: ss.activationReps || ss.r || 0,
+          miniSets: miniArr,
+          rir: (ss.rir !== undefined && ss.rir !== null) ? ss.rir : null
+        };
+      } else if (saved.sets) {
+        for (var ssi = 0; ssi < saved.sets.length; ssi++) {
+          var s = saved.sets[ssi];
+          var sd = { w: s.w || "", r: s.r || "" };
+          if (s.rir !== undefined && s.rir !== null) sd.rir = s.rir;
+          entry.sets.push(sd);
+        }
+      }
+      newLog[k] = entry;
+    }
+    setEditingSession({ weekNum: wk, dayIdx: dayIdx, date: date, data: raw });
+    setADay(dayIdx);
+    setAEx(0);
+    setLog(newLog);
+    setSessionSaved(false);
+    setNewPRs([]);
+    setScreen("workout");
+    setView("workout");
+  }
+
+  // Save edits to a past session (updates exHist + session data)
+  function saveEditedSession() {
+    if (!editingSession) return;
+    var day = program[editingSession.dayIdx];
+    if (!day) return;
+    var ds = editingSession.date;
+    var exData = [];
+    var newHist = Object.assign({}, exHist);
+
+    day.exercises.forEach(function(ex, ei) {
+      var k = editingSession.dayIdx + "-" + ei;
+      var entry = log[k];
+      if (!entry) return;
+      var sets = [];
+      if ((ex.tech === "myo" || ex.tech === "restpause") && entry.myo && entry.myo.activationReps > 0 && entry.myo.w > 0) {
+        var totalMiniReps = 0; var miniArr = [];
+        for (var _smi = 0; _smi < (entry.myo.miniSets || []).length; _smi++) {
+          var ms = entry.myo.miniSets[_smi]; if (ms && ms.r > 0) { totalMiniReps += ms.r; miniArr.push({ r: ms.r }); }
+        }
+        var totalR = entry.myo.activationReps + totalMiniReps;
+        var myoRir = (entry.myo.rir !== undefined && entry.myo.rir !== null) ? entry.myo.rir : null;
+        sets.push({ w: entry.myo.w, r: totalR, activationReps: entry.myo.activationReps, miniSets: miniArr, rir: myoRir });
+      } else if (entry.sets) {
+        entry.sets.forEach(function(s) { if (s && s.w && s.r) { var sd = { w: s.w, r: s.r }; if (s.rir !== undefined && s.rir !== null) sd.rir = s.rir; sets.push(sd); } });
+      }
+      if (sets.length === 0) return;
+      exData.push({ name: ex.name, muscle: ex.muscle, tech: ex.tech, sets: sets });
+
+      // Update exHist: find the entry with matching date and replace it
+      var h = (newHist[ex.name] || []).slice();
+      var replaced = false;
+      for (var hi = 0; hi < h.length; hi++) {
+        if (h[hi].date === ds) { h[hi] = { sets: sets, date: ds, targetRir: h[hi].targetRir }; replaced = true; break; }
+      }
+      if (!replaced) {
+        // Entry did not exist (exercise not logged before), add it
+        h.unshift({ sets: sets, date: ds, targetRir: null });
+        if (h.length > 30) h = h.slice(0, 30);
+      }
+      newHist[ex.name] = h;
+    });
+
+    setExHist(newHist);
+    sSet("forge_exh", newHist);
+
+    // Update session data
+    var oldData = editingSession.data || {};
+    sSet("forge_s_" + ds + "_" + editingSession.dayIdx, Object.assign({}, oldData, { exercises: exData, edited: true, editDate: new Date().toISOString().slice(0, 10) }));
+
+    setEditingSession(null);
+    setSessionSaved(true);
+    setScreen("dashboard");
+    setView("preview");
   }
 
   // ═══ SESSION ROLLBACK (undo last saved session) ═══
@@ -8068,6 +8364,20 @@ function Forge(props){
         </div>}
       </div>;
     }
+    else if(popup.type==="philosophy"){
+      var _phPreset=popup.presetId?PROGRAM_PHILOSOPHY[popup.presetId]:null;
+      var _phSections=_phPreset?_phPreset.sections:popup.sections||[];
+      title=_phPreset?_phPreset.title:"YOUR PROGRAM PHILOSOPHY";
+      body="";
+      extra=React.createElement("div",{style:{fontSize:12,color:C.mid,lineHeight:1.7}},
+        _phSections.map(function(sec,si){
+          return React.createElement("div",{key:si,style:{marginBottom:si<_phSections.length-1?16:0}},
+            React.createElement("div",{style:{fontSize:11,fontFamily:FD,letterSpacing:1,color:si===0?C.acc:si===1?C.pur:si===2?C.blu:C.grn,marginBottom:4}},sec.h),
+            React.createElement("div",{style:{fontSize:12,color:C.mid,lineHeight:1.7}},sec.t)
+          );
+        })
+      );
+    }
     else if(popup.type==="protocol"){
       var pInfo=METHOD_EXPLAIN[popup.id];
       if(pInfo){
@@ -8645,6 +8955,7 @@ function Forge(props){
           {authUser&&<div style={{display:"flex",alignItems:"center",gap:4,marginTop:6}}><div style={{width:6,height:6,borderRadius:"50%",background:C.grn}}/><span style={{fontSize:10,color:C.grn}}>{"Cloud synced • "+authUser.email}</span></div>}
           {!authUser&&<div style={{marginTop:6}}><button onClick={function(){fbSignIn().catch(function(e){});}} style={{fontSize:10,color:C.blu,background:"transparent",border:"none",cursor:"pointer",fontFamily:FD,letterSpacing:1}}>SIGN IN FOR CLOUD SYNC</button></div>}
           {METHOD_EXPLAIN[method]&&<button onClick={function(){setPopup({type:"protocol",id:method});}} style={{marginTop:10,width:"100%",padding:"10px 0",background:C.pur+"12",color:C.pur,border:"1px solid "+C.pur+"30",borderRadius:10,fontSize:12,fontWeight:700,fontFamily:FD,cursor:"pointer",letterSpacing:1}}>PROTOCOL GUIDE: {methodObj.n.toUpperCase()}</button>}
+          <button onClick={function(){if(presetPick&&PROGRAM_PHILOSOPHY[presetPick]){setPopup({type:"philosophy",presetId:presetPick});}else{setPopup({type:"philosophy",sections:getCustomPhilosophy(splitObj,methodObj,goalObj,mins)});}}} style={{marginTop:8,width:"100%",padding:"10px 0",background:C.blu+"12",color:C.blu,border:"1px solid "+C.blu+"30",borderRadius:10,fontSize:12,fontWeight:700,fontFamily:FD,cursor:"pointer",letterSpacing:1}}>PROGRAM PHILOSOPHY</button>
         </div>)}
         {/* Next workout card */}
         {(function(){
@@ -8730,6 +9041,26 @@ function Forge(props){
               </div>;
             })}
           </div>);
+        })()}
+        {/* ═══ RECENT SESSIONS (Fix 8 — editable past workouts) ═══ */}
+        {(function(){
+          var recentSessions=completedDays.filter(function(cd){return cd.weekNum<=weekNum;}).sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:0;}).slice(0,8);
+          if(recentSessions.length===0)return null;
+          return cd(React.createElement("div",null,
+            hd("RECENT SESSIONS"),
+            React.createElement("div",{style:{fontSize:10,color:C.dim,marginBottom:10}},"Tap EDIT to update logged data (weights, reps, myo-rep breakdowns, RIR)."),
+            recentSessions.map(function(rs){
+              var day=program[rs.dayIdx];
+              if(!day)return null;
+              return React.createElement("div",{key:rs.date+"_"+rs.dayIdx,style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid "+C.bdr}},
+                React.createElement("div",null,
+                  React.createElement("div",{style:{fontSize:13,fontWeight:700,fontFamily:FD,color:C.txt}},"D"+(rs.dayIdx+1)+" — "+(day.label||"Workout")),
+                  React.createElement("div",{style:{fontSize:10,color:C.dim}},"W"+rs.weekNum+" · "+rs.date)
+                ),
+                React.createElement("button",{onClick:function(){var _rs=rs;return function(){loadPastSession(_rs.weekNum,_rs.dayIdx,_rs.date);};}(),style:{padding:"6px 14px",fontSize:10,fontFamily:FD,fontWeight:700,letterSpacing:1,background:C.blu+"15",color:C.blu,border:"1px solid "+C.blu+"40",borderRadius:8,cursor:"pointer"}},"EDIT")
+              );
+            })
+          ));
         })()}
         <div style={{height:80}}/>
       </div>)}
@@ -9471,6 +9802,10 @@ function Forge(props){
 
       {/* ═══ WORKOUT ═══ */}
       {view==="workout"&&program[aDay]&&(<div className="view-slide">
+        {editingSession&&<div style={{background:C.blu+"18",border:"1px solid "+C.blu+"40",borderRadius:10,padding:"10px 14px",marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div><div style={{fontSize:11,fontFamily:FD,letterSpacing:1.5,color:C.blu,fontWeight:700}}>EDITING PAST SESSION</div><div style={{fontSize:10,color:C.dim,marginTop:2}}>{editingSession.date+" — W"+editingSession.weekNum+" D"+(editingSession.dayIdx+1)}</div></div>
+          <div style={{display:"flex",gap:6}}><button onClick={function(){saveEditedSession();}} style={{padding:"8px 16px",fontSize:11,fontFamily:FD,fontWeight:700,letterSpacing:1,background:C.grn+"20",color:C.grn,border:"1px solid "+C.grn+"50",borderRadius:8,cursor:"pointer"}}>SAVE</button><button onClick={function(){setEditingSession(null);setScreen("dashboard");setView("preview");}} style={{padding:"8px 12px",fontSize:11,fontFamily:FD,fontWeight:700,letterSpacing:1,background:C.bar,color:C.dim,border:"1px solid "+C.bdr,borderRadius:8,cursor:"pointer"}}>CANCEL</button></div>
+        </div>}
         <div style={{padding:"14px 0 10px"}}><div style={{fontSize:12,color:C.dim,fontFamily:FD,letterSpacing:2}}>{"W"+weekNum+" / DAY "+(aDay+1)+" / "+getRIR(weekNum,mesoLen,null,expLevel)+" RIR / ~"+Math.round(program[aDay].correctedEst||program[aDay].est||0)+"min"}</div><div style={{fontSize:22,fontFamily:FD,letterSpacing:2,marginTop:2}}>{program[aDay].label.toUpperCase()}</div><div style={{display:"flex",gap:6,marginTop:4,alignItems:"center"}}><span onClick={function(e){e.stopPropagation();var _pl=getPhaseLabel(weekNum,mesoLen);var _k=_pl==="Build"?"phase_build":_pl==="Push"?"phase_push":_pl==="Overreach"?"phase_overreach":_pl==="Recover"?"phase_recover":"phase_build";setInfoSheet(_k);}} style={{fontSize:9,color:C.pur,fontFamily:FD,background:C.pur+"15",padding:"2px 8px",borderRadius:4,cursor:"pointer"}}>{getPhaseLabel(weekNum,mesoLen).toUpperCase()}</span><span onClick={function(e){e.stopPropagation();setInfoSheet("rir");}} style={{fontSize:9,color:C.blu,fontFamily:FD,background:C.blu+"15",padding:"2px 8px",borderRadius:4,cursor:"pointer"}}>{getRIR(weekNum,mesoLen,null,expLevel)+" RIR"}</span><button onClick={function(e){e.stopPropagation();setPopup({type:"system_info"});}} style={{fontSize:9,color:C.blu,fontFamily:FD,background:C.blu+"15",padding:"2px 8px",borderRadius:4,border:"1px solid "+C.blu+"30",cursor:"pointer"}}>INFO</button></div>{readMod<0.85&&<div style={{fontSize:10,color:C.orn,marginTop:4}}>{"Readiness "+Math.round(readMod*100)+"% - volume adjusted"}</div>}{program[aDay].timeFactorSource&&program[aDay].timeFactorSource!=="default"&&program[aDay].timeFactorSessions>=3&&<div style={{fontSize:9,color:C.blu,marginTop:3,fontFamily:FD,letterSpacing:0.5}}>{"\u2022 PREDICTED FROM "+program[aDay].timeFactorSessions+" "+(program[aDay].timeFactorSource==="day"?(program[aDay].label+" SESSION"+(program[aDay].timeFactorSessions===1?"":"S")):"PAST SESSION"+(program[aDay].timeFactorSessions===1?"":"S"))}</div>}</div>
 
         {/* ═══ WORKOUT TIMER BAR ═══ */}
@@ -9483,8 +9818,8 @@ function Forge(props){
           var isPaused=!!timerPauseStart;
           // Rest timer
           var restRem=getRestRemaining();
-          var restActive=restRem!==null&&restRem>-10; // show for 10s after expiry
-          return <div style={{background:C.sf,border:"1px solid "+C.bdr,borderRadius:12,padding:"10px 14px",marginBottom:10}}>
+          var restActive=restRem!==null&&restRem>-30; // show for 30s after expiry (Fix 3+6: persistent visibility)
+          return <div style={{background:C.sf,border:"1px solid "+C.bdr,borderRadius:12,padding:"10px 14px",marginBottom:10,position:"sticky",top:0,zIndex:20}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <div className="num" style={{fontSize:28,fontWeight:700,fontFamily:FB,color:timerStart?timerColor:C.dim,letterSpacing:1,minWidth:80,fontVariantNumeric:"tabular-nums lining-nums"}}>{formatTime(elapsed)}</div>
@@ -9898,6 +10233,7 @@ function Forge(props){
           var allDone=dayExs.length>0;
           for(var di=0;di<dayExs.length;di++){var dk=aDay+"-"+di;if(!log[dk]||!log[dk].done)allDone=false;}
           var finishHandler=function(){
+            if(editingSession){saveEditedSession();return;}
             if(!confirm("Are you sure you want to finish this session?"))return;
             var am=timerStart?stopTimer():0;
             setActualMin(am);
@@ -9918,8 +10254,9 @@ function Forge(props){
             try{sarahSayCompletionRandom();}catch(e){}
           };
           if(allDone){
-            return <div style={{marginTop:16,padding:12,background:C.acc+"18",borderRadius:12,border:"1px solid "+C.acc+"40"}}><div style={{textAlign:"center",fontSize:11,color:C.acc,fontFamily:FD,letterSpacing:2,marginBottom:8}}>ALL EXERCISES COMPLETE</div>{mainBtn("FINISH SESSION",finishHandler)}</div>;
+            return <div style={{marginTop:16,padding:12,background:editingSession?C.blu+"18":C.acc+"18",borderRadius:12,border:"1px solid "+(editingSession?C.blu+"40":C.acc+"40")}}><div style={{textAlign:"center",fontSize:11,color:editingSession?C.blu:C.acc,fontFamily:FD,letterSpacing:2,marginBottom:8}}>{editingSession?"EDITS READY":"ALL EXERCISES COMPLETE"}</div>{mainBtn(editingSession?"SAVE EDITS":"FINISH SESSION",finishHandler)}</div>;
           }
+          if(editingSession){return <div style={{marginTop:16}}>{mainBtn("SAVE EDITS",function(){saveEditedSession();})}</div>;}
           return <div style={{marginTop:32,opacity:0.4}}><button onClick={finishHandler} style={{width:"100%",padding:"10px 0",fontSize:11,fontFamily:FD,letterSpacing:2,color:C.dim,background:"transparent",border:"1px solid "+C.bdr,borderRadius:8,cursor:"pointer"}}>FINISH EARLY</button></div>;
         })()}
       </div>)}
