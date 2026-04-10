@@ -4618,7 +4618,7 @@ function isBandExercise(ex){
   return ex.n.toLowerCase().includes("band") || ex.n.toLowerCase().includes("banded");
 }
 
-function scoreEx(ex,mid,hist,goalId,slotType,equipFilter,muscle,priorityMuscle){
+function scoreEx(ex,mid,hist,goalId,slotType,equipFilter,muscle,priorityMuscle,weekNum,mesoLen){
   // slotType: "compound","isolation","any" — helps contextualize scoring
   // equipFilter: "band","bw","db",null — from preset selection
   // muscle: VOL_LM key this exercise is being scored for (for stretch-sensitivity)
@@ -4665,10 +4665,31 @@ function scoreEx(ex,mid,hist,goalId,slotType,equipFilter,muscle,priorityMuscle){
   }
   // Bands are effective for isolations (constant tension, metabolic stress) regardless of program
   if(isBand&&ex.t==="I"&&slotType==="isolation")s+=3;
-  // ═══ STIMULUS-TO-FATIGUE RATIO (SFR) ═══
-  // Machine/isolation exercises = higher SFR (less systemic fatigue per set)
-  // Heavy compounds = lower SFR (more systemic fatigue) — use strategically
+  // ═══ STIMULUS-TO-FATIGUE RATIO (SFR) v2 ═══
+  // Uses fat field (1-3) from exercise metadata when available
+  var exFat=ex.fat||((ex.t==="C")?3:1);
+  if(exFat===1)s+=4; // low-fatigue exercises get SFR bonus
+  if(ex.n.indexOf("Chest-Supported")>=0)s+=3; // removes lower back as limiter
+  if(ex.n.indexOf("Incline Curls")>=0)s+=3; // removes momentum cheating
   if(ex.t==="I")s+=2; // slight SFR bonus for isolations
+  // ═══ PHASE-POTENTIATED COMPLEXITY (System 7a) ═══
+  // Early meso: favor compounds. Late meso: favor isolations (higher SFR, safer near failure).
+  var _wn=weekNum||1;var _ml=mesoLen||4;
+  var phaseRatio=_wn/_ml;
+  if(phaseRatio<=0.4){
+    if(ex.t==="C")s+=8;
+  }
+  if(phaseRatio>=0.7){
+    if(ex.t==="I"||ex.t==="B")s+=8;
+    if(ex.t==="C"&&exFat>=3)s-=5;
+  }
+  // ═══ METHOD-AWARE SELECTION WEIGHTING (System 7b) ═══
+  if(mid==="myo"&&(ex.t==="I"||ex.t==="B"))s+=12;
+  if(mid==="myo"&&ex.t==="C"&&exFat>=3)s-=15;
+  if(mid==="dc"&&ex.t==="C")s+=12;
+  if(mid==="giant")s+=3;
+  if(mid==="preexh"&&ex.t==="I"&&ex.len==="S")s+=10;
+  if(mid==="mech"&&ex.drop)s+=15;
   // ═══ STALL DETECTION (method-aware) ═══
   if(hist&&hist[ex.n]){
     var st=detectStall(hist[ex.n]);
@@ -4897,6 +4918,171 @@ var STALL_LADDER = [
   {tier:3, step:"Swap to a harder variation", desc:"Switch to a mechanically harder version (incline, single-arm, deficit, unstable surface) and restart the progression ladder from scratch.", minSessions:10},
 ];
 
+
+
+// ═══ MESOCYCLE EXERCISE LOCKING (System 6) ═══
+// Locks exercise selections at meso start. Restores on subsequent weeks.
+function getMesoExercises(splitId,methodId){
+  var key="mesoExercises_"+splitId+"_"+methodId;
+  var raw=sGet(key,null);
+  if(!raw)return null;
+  try{return JSON.parse(raw);}catch(e){return null;}
+}
+function setMesoExercises(splitId,methodId,selections){
+  var key="mesoExercises_"+splitId+"_"+methodId;
+  sSet(key,JSON.stringify(selections));
+}
+// Extract exercise names from a generated program for locking
+function extractMesoSelections(sessions){
+  var sel={};
+  for(var si=0;si<sessions.length;si++){
+    var dayKey=sessions[si].label;
+    sel[dayKey]={};
+    for(var ei=0;ei<sessions[si].exercises.length;ei++){
+      var e=sessions[si].exercises[ei];
+      if(e.muscle&&e.muscle!=="cardio"&&e.muscle!=="corrective"&&e.muscle!=="carry"&&e.muscle!=="grit"&&e.tier!=="primer"){
+        if(!sel[dayKey][e.muscle])sel[dayKey][e.muscle]=[];
+        sel[dayKey][e.muscle].push(e.name);
+      }
+    }
+  }
+  return sel;
+}
+// Apply locked selections to a freshly generated program
+function applyMesoLock(sessions,locked){
+  for(var si=0;si<sessions.length;si++){
+    var dayKey=sessions[si].label;
+    if(!locked[dayKey])continue;
+    for(var ei=0;ei<sessions[si].exercises.length;ei++){
+      var e=sessions[si].exercises[ei];
+      if(!e.muscle||!locked[dayKey][e.muscle])continue;
+      var lockedNames=locked[dayKey][e.muscle];
+      // Find the exercise index for this slot
+      var slotIdx=0;
+      for(var pi=0;pi<ei;pi++){
+        if(sessions[si].exercises[pi].muscle===e.muscle&&
+           sessions[si].exercises[pi].tier!=="primer")slotIdx++;
+      }
+      if(slotIdx<lockedNames.length){
+        var targetName=lockedNames[slotIdx];
+        if(targetName!==e.name){
+          // Find the exercise in the pool
+          var pool=EX[e.muscle]||[];
+          for(var pi2=0;pi2<pool.length;pi2++){
+            if(pool[pi2].n===targetName){
+              sessions[si].exercises[ei]=Object.assign({},e,{name:pool[pi2].n,mv:pool[pi2].mv});
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+  return sessions;
+}
+// ═══ SMART EXERCISE SELECTION (System 2) ═══
+// Replaces inline picking logic with guarantees:
+// 2a: Lengthened-bias guarantee (≥1 len:"L" per muscle per session)
+// 2d: Unilateral distribution for legs
+// 2e: Compound-to-isolation ratio (goal-aware)
+function selectExercisesForMuscle(scored,numExercises,goalObj,muscle,rng,equipFilter,banned){
+  var comps=scored.filter(function(e){return e.t==="C";});
+  var isos=scored.filter(function(e){return e.t!=="C"&&e.t!=="B";});
+  var bw=scored.filter(function(e){return e.t==="B";});
+  var picked=[];var usedNames={};var usedFamilies={};
+  // Determine compound:isolation target ratio based on goal
+  var gid=goalObj&&goalObj.id?goalObj.id:"balanced";
+  var isoHeavy=gid==="beach"||gid==="tshirt"||gid==="arms"||gid==="contest";
+  var compTarget=isoHeavy?Math.max(1,Math.floor(numExercises*0.33)):Math.max(1,Math.ceil(numExercises*0.5));
+  var isoTarget=numExercises-compTarget;
+  // Pick compounds (with family grouping)
+  var off=Math.floor(rng()*Math.max(1,comps.length));
+  for(var i=0;picked.length<compTarget&&i<comps.length;i++){
+    var ci=(i+off)%comps.length;
+    if(!usedNames[comps[ci].n]){
+      var fam=getExFamily(comps[ci].n);
+      if(!fam||!usedFamilies[fam]){
+        picked.push(comps[ci]);usedNames[comps[ci].n]=1;
+        if(fam)usedFamilies[fam]=1;
+      }
+    }
+  }
+  // Pick isolations
+  var isoOff=Math.floor(rng()*Math.max(1,isos.length));
+  for(var j=0;picked.length<numExercises&&j<isos.length;j++){
+    var ii=(j+isoOff)%isos.length;
+    if(!usedNames[isos[ii].n]){
+      var isoFam=getExFamily(isos[ii].n);
+      if(!isoFam||!usedFamilies[isoFam]){
+        picked.push(isos[ii]);usedNames[isos[ii].n]=1;
+        if(isoFam)usedFamilies[isoFam]=1;
+      }
+    }
+  }
+  // Family-ignoring iso fallback
+  if(picked.length<numExercises){
+    for(var fb=0;picked.length<numExercises&&fb<isos.length;fb++){
+      var fbi=(fb+isoOff)%isos.length;
+      if(!usedNames[isos[fbi].n]){picked.push(isos[fbi]);usedNames[isos[fbi].n]=1;}
+    }
+  }
+  // BW fallback (e.g. JACKED db filter removes all band isolations)
+  if(picked.length<numExercises&&bw.length>0){
+    var bwOff=Math.floor(rng()*Math.max(1,bw.length));
+    for(var bwi=0;picked.length<numExercises&&bwi<bw.length;bwi++){
+      var bwIdx=(bwi+bwOff)%bw.length;
+      if(!usedNames[bw[bwIdx].n]){
+        var bwFam=getExFamily(bw[bwIdx].n);
+        if(!bwFam||!usedFamilies[bwFam]){
+          picked.push(bw[bwIdx]);usedNames[bw[bwIdx].n]=1;
+          if(bwFam)usedFamilies[bwFam]=1;
+        }
+      }
+    }
+  }
+  // ═══ 2a: LENGTHENED-BIAS GUARANTEE ═══
+  // Ensure at least 1 exercise with len:"L" per muscle (Wolf 2023/2025)
+  var hasLengthened=false;
+  for(var li=0;li<picked.length;li++){if(picked[li].len==="L"){hasLengthened=true;break;}}
+  if(!hasLengthened){
+    // Find highest-scored len:"L" exercise from full pool
+    var bestL=null;
+    for(var si=0;si<scored.length;si++){
+      if(scored[si].len==="L"&&!usedNames[scored[si].n]){bestL=scored[si];break;}
+    }
+    if(!bestL){
+      for(var si2=0;si2<scored.length;si2++){if(scored[si2].len==="L"){bestL=scored[si2];break;}}
+    }
+    if(bestL&&picked.length>0){
+      // Replace lowest-scored non-L exercise
+      var worstIdx=picked.length-1;
+      var worstScore=Infinity;
+      for(var wi=0;wi<picked.length;wi++){
+        if(picked[wi].len!=="L"&&picked[wi]._score<worstScore){worstScore=picked[wi]._score;worstIdx=wi;}
+      }
+      picked[worstIdx]=bestL;
+    }
+  }
+  // ═══ 2d: UNILATERAL DISTRIBUTION FOR LEGS ═══
+  if(muscle==="quads"||muscle==="hams"){
+    var hasUni=false;
+    for(var ui=0;ui<picked.length;ui++){if(picked[ui].uni===1){hasUni=true;break;}}
+    if(!hasUni&&picked.length>1){
+      var bestUni=null;
+      for(var sui=0;sui<scored.length;sui++){
+        if(scored[sui].uni===1&&!usedNames[scored[sui].n]){bestUni=scored[sui];break;}
+      }
+      if(bestUni){
+        var worstBi=picked.length-1;var wbScore=Infinity;
+        for(var wbi=0;wbi<picked.length;wbi++){
+          if(picked[wbi].uni!==1&&picked[wbi]._score<wbScore){wbScore=picked[wbi]._score;worstBi=wbi;}
+        }
+        picked[worstBi]=bestUni;
+      }
+    }
+  }
+  return picked;
+}
 function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHistory,readMod,genCount,banned,equipFilter){
   banned=banned||[];
   var tm=1-(methodObj.sv/100);var cl=goalObj.cd||0;var cm=cl>0?Math.min(10,cl*4):0;var lm=mins-cm;var sessions=[];
@@ -4931,6 +5117,20 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
     // Pre-calculate time budget per muscle group to ensure ALL groups get time
     var totalTime=lm*tm;var numGroups=day.g.length;var timePerGroup=Math.max(5,Math.floor(totalTime/Math.max(1,numGroups)));
     var muscleIdx=0;
+    // ═══ REP RANGE UNDULATION (System 5b) ═══
+    // Track how many prior days in this layout had each muscle to vary rep ranges
+    var _muscleOccurrence={};
+    for(var _mdi=0;_mdi<di;_mdi++){
+      var _pdg=splitObj.layout[_mdi].g;
+      for(var _pmg=0;_pmg<_pdg.length;_pmg++){
+        _muscleOccurrence[_pdg[_pmg]]=(_muscleOccurrence[_pdg[_pmg]]||0)+1;
+      }
+    }
+    var _muscleFreq={};
+    for(var _mfi=0;_mfi<splitObj.layout.length;_mfi++){
+      var _mfg=splitObj.layout[_mfi].g;
+      for(var _mfj=0;_mfj<_mfg.length;_mfj++){_muscleFreq[_mfg[_mfj]]=(_muscleFreq[_mfg[_mfj]]||0)+1;}
+    }
     day.g.forEach(function(muscle){
       var pool=EX[muscle];if(!pool)return;pool=pool.filter(function(e){return banned.indexOf(e.n)<0;});
       // Equipment filter: restrict exercises to matching equipment type
@@ -4942,6 +5142,9 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       var sessionTarget=Math.ceil(weeklyTarget/freq);
       var cap=VOL_LM[muscle]?VOL_LM[muscle].cap:10;
       sessionTarget=Math.min(sessionTarget,cap); // per-session cap (Pelland 2025)
+      // System 5a: variance cap — no session gets >60% of weekly volume
+      var _sixtyPct=Math.ceil(weeklyTarget*0.6);
+      if(freq>=2)sessionTarget=Math.min(sessionTarget,_sixtyPct);
       // Apply readiness modifier to session volume
       sessionTarget=Math.max(2,Math.round(sessionTarget*rm));
       if(phase==="deload")sessionTarget=Math.max(2,Math.ceil(sessionTarget*0.5));
@@ -4969,7 +5172,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       // Score all exercises, attach score, then tier-shuffle so similar-scored exercises rotate
       var rng=mulberry32(daySeed);
       var isPriorityMuscle=(goalObj&&goalObj.vol&&goalObj.vol[muscle]>=1.5);
-      var scoredRaw=pool.slice().map(function(e){var c={};for(var k in e)c[k]=e[k];c._score=scoreEx(e,mid,exHistory,gid,e.t==="C"?"compound":"isolation",equipFilter,muscle,isPriorityMuscle);return c;});
+      var scoredRaw=pool.slice().map(function(e){var c={};for(var k in e)c[k]=e[k];c._score=scoreEx(e,mid,exHistory,gid,e.t==="C"?"compound":"isolation",equipFilter,muscle,isPriorityMuscle,wk,ml);return c;});
       scoredRaw.sort(function(a,b){return b._score-a._score;});
       var scored=tierShuffle(scoredRaw,rng);
       var comps=scored.filter(function(e){return e.t==="C";});
@@ -5145,53 +5348,15 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       }
 
       // ── STRAIGHT SETS / HYBRID (default) ──
-      // FIX: sessionTarget divided AMONG exercises (not given to each)
-      // Pick from shuffled pools using modular offset so rotation works across the full pool
-      // Family grouping: prevent picking two exercises from the same family
-      var picked=[];var usedNames={};var usedFamilies={};
-      for(var i=0;i<numExercises&&picked.length<numExercises;i++){
-        var ci=(i+off)%comps.length;
-        if(ci<comps.length&&!usedNames[comps[ci].n]){
-          var fam=getExFamily(comps[ci].n);
-          if(!fam||!usedFamilies[fam]){
-            picked.push(comps[ci]);usedNames[comps[ci].n]=1;
-            if(fam)usedFamilies[fam]=1;
-          }
-        }
-      }
-      var isoOff=Math.floor(rng()*Math.max(1,isos.length));
-      for(var j=0;picked.length<numExercises&&j<isos.length;j++){
-        var ii=(j+isoOff)%isos.length;
-        if(!usedNames[isos[ii].n]){
-          var isoFam=getExFamily(isos[ii].n);
-          if(!isoFam||!usedFamilies[isoFam]){
-            picked.push(isos[ii]);usedNames[isos[ii].n]=1;
-            if(isoFam)usedFamilies[isoFam]=1;
-          }
-        }
-      }
-      // Fallback: if family filtering was too restrictive, fill remaining slots ignoring family
-      if(picked.length<numExercises){
-        for(var fb=0;picked.length<numExercises&&fb<isos.length;fb++){
-          var fbi=(fb+isoOff)%isos.length;
-          if(!usedNames[isos[fbi].n]){picked.push(isos[fbi]);usedNames[isos[fbi].n]=1;}
-        }
-      }
-      // BW fallback: if equipment filter removed isolations (e.g. JACKED db filter removes
-      // all banded quads/hams isos), use bodyweight exercises so leg days stay leg days
-      if(picked.length<numExercises&&bw.length>0){
-        var bwOff2=Math.floor(rng()*Math.max(1,bw.length));
-        for(var bwi=0;picked.length<numExercises&&bwi<bw.length;bwi++){
-          var bwIdx=(bwi+bwOff2)%bw.length;
-          if(!usedNames[bw[bwIdx].n]){
-            var bwFam=getExFamily(bw[bwIdx].n);
-            if(!bwFam||!usedFamilies[bwFam]){
-              picked.push(bw[bwIdx]);usedNames[bw[bwIdx].n]=1;
-              if(bwFam)usedFamilies[bwFam]=1;
-            }
-          }
-        }
-      }
+      // System 2: Smart selection with lengthened-bias guarantee, unilateral distribution,
+      // goal-aware compound:isolation ratio, BW fallback
+      var picked=selectExercisesForMuscle(scored,numExercises,goalObj,muscle,rng,equipFilter,banned);
+      // ═══ REP RANGE UNDULATION — per-muscle session rep profile ═══
+      var _mFreq=_muscleFreq[muscle]||1;
+      var _mOcc=_muscleOccurrence[muscle]||0;
+      var _repProfiles=["heavy","moderate","light"];
+      var _repProfile=_repProfiles[_mOcc%Math.min(_mFreq,3)];
+      var _undulatedReps=_mFreq>=2?(_repProfile==="heavy"?"6-10":_repProfile==="moderate"?"8-12":"12-15"):baseReps;
       // Volume weighting: compounds get 60% of sets, isolations 40% (research: higher neuromuscular demand)
       var compCount=picked.filter(function(e){return e.t==="C";}).length;
       var isoCount=picked.length-compCount;
@@ -5202,7 +5367,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       picked.forEach(function(ex){
         var tech="straight";
         if(mid==="hybrid")tech=(ex.t==="I"&&ex.myo)?"myo":"straight";
-        var reps=tech==="myo"?"12-20 + 3-5x3-5":baseReps;
+        var reps=tech==="myo"?"12-20 + 3-5x3-5":_undulatedReps;
         var sets=tech==="myo"?1:(ex.t==="C"?compSets:isoSets);
         if(phase==="deload"){reps="8-10 easy";sets=2;tech="straight";}
         var isComp=ex.t==="C";var repsNum=parseInt(reps)||10;
@@ -5297,7 +5462,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
         _rpool=_rpool.filter(function(e){return banned.indexOf(e.n)<0;});
         if(equipFilter&&EQUIP_FILTERS[equipFilter])_rpool=_rpool.filter(EQUIP_FILTERS[equipFilter]);
         if(_rpool.length===0)continue;
-        var _rscored=_rpool.map(function(e){var c={};for(var k in e)c[k]=e[k];c._score=scoreEx(e,mid,exHistory,gid,"any",equipFilter,_rmuscle,false);return c;});
+        var _rscored=_rpool.map(function(e){var c={};for(var k in e)c[k]=e[k];c._score=scoreEx(e,mid,exHistory,gid,"any",equipFilter,_rmuscle,false,wk,ml);return c;});
         _rscored.sort(function(a,b){return b._score-a._score;});
         var _rpick=_rscored[0];
         var _rsets=2;var _rreps=phase==="deload"?"8-10 easy":baseReps;
@@ -5307,18 +5472,106 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       }
     }
 
-    // ═══ SMART EXERCISE ORDERING ═══
-    // Order: Primers → Compounds (heaviest first) → Isolations → Correctives → Carries/Grit → Cardio
-    var tierOrder={"primer":0,"strength":1,"straight":2,"preexhaust":2,"restpause":2,"mechanical":3,"myo":4,"corrective":5,"carry":6,"grit":7,"hiit":8,"recovery":9,"steady":9};
-    exs.sort(function(a,b){
-      var ta=tierOrder[a.tech]!==undefined?tierOrder[a.tech]:(a.tier?tierOrder[a.tier]:3);
-      var tb=tierOrder[b.tech]!==undefined?tierOrder[b.tech]:(b.tier?tierOrder[b.tier]:3);
-      if(ta!==tb)return ta-tb;
-      // Within same tier, compounds before isolations
-      var typeA=a.name&&a.name.indexOf("DB ")===0?0:1;
-      var typeB=b.name&&b.name.indexOf("DB ")===0?0:1;
-      return typeA-typeB;
-    });
+    // ═══ SMART EXERCISE ORDERING v2 (System 3) ═══
+    // 3a: Priority muscle exercises move up in order
+    // 3b: Meadows 4-phase ordering per muscle (activation → heavy compound → pump iso → stretch finisher)
+    // 3c: Interleave muscle groups for local recovery
+    // 3d: Intra-session RIR gradient (compounds: base+1, isolations: base-1 min 0)
+    var _primers=[];var _strength=[];var _correctives=[];var _carries=[];var _cardio=[];
+    var _muscleExs={};
+    for(var oi=0;oi<exs.length;oi++){
+      var _oe=exs[oi];
+      if(_oe.tier==="primer"){_primers.push(_oe);continue;}
+      if(_oe.tier==="strength"){_strength.push(_oe);continue;}
+      if(_oe.tier==="corrective"){_correctives.push(_oe);continue;}
+      if(_oe.tier==="carry"||_oe.tier==="grit"){_carries.push(_oe);continue;}
+      if(_oe.muscle==="cardio"){_cardio.push(_oe);continue;}
+      if(!_muscleExs[_oe.muscle])_muscleExs[_oe.muscle]=[];
+      _muscleExs[_oe.muscle].push(_oe);
+    }
+    // 3a: Separate priority vs normal muscles
+    var _prioMuscles=[];var _normMuscles=[];
+    var _gvol=goalObj&&goalObj.vol?goalObj.vol:{};
+    for(var _mk in _muscleExs){
+      if(_gvol[_mk]>=1.5){_prioMuscles.push(_mk);}else{_normMuscles.push(_mk);}
+    }
+    // 3b: Meadows 4-phase sort within each muscle group
+    function _meadowsSort(arr){
+      arr.sort(function(a,b){
+        var aFat=a.fat||((a.name&&a.name.indexOf("DB ")===0)?3:1);
+        var bFat=b.fat||((b.name&&b.name.indexOf("DB ")===0)?3:1);
+        // Heavy compounds first (fat desc), then stretch finisher last (len==="L" goes last)
+        if(aFat!==bFat)return bFat-aFat;
+        var aL=a.len==="L"?1:0;var bL=b.len==="L"?1:0;
+        return aL-bL;
+      });
+      return arr;
+    }
+    for(var _smk in _muscleExs){_meadowsSort(_muscleExs[_smk]);}
+    // 3c: Interleave muscle groups (priority first, then normal)
+    var _allGroups=_prioMuscles.concat(_normMuscles);
+    var _interleaved=[];
+    var _maxPerGroup=0;
+    for(var _ig=0;_ig<_allGroups.length;_ig++){
+      var _gl=(_muscleExs[_allGroups[_ig]]||[]).length;
+      if(_gl>_maxPerGroup)_maxPerGroup=_gl;
+    }
+    for(var _round=0;_round<_maxPerGroup;_round++){
+      for(var _ig2=0;_ig2<_allGroups.length;_ig2++){
+        var _gexs=_muscleExs[_allGroups[_ig2]]||[];
+        if(_round<_gexs.length)_interleaved.push(_gexs[_round]);
+      }
+    }
+    // 3d: Stamp intra-session RIR gradient
+    var _workCount=_strength.length+_interleaved.length;
+    for(var _ri=0;_ri<_interleaved.length;_ri++){
+      var _pos=_strength.length+_ri;
+      if(_interleaved[_ri].rir!==undefined){
+        var _baseRir=_interleaved[_ri].rir;
+        if(_pos<2){_interleaved[_ri].sessionRIR=Math.min(_baseRir+1,4);}
+        else if(_pos>=_workCount-2){_interleaved[_ri].sessionRIR=Math.max(_baseRir-1,0);}
+        else{_interleaved[_ri].sessionRIR=_baseRir;}
+      }
+    }
+    // Reassemble: primers → strength → interleaved work → correctives → carries → cardio
+    exs=_primers.concat(_strength).concat(_interleaved).concat(_correctives).concat(_carries).concat(_cardio);
+
+
+    // ═══ SUPERSET ENGINE (System 4) ═══
+    // Auto-pair exercises when over time budget. Agonist-antagonist pairs save ~35% rest time.
+    var _tot=exs.reduce(function(a,e){return a+e.time;},0);
+    var _shouldSuperset=_tot>mins*1.1||(mins<=45);
+    if(_shouldSuperset){
+      var _timeToSave=_tot-mins;
+      for(var _ssi=0;_ssi<exs.length&&_timeToSave>0;_ssi++){
+        if(exs[_ssi]._paired||exs[_ssi].tier==="primer"||exs[_ssi].tier==="corrective"||exs[_ssi].tier==="carry"||exs[_ssi].tier==="grit"||exs[_ssi].muscle==="cardio")continue;
+        if(exs[_ssi].tech==="myo"||exs[_ssi].tech==="restpause")continue;
+        for(var _ssj=_ssi+1;_ssj<exs.length;_ssj++){
+          if(exs[_ssj]._paired||exs[_ssj].tier==="primer"||exs[_ssj].tier==="corrective"||exs[_ssj].tier==="carry"||exs[_ssj].tier==="grit"||exs[_ssj].muscle==="cardio")continue;
+          if(exs[_ssj].tech==="myo"||exs[_ssj].tech==="restpause")continue;
+          if(exs[_ssi].muscle===exs[_ssj].muscle)continue;
+          var _aFat=(exs[_ssi].fat||2);var _bFat=(exs[_ssj].fat||2);
+          if(_aFat>=3&&_bFat>=3)continue;
+          // Check agonist-antagonist compatibility via ss field
+          var _ass=exs[_ssi].ss||"";var _bss=exs[_ssj].ss||"";
+          var _pushPull=(_ass==="push"&&_bss==="pull")||(_ass==="pull"&&_bss==="push");
+          var _quadHam=(_ass==="qd"&&_bss==="hd")||(_ass==="hd"&&_bss==="qd");
+          var _smallIso=(_ass==="siso"&&_bss==="siso");
+          if(_pushPull||_quadHam||_smallIso){
+            exs[_ssi]._paired=true;exs[_ssj]._paired=true;
+            exs[_ssi]._supersetWith=exs[_ssj].name;
+            exs[_ssj]._supersetWith=exs[_ssi].name;
+            var _savedTime=Math.round(Math.min(exs[_ssi].time,exs[_ssj].time)*0.35);
+            exs[_ssi].time=Math.max(2,exs[_ssi].time-Math.round(_savedTime/2));
+            exs[_ssj].time=Math.max(2,exs[_ssj].time-Math.round(_savedTime/2));
+            _timeToSave-=_savedTime;
+            if(exs[_ssi].note)exs[_ssi].note="SUPERSET with "+exs[_ssj].name+". "+exs[_ssi].note;
+            if(exs[_ssj].note)exs[_ssj].note="SUPERSET with "+exs[_ssi].name+". No rest — go straight to this. "+exs[_ssj].note;
+            break;
+          }
+        }
+      }
+    }
 
     // ═══ ATHLEANX EXPRESS AUTO-COMPRESS ═══
     // Before cutting exercises, try compressing (superset pairing, reduced rest, fewer sets)
@@ -5366,6 +5619,45 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
   return sessions;
 }
 
+
+// ═══ POST-GENERATION VALIDATION (System 8) ═══
+function validateProgram(sessions,goalObj){
+  var result={warnings:[],patterns:{},lenCoverage:{},pushSets:0,pullSets:0,uniLeg:false};
+  for(var si=0;si<sessions.length;si++){
+    var muscleSets={};
+    for(var ei=0;ei<sessions[si].exercises.length;ei++){
+      var e=sessions[si].exercises[ei];
+      if(e.pat)result.patterns[e.pat]=true;
+      if(e.muscle&&e.len){
+        if(!result.lenCoverage[e.muscle])result.lenCoverage[e.muscle]={L:0,M:0,S:0};
+        result.lenCoverage[e.muscle][e.len]+=(e.sets||0);
+      }
+      if(e.pat==="hp"||e.pat==="vp")result.pushSets+=(e.sets||0);
+      if(e.pat==="hpl"||e.pat==="vpl")result.pullSets+=(e.sets||0);
+      if((e.muscle==="quads"||e.muscle==="hams")&&e.uni===1)result.uniLeg=true;
+      muscleSets[e.muscle]=(muscleSets[e.muscle]||0)+(e.sets||0);
+    }
+    for(var mk in muscleSets){
+      if(muscleSets[mk]>10)result.warnings.push("Session "+(si+1)+": "+mk+" has "+muscleSets[mk]+" sets (>10 cap)");
+    }
+  }
+  // Check movement pattern coverage
+  var required=["hp","vp","hpl","vpl","sq","hi"];
+  for(var ri=0;ri<required.length;ri++){
+    if(!result.patterns[required[ri]])result.warnings.push("Missing movement pattern: "+required[ri]);
+  }
+  // Check lengthened-bias per muscle
+  for(var lm in result.lenCoverage){
+    if(result.lenCoverage[lm].L===0)result.warnings.push(lm+": no lengthened-bias exercises this week");
+  }
+  // Push:Pull ratio check (System 2c)
+  if(result.pullSets>0&&result.pushSets>0){
+    var ratio=result.pushSets/result.pullSets;
+    if(ratio>1.3)result.warnings.push("Push:Pull ratio "+result.pushSets+":"+result.pullSets+" — consider more pulls");
+  }
+  result.pushPull=result.pushSets+":"+result.pullSets;
+  return result;
+}
 // ═══ AUTH WRAPPER (separate component so Forge hooks always run in same order) ═══
 function ForgeAuth(){
   var _au=useState(null),authUser=_au[0],setAuthUser=_au[1];
@@ -6670,6 +6962,21 @@ function Forge(props){
     var eqF=null;
     if(presetPick){var pObj=PRESETS.find(function(x){return x.id===presetPick;});if(pObj&&pObj.equip)eqF=pObj.equip;}
     var newProg=buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,null,exHist,readMod,newGenCount,banned,eqF);
+    // ═══ MESO-LOCK (System 6): lock exercises at week 1, restore on subsequent weeks ═══
+    var _splitId=splitObj.id||"custom";var _methodId=methodObj.id||"straight";
+    if(weekNum===1){
+      // New meso: lock selections
+      setMesoExercises(_splitId,_methodId,extractMesoSelections(newProg));
+    } else {
+      // Ongoing meso: restore locked selections
+      var _locked=getMesoExercises(_splitId,_methodId);
+      if(_locked)newProg=applyMesoLock(newProg,_locked);
+    }
+    // Validate program (System 8)
+    var _validation=validateProgram(newProg,goalObj);
+    if(_validation.warnings.length>0){
+      console.log("FORGE validation:",_validation.warnings.join("; "));
+    }
     // Apply persistent meso swaps
     if(mesoSwaps&&Object.keys(mesoSwaps).length>0){
       for(var sd=0;sd<newProg.length;sd++){
