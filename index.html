@@ -873,24 +873,14 @@ if(typeof document!=="undefined"){
   document.addEventListener("touchstart",warmUpAudio,{once:false,passive:true});
   document.addEventListener("click",warmUpAudio,{once:false,passive:true});
 }
-function beep(freq,dur,vol){
-  // D-Apr2026: hardened path — always try to resume audio context before
-  // scheduling the tone, and start at currentTime+0.005 to avoid iOS
-  // "cannot start at 0" glitches. If the context is suspended (e.g. Safari
-  // threw away the audio graph after backgrounding), resume returns a
-  // Promise we fire-and-forget; the NEXT beep will succeed.
+function _scheduleBeep(freq,dur,vol){
   try{
-    if(!_audioCtx)_audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-    if(_audioCtx.state==="suspended"){
-      try{var rp=_audioCtx.resume();if(rp&&typeof rp.then==="function")rp.then(function(){},function(){});}catch(e2){}
-    }
     var now=_audioCtx.currentTime;
     var osc=_audioCtx.createOscillator();
     var gain=_audioCtx.createGain();
     osc.connect(gain);gain.connect(_audioCtx.destination);
     osc.frequency.value=freq||880;
     var v=Math.min(1.0,vol||0.3);
-    // Envelope: ramp up 5ms, sustain, ramp down 20ms — avoids clicks.
     gain.gain.setValueAtTime(0.0001,now);
     gain.gain.linearRampToValueAtTime(v,now+0.005);
     var stopAt=now+(dur||0.15);
@@ -898,7 +888,23 @@ function beep(freq,dur,vol){
     osc.start(now+0.002);
     osc.stop(stopAt+0.02);
   }catch(e){}
-  // Vibrate as fallback for silent mode (mobile only)
+}
+function beep(freq,dur,vol){
+  try{
+    if(!_audioCtx)_audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    if(_audioCtx.state==="suspended"){
+      try{
+        var rp=_audioCtx.resume();
+        if(rp&&typeof rp.then==="function"){
+          rp.then(function(){_scheduleBeep(freq,dur,vol);},function(){});
+        } else {
+          _scheduleBeep(freq,dur,vol);
+        }
+      }catch(e2){_scheduleBeep(freq,dur,vol);}
+    } else {
+      _scheduleBeep(freq,dur,vol);
+    }
+  }catch(e){}
   try{if(navigator.vibrate)navigator.vibrate(dur?Math.min(500,dur*1000):100);}catch(e){}
 }
 
@@ -942,6 +948,22 @@ function _preloadAllVoice(){
     for(var k in bank){if(!_voiceCache[_forgeVoiceChoice+"_"+k])_decodeOne(k);}
   }catch(e){}
 }
+function _playVoiceBuffer(buf){
+  try{
+    _voiceBusy=true;
+    var src=_audioCtx.createBufferSource();
+    var gain=_audioCtx.createGain();
+    gain.gain.value=1.0;
+    src.buffer=buf;
+    src.connect(gain);gain.connect(_audioCtx.destination);
+    _voiceCurSrc=src;_voiceCurGain=gain;
+    src.onended=function(){
+      _voiceCurSrc=null;_voiceCurGain=null;
+      _voiceGapTimer=setTimeout(function(){_voiceGapTimer=null;_voiceBusy=false;_processVoiceQueue();},_FORGE_VOICE_GAP_MS);
+    };
+    src.start(_audioCtx.currentTime+0.003);
+  }catch(e){_voiceBusy=false;_processVoiceQueue();}
+}
 function _processVoiceQueue(){
   if(_voiceBusy)return;
   if(!_voiceQueue.length)return;
@@ -955,20 +977,19 @@ function _processVoiceQueue(){
   }
   try{
     if(!_audioCtx)_audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-    if(_audioCtx.state==="suspended"){try{var rp=_audioCtx.resume();if(rp&&rp.then)rp.then(function(){},function(){});}catch(e){}}
-    _voiceBusy=true;
-    var src=_audioCtx.createBufferSource();
-    var gain=_audioCtx.createGain();
-    gain.gain.value=1.0;
-    src.buffer=buf;
-    src.connect(gain);gain.connect(_audioCtx.destination);
-    _voiceCurSrc=src;_voiceCurGain=gain;
-    src.onended=function(){
-      _voiceCurSrc=null;_voiceCurGain=null;
-      _voiceGapTimer=setTimeout(function(){_voiceGapTimer=null;_voiceBusy=false;_processVoiceQueue();},_FORGE_VOICE_GAP_MS);
-    };
-    src.start(_audioCtx.currentTime+0.003);
-  }catch(e){_voiceBusy=false;}
+    if(_audioCtx.state==="suspended"){
+      try{
+        var rp=_audioCtx.resume();
+        if(rp&&typeof rp.then==="function"){
+          rp.then(function(){_playVoiceBuffer(buf);},function(){_voiceBusy=false;_processVoiceQueue();});
+        } else {
+          _playVoiceBuffer(buf);
+        }
+      }catch(e){_playVoiceBuffer(buf);}
+    } else {
+      _playVoiceBuffer(buf);
+    }
+  }catch(e){_voiceBusy=false;_processVoiceQueue();}
 }
 // Sprint 6 Item 1 — Rest-timer 3-2-1 "Work" countdown sub-toggle.
 // Independent of master voice flag so users can keep voice cues elsewhere
@@ -5191,8 +5212,27 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
   }
 
   splitObj.layout.forEach(function(day,di){var exs=[];var used=0;var firstComp=true;
-    // Pre-calculate time budget per muscle group to ensure ALL groups get time
-    var totalTime=lm*tm;var numGroups=day.g.length;var timePerGroup=Math.max(5,Math.floor(totalTime/Math.max(1,numGroups)));
+    // Pre-calculate time budget per muscle group — VOLUME-PROPORTIONAL (Apr 2026).
+    // Old logic: equal split (totalTime / numGroups). This starved compound-heavy
+    // muscles (legs need 9-12 min) and over-fed small muscles (core needs 3-5 min).
+    // New logic: allocate time proportional to each muscle's session volume target.
+    var totalTime=lm*tm;var numGroups=day.g.length;
+    // Compute per-muscle session targets FIRST so we can weight the budget
+    var _budgetTargets={};var _budgetSum=0;
+    for(var _bi=0;_bi<day.g.length;_bi++){
+      var _bm=day.g[_bi];
+      var _bwt=weeklyVols[_bm]||10;
+      var _bfreq=Math.max(1,splitObj.layout.filter(function(d){return d.g.indexOf(_bm)>=0;}).length);
+      var _bst=Math.max(2,Math.ceil(_bwt/_bfreq));
+      _budgetTargets[_bm]=_bst;_budgetSum+=_bst;
+    }
+    // Allocate time proportionally, with a floor of 5 min per muscle
+    var _budgetAlloc={};
+    for(var _bj=0;_bj<day.g.length;_bj++){
+      var _bm2=day.g[_bj];
+      var _share=_budgetSum>0?(_budgetTargets[_bm2]/_budgetSum):1/numGroups;
+      _budgetAlloc[_bm2]=Math.max(5,Math.round(totalTime*_share));
+    }
     var muscleIdx=0;
     // ═══ REP RANGE UNDULATION (System 5b) ═══
     // Track how many prior days in this layout had each muscle to vary rep ranges
@@ -5209,6 +5249,11 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       for(var _mfj=0;_mfj<_mfg.length;_mfj++){_muscleFreq[_mfg[_mfj]]=(_muscleFreq[_mfg[_mfj]]||0)+1;}
     }
     day.g.forEach(function(muscle){
+      // Compute daySeed early so primer rotation works even if pool is empty
+      var daySeed=baseSeed+di*251+muscle.charCodeAt(0)*13;
+
+      // Primers are added AFTER the muscle loop — main exercises get budget priority.
+
       var pool=EX[muscle];if(!pool)return;pool=pool.filter(function(e){return banned.indexOf(e.n)<0;});
       // Equipment filter: restrict exercises to matching equipment type
       if(equipFilter&&EQUIP_FILTERS[equipFilter]){pool=pool.filter(EQUIP_FILTERS[equipFilter]);}
@@ -5227,26 +5272,14 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       if(phase==="deload")sessionTarget=Math.max(2,Math.ceil(sessionTarget*0.5));
       // cnt = number of EXERCISES for this muscle (sessionTarget sets divided among them)
       var numExercises=Math.max(1,Math.min(3,Math.ceil(sessionTarget/3))); // ~3 sets each
-      // Time guard: ensure each muscle group gets fair time (not first-come-first-served)
-      var myBudget=timePerGroup;if(muscleIdx===numGroups-1)myBudget=totalTime-used; // last group gets remainder
+      // Time guard: volume-proportional budget per muscle group
+      var myBudget=_budgetAlloc[muscle]||Math.max(5,Math.floor(totalTime/Math.max(1,numGroups)));
+      if(muscleIdx===numGroups-1)myBudget=Math.max(myBudget,totalTime-used); // last group gets remainder if larger
       var avail=Math.max(5,Math.min(myBudget,totalTime-used));if(avail<5){muscleIdx++;return;}
       numExercises=Math.min(numExercises,Math.max(1,Math.floor(avail/5)));if(numExercises<1)numExercises=1;
       muscleIdx++;
-      var groupUsed=0; // Track time used within THIS muscle group's budget
+      var groupUsed=0; // Primers are added post-loop, so groupUsed starts at 0
       var setsPerExercise=Math.max(2,Math.min(4,Math.ceil(sessionTarget/numExercises)));
-
-      // Compute daySeed BEFORE primer so primer rotation works
-      var daySeed=baseSeed+di*251+muscle.charCodeAt(0)*13;
-
-      // ── TIER 1: PRIMER (band/bodyweight activation, rotated with seed) ──
-      // Always include primers when not deloading and time allows — regardless
-      // of method tier. Primers are warmups, not a method-specific feature.
-      if(phase!=="deload"&&PRIMERS[muscle]){
-        var primerRng=mulberry32(daySeed+77);
-        var primer=PRIMERS[muscle][Math.floor(primerRng()*PRIMERS[muscle].length)];
-        exs.push({name:primer.n,muscle:muscle,tech:"primer",sets:2,reps:"10-15",time:2,mv:primer.mv,note:"PRIMER: Light activation. Wake up the muscle and stabilizers before heavy work.",tier:"primer"});
-        used+=2;groupUsed+=2;
-      }
 
       // Score all exercises, attach score, then tier-shuffle so similar-scored exercises rotate
       var rng=mulberry32(daySeed);
@@ -5465,103 +5498,101 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       });
     });
 
-    // Add cardio if goal requires it — rotate with seed so it varies
-    if(cl>0){
-      var cardioPool=EX.cardio||[];
-      if(cardioPool.length>0){
-      var cardioRng=mulberry32(baseSeed+di*97+43);
-      var cIdx=Math.floor(cardioRng()*cardioPool.length);
-      if(cl>=3)cIdx=Math.min(Math.floor(cardioRng()*2),cardioPool.length-1); // Contest: pick from HIIT options
-      var cEx=cardioPool[Math.min(cIdx,cardioPool.length-1)];
-      // Cardio time should align with the budget allocation (cm = min(10, cd*4)).
-      // cd=1 → 4 min (light conditioning), cd=2 → 8 min, cd=3 → 10 min cap.
-      // Old values (8/15/10) created a mismatch: budget subtracted 4 min from
-      // muscle time but the exercise itself burned 8-15 min.
-      var cTime=Math.min(10,cl*4);
-      exs.push({name:cEx.n,muscle:"cardio",tech:cEx.t==="H"?"hiit":cEx.t==="R"?"recovery":"steady",sets:1,reps:"",time:cTime,mv:"cardio",note:cEx.t==="H"?"High-intensity intervals. All-out effort.":cEx.t==="R"?"Active recovery. Keep moving, stay loose.":"Moderate steady-state cardio."});
-      } // end cardioPool.length>0
-    }
-
-    // ── TIER 5: CORRECTIVE (AthleanX: joint health, posture prehab) ──
-    // Always include correctives when not deloading — joint health is universal,
-    // not method-specific. Time guard in the rescue block handles budget overflow.
-    if(phase!=="deload"){
-      // Determine day type: push/pull/legs based on muscle groups
-      var dayType="push";
-      var hasPull=day.g.indexOf("back")>=0||day.g.indexOf("biceps")>=0;
-      var hasLegs=day.g.indexOf("quads")>=0||day.g.indexOf("hams")>=0;
-      var hasPush=day.g.indexOf("chest")>=0||day.g.indexOf("shoulders")>=0||day.g.indexOf("triceps")>=0;
-      if(hasLegs&&!hasPush&&!hasPull)dayType="legs";
-      else if(hasPull&&!hasPush)dayType="pull";
-      else if(hasLegs)dayType="legs";
-      var corrPool=CORRECTIVES[dayType]||(CORRECTIVES.push?CORRECTIVES.push:[]);
-      var corrRng=mulberry32(baseSeed+di*331);
-      if(!corrPool||corrPool.length===0)return;
-      var corrPick=corrPool[Math.floor(corrRng()*corrPool.length)];
-      exs.push({name:corrPick.n,muscle:"corrective",tech:"corrective",sets:corrPick.sets,reps:corrPick.reps,time:2,mv:corrPick.mv,note:"CORRECTIVE: "+corrPick.note,tier:"corrective"});
-    }
-
-    // ── TIER 6: CARRY or GRIT (alternating per session, based on method prefs) ──
-    if(phase!=="deload"&&methodObj.tiers&&(methodObj.tiers.carry||methodObj.tiers.grit)){
-      var wantCarry=methodObj.tiers.carry;
-      var wantGrit=methodObj.tiers.grit;
-      var useCarry=wantCarry&&wantGrit?((di+wk)%2===0):wantCarry;
-      if(useCarry){
-        var carryRng=mulberry32(baseSeed+di*443);
-        var carryPick=CARRIES[Math.floor(carryRng()*CARRIES.length)];
-        exs.push({name:carryPick.n,muscle:"carry",tech:"carry",sets:carryPick.sets,reps:carryPick.reps,time:carryPick.time,mv:carryPick.mv,note:"CARRY: "+carryPick.note,tier:"carry"});
-      } else {
-        var gritOptions=GRIT.filter(function(g){
-          for(var gi=0;gi<g.for.length;gi++){if(day.g.indexOf(g.for[gi])>=0)return true;}return false;
-        });
-        if(gritOptions.length>0){
-          var gritRng=mulberry32(baseSeed+di*571);
-          var gritPick=gritOptions[Math.floor(gritRng()*gritOptions.length)];
-          exs.push({name:gritPick.n,muscle:"grit",tech:"grit",sets:1,reps:"see desc",time:4,mv:gritPick.mv,note:"GRIT: "+gritPick.desc,tier:"grit"});
+    // ═══ POST-LOOP REBALANCING v2 (Apr 2026) ═══
+    // Problem: core/small-muscle exercises are ~2x faster than leg/chest compounds.
+    // Even with proportional time budgets, fast muscles pack 3-4 exercises while
+    // slow muscles get 1. A "Lower Hyp" day ends up looking all-core.
+    // v2 Fix: RELATIVE comparison — if any muscle has 2+ more working exercises
+    // than another on the same day, trim the over-represented and add to the under.
+    // No absolute target thresholds (those missed core with high session targets).
+    if(day.g.length>=2){
+      var _rebalExCount={};
+      for(var _rbi=0;_rbi<exs.length;_rbi++){
+        var _rbm=exs[_rbi].muscle;
+        if(_rbm&&day.g.indexOf(_rbm)>=0&&exs[_rbi].tier!=="primer"){
+          _rebalExCount[_rbm]=(_rebalExCount[_rbm]||0)+1;
+        }
+      }
+      // Find min and max exercise counts across day's muscle groups
+      var _rbMin=999;var _rbMax=0;
+      for(var _rbk=0;_rbk<day.g.length;_rbk++){
+        var _rbC=_rebalExCount[day.g[_rbk]]||0;
+        if(_rbC<_rbMin)_rbMin=_rbC;
+        if(_rbC>_rbMax)_rbMax=_rbC;
+      }
+      // Rebalance if the gap is 2+ exercises (e.g., core has 3, quads has 1)
+      if(_rbMax-_rbMin>=2){
+        var _rbCap=Math.max(2,_rbMin+1); // allow max 1 more than the lowest
+        // Trim muscles above the cap
+        for(var _rbti=0;_rbti<day.g.length;_rbti++){
+          var _rbtm=day.g[_rbti];
+          var _rbtC=_rebalExCount[_rbtm]||0;
+          while(_rbtC>_rbCap){
+            // Remove the last non-primer non-corrective exercise for this muscle
+            for(var _rbtj=exs.length-1;_rbtj>=0;_rbtj--){
+              if(exs[_rbtj].muscle===_rbtm&&exs[_rbtj].tier!=="primer"&&exs[_rbtj].tier!=="corrective"&&exs[_rbtj].tier!=="strength"){
+                exs.splice(_rbtj,1);_rbtC--;break;
+              }
+            }
+            if(_rbtC>_rbCap)break; // safety: no more to remove
+          }
+        }
+        // Add exercises for under-represented muscles with the freed time
+        var _rebalUsed=exs.reduce(function(a,e){return a+(e.time||0);},0);
+        var _rebalFree=totalTime-_rebalUsed;
+        var _underMuscles=[];
+        for(var _rui=0;_rui<day.g.length;_rui++){
+          // Recount after trimming
+          var _ruC=0;
+          for(var _ruj=0;_ruj<exs.length;_ruj++){
+            if(exs[_ruj].muscle===day.g[_rui]&&exs[_ruj].tier!=="primer")_ruC++;
+          }
+          if(_ruC<2)_underMuscles.push(day.g[_rui]);
+        }
+        if(_underMuscles.length>0&&_rebalFree>0){
+          var _perUnder=Math.floor(_rebalFree/_underMuscles.length);
+          for(var _sti=0;_sti<_underMuscles.length;_sti++){
+            var _stm=_underMuscles[_sti];
+            var _stpool=EX[_stm];if(!_stpool)continue;
+            _stpool=_stpool.filter(function(e){return banned.indexOf(e.n)<0;});
+            if(equipFilter&&EQUIP_FILTERS[equipFilter])_stpool=_stpool.filter(EQUIP_FILTERS[equipFilter]);
+            if(_stpool.length===0)continue;
+            var _usedNames={};for(var _uni=0;_uni<exs.length;_uni++){_usedNames[exs[_uni].name]=1;}
+            _stpool=_stpool.filter(function(e){return !_usedNames[e.n];});
+            if(_stpool.length===0)continue;
+            var _stscored=_stpool.map(function(e){var c={};for(var k in e)c[k]=e[k];c._score=scoreEx(e,mid,exHistory,gid,"any",equipFilter,_stm,false,wk,ml);return c;});
+            _stscored.sort(function(a,b){return b._score-a._score;});
+            var _stBudget=Math.max(5,_perUnder);var _stUsed=0;
+            for(var _stei=0;_stei<Math.min(2,_stscored.length)&&_stUsed<_stBudget;_stei++){
+              var _stpick=_stscored[_stei];
+              var _stIsComp=_stpick.t==="C";
+              var _stsets=3;
+              var _sttime=exTime(_stsets,10,_stIsComp,false,"straight");
+              if(_stUsed+_sttime>_stBudget&&_stsets>2){_stsets=2;_sttime=exTime(_stsets,10,_stIsComp,false,"straight");}
+              if(_stUsed+_sttime>_stBudget&&_stei>0)break;
+              var _stnote=phase==="deload"?"DELOAD: 50% weight, easy reps.":"W"+wk+" / "+rir+" RIR / "+phase;
+              exs.push({name:_stpick.n,muscle:_stm,tech:"straight",sets:_stsets,reps:baseReps,time:_sttime,mv:_stpick.mv,note:_stnote,rir:rir});
+              _stUsed+=_sttime;
+            }
+          }
         }
       }
     }
 
-    // ═══ RESCUE: Ensure every muscle group has ≥1 exercise — leg days MUST stay leg days ═══
-    // PROPORTIONAL (Apr 2026): instead of nuking ALL extras, calculate how much time
-    // the missing muscles need, then strip extras in REVERSE priority order (grit first,
-    // primers last) only until enough time is freed. After rescue, re-check and keep
-    // any extras that still fit within the total budget.
+    // ═══ RESCUE: Ensure every muscle group has ≥1 exercise ═══
+    // Runs BEFORE extras. Main working exercises are sacred — if any muscle listed
+    // in day.g is missing, force-add it from the pool using remaining time.
     var _covM={};
-    var _usedTime=0;
+    var _usedTime=exs.reduce(function(a,e){return a+(e.time||0);},0);
     for(var _ci=0;_ci<exs.length;_ci++){
       var _em=exs[_ci].muscle;
-      _usedTime+=(exs[_ci].time||0);
-      if(_em&&_em!=="cardio"&&_em!=="corrective"&&_em!=="carry"&&_em!=="grit")_covM[_em]=1;
+      if(_em&&day.g.indexOf(_em)>=0)_covM[_em]=1;
     }
     var _miss=[];
     for(var _gmi=0;_gmi<day.g.length;_gmi++){if(!_covM[day.g[_gmi]])_miss.push(day.g[_gmi]);}
     if(_miss.length>0){
-      // Estimate time needed for missing muscles (~5 min each, 2 sets of a compound)
-      var _needTime=_miss.length*5;
-      var _freeTime=mins-_usedTime; // actual free time vs total budget (NOT the method-adjusted lm)
-      var _deficit=_needTime-_freeTime;
-      // Only strip extras if there is actually a time deficit
-      if(_deficit>0){
-        // Strip in reverse priority: grit → carries → correctives → cardio → primers
-        // Stop as soon as deficit is covered
-        var _stripOrder=["grit","carry","corrective","cardio","primer"];
-        for(var _si=0;_si<_stripOrder.length&&_deficit>0;_si++){
-          var _stier=_stripOrder[_si];
-          var _kept=[];
-          for(var _sj=0;_sj<exs.length;_sj++){
-            var _isTier=(_stier==="cardio")?(exs[_sj].muscle==="cardio"):(exs[_sj].tier===_stier);
-            if(_isTier&&_deficit>0){
-              _deficit-=(exs[_sj].time||0);
-              // stripped — don't push to _kept
-            } else {
-              _kept.push(exs[_sj]);
-            }
-          }
-          exs=_kept;
-        }
-      }
-      // Force-pick 1 exercise per missing muscle with minimal sets
+      var _rescueFree=mins-_usedTime;
+      var _perMissing=_miss.length>0?Math.floor(Math.max(5,_rescueFree)/_miss.length):5;
       for(var _rmi=0;_rmi<_miss.length;_rmi++){
         var _rmuscle=_miss[_rmi];
         var _rpool=EX[_rmuscle];if(!_rpool)continue;
@@ -5570,11 +5601,124 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
         if(_rpool.length===0)continue;
         var _rscored=_rpool.map(function(e){var c={};for(var k in e)c[k]=e[k];c._score=scoreEx(e,mid,exHistory,gid,"any",equipFilter,_rmuscle,false,wk,ml);return c;});
         _rscored.sort(function(a,b){return b._score-a._score;});
-        var _rpick=_rscored[0];
-        var _rsets=2;var _rreps=phase==="deload"?"8-10 easy":baseReps;
-        var _rtime=exTime(_rsets,10,_rpick.t==="C",false,"straight");
-        var _rnote=phase==="deload"?"DELOAD: 50% weight, easy reps.":"W"+wk+" / "+rir+" RIR / "+phase;
-        exs.push({name:_rpick.n,muscle:_rmuscle,tech:"straight",sets:_rsets,reps:_rreps,time:_rtime,mv:_rpick.mv,note:_rnote,rir:rir});
+        var _rBudget=Math.max(5,_perMissing);var _rUsedHere=0;var _rExCount=0;
+        var _rng2=mulberry32(baseSeed+di*199+_rmuscle.charCodeAt(0)*7);
+        var _rShuffled=tierShuffle(_rscored,_rng2);
+        for(var _rei=0;_rei<Math.min(3,_rShuffled.length)&&_rUsedHere<_rBudget;_rei++){
+          var _rpick=_rShuffled[_rei];
+          var _rsets=3;var _rreps=phase==="deload"?"8-10 easy":baseReps;
+          var _isComp=_rpick.t==="C";
+          var _rtime=exTime(_rsets,10,_isComp,firstComp&&_isComp,"straight");
+          if(_rUsedHere+_rtime>_rBudget&&_rsets>2){_rsets=2;_rtime=exTime(_rsets,10,_isComp,firstComp&&_isComp,"straight");}
+          if(_rUsedHere+_rtime>_rBudget&&_rExCount>0)break;
+          var _rnote=phase==="deload"?"DELOAD: 50% weight, easy reps.":"W"+wk+" / "+rir+" RIR / "+phase;
+          exs.push({name:_rpick.n,muscle:_rmuscle,tech:"straight",sets:_rsets,reps:_rreps,time:_rtime,mv:_rpick.mv,note:_rnote,rir:rir});
+          if(_isComp)firstComp=false;_rUsedHere+=_rtime;_rExCount++;
+        }
+      }
+    }
+
+    // ═══ EXTRAS: Priority-ordered additions with remaining time (Apr 2026) ═══
+    // David's spec: main muscles are ALREADY placed above. Now add extras in
+    // strict priority order, each only if time remains:
+    //   1. Cardio (if program calls for it)
+    //   2. ONE compound primer (best bang-for-buck warmup covering the most muscles)
+    //   3. Corrective (joint health)
+    //   4. Second primer (only if still time)
+    //   5. Carry or grit (only if still time)
+    // This prevents warmups/extras from crowding out actual muscle work at 30 min.
+    if(phase!=="deload"){
+      var _extUsed=exs.reduce(function(a,e){return a+(e.time||0);},0);
+      var _extFree=mins-_extUsed;
+
+      // ── PRIORITY 1: CARDIO ──
+      if(cl>0&&_extFree>=4){
+        var cardioPool=EX.cardio||[];
+        if(cardioPool.length>0){
+          var cardioRng=mulberry32(baseSeed+di*97+43);
+          var cIdx=Math.floor(cardioRng()*cardioPool.length);
+          if(cl>=3)cIdx=Math.min(Math.floor(cardioRng()*2),cardioPool.length-1);
+          var cEx=cardioPool[Math.min(cIdx,cardioPool.length-1)];
+          var cTime=Math.min(10,cl*4);
+          if(cTime>_extFree)cTime=Math.max(4,_extFree); // shrink to fit
+          exs.push({name:cEx.n,muscle:"cardio",tech:cEx.t==="H"?"hiit":cEx.t==="R"?"recovery":"steady",sets:1,reps:"",time:cTime,mv:"cardio",note:cEx.t==="H"?"High-intensity intervals. All-out effort.":cEx.t==="R"?"Active recovery. Keep moving, stay loose.":"Moderate steady-state cardio."});
+          _extFree-=cTime;
+        }
+      }
+
+      // ── PRIORITY 2: FIRST PRIMER (pick the compound one — most bang for buck) ──
+      // Choose the primer for the PRIMARY muscle on this day (first compound-heavy muscle)
+      if(_extFree>=2){
+        // Rank muscles: prefer compound-heavy (quads>hams>back>chest>shoulders) over small
+        var _primerOrder=["quads","hams","back","chest","shoulders","core","biceps","triceps"];
+        var _primerMuscle=null;
+        for(var _poi=0;_poi<_primerOrder.length;_poi++){
+          if(day.g.indexOf(_primerOrder[_poi])>=0&&PRIMERS[_primerOrder[_poi]]){_primerMuscle=_primerOrder[_poi];break;}
+        }
+        if(!_primerMuscle&&day.g.length>0&&PRIMERS[day.g[0]])_primerMuscle=day.g[0]; // fallback
+        if(_primerMuscle){
+          var _p1Seed=baseSeed+di*251+_primerMuscle.charCodeAt(0)*13;
+          var _p1Rng=mulberry32(_p1Seed+77);
+          var _p1=PRIMERS[_primerMuscle][Math.floor(_p1Rng()*PRIMERS[_primerMuscle].length)];
+          exs.push({name:_p1.n,muscle:_primerMuscle,tech:"primer",sets:2,reps:"10-15",time:2,mv:_p1.mv,note:"PRIMER: Light activation. Wake up the muscle and stabilizers before heavy work.",tier:"primer"});
+          _extFree-=2;
+        }
+      }
+
+      // ── PRIORITY 3: CORRECTIVE (joint health) ──
+      if(_extFree>=2){
+        var dayType="push";
+        var hasPull=day.g.indexOf("back")>=0||day.g.indexOf("biceps")>=0;
+        var hasLegs=day.g.indexOf("quads")>=0||day.g.indexOf("hams")>=0;
+        var hasPush=day.g.indexOf("chest")>=0||day.g.indexOf("shoulders")>=0||day.g.indexOf("triceps")>=0;
+        if(hasLegs&&!hasPush&&!hasPull)dayType="legs";
+        else if(hasPull&&!hasPush)dayType="pull";
+        else if(hasLegs)dayType="legs";
+        var corrPool=CORRECTIVES[dayType]||(CORRECTIVES.push?CORRECTIVES.push:[]);
+        if(corrPool&&corrPool.length>0){
+          var corrRng=mulberry32(baseSeed+di*331);
+          var corrPick=corrPool[Math.floor(corrRng()*corrPool.length)];
+          exs.push({name:corrPick.n,muscle:"corrective",tech:"corrective",sets:corrPick.sets,reps:corrPick.reps,time:2,mv:corrPick.mv,note:"CORRECTIVE: "+corrPick.note,tier:"corrective"});
+          _extFree-=2;
+        }
+      }
+
+      // ── PRIORITY 4: CARRY or GRIT (if method supports it) ──
+      if(_extFree>=3&&methodObj.tiers&&(methodObj.tiers.carry||methodObj.tiers.grit)){
+        var wantCarry=methodObj.tiers.carry;
+        var wantGrit=methodObj.tiers.grit;
+        var useCarry=wantCarry&&wantGrit?((di+wk)%2===0):wantCarry;
+        if(useCarry){
+          var carryRng=mulberry32(baseSeed+di*443);
+          var carryPick=CARRIES[Math.floor(carryRng()*CARRIES.length)];
+          if(carryPick.time<=_extFree){
+            exs.push({name:carryPick.n,muscle:"carry",tech:"carry",sets:carryPick.sets,reps:carryPick.reps,time:carryPick.time,mv:carryPick.mv,note:"CARRY: "+carryPick.note,tier:"carry"});
+            _extFree-=carryPick.time;
+          }
+        } else {
+          var gritOptions=GRIT.filter(function(g){for(var gi=0;gi<g.for.length;gi++){if(day.g.indexOf(g.for[gi])>=0)return true;}return false;});
+          if(gritOptions.length>0&&_extFree>=4){
+            var gritRng=mulberry32(baseSeed+di*571);
+            var gritPick=gritOptions[Math.floor(gritRng()*gritOptions.length)];
+            exs.push({name:gritPick.n,muscle:"grit",tech:"grit",sets:1,reps:"see desc",time:4,mv:gritPick.mv,note:"GRIT: "+gritPick.desc,tier:"grit"});
+            _extFree-=4;
+          }
+        }
+      }
+
+      // ── PRIORITY 5: SECOND PRIMER (different muscle than the first, lowest priority) ──
+      if(_extFree>=2){
+        var _p2Muscle=null;
+        for(var _p2i=0;_p2i<day.g.length;_p2i++){
+          if(day.g[_p2i]!==_primerMuscle&&PRIMERS[day.g[_p2i]]){_p2Muscle=day.g[_p2i];break;}
+        }
+        if(_p2Muscle){
+          var _p2Seed=baseSeed+di*251+_p2Muscle.charCodeAt(0)*13;
+          var _p2Rng=mulberry32(_p2Seed+77);
+          var _p2=PRIMERS[_p2Muscle][Math.floor(_p2Rng()*PRIMERS[_p2Muscle].length)];
+          exs.push({name:_p2.n,muscle:_p2Muscle,tech:"primer",sets:2,reps:"10-15",time:2,mv:_p2.mv,note:"PRIMER: Light activation. Wake up the muscle and stabilizers before heavy work.",tier:"primer"});
+          _extFree-=2;
+        }
       }
     }
 
@@ -5831,8 +5975,6 @@ function Forge(props){
   var dragTouchY=useRef(null);
   // Popups
   var _pop=useState(null),popup=_pop[0],setPopup=_pop[1];
-  // Confirmation modal for "New Program" — always shown before replacing current program
-  var _cfm=useState(null),confirmModal=_cfm[0],setConfirmModal=_cfm[1];
   // C3 — Info sheet (bottom sheet for engine-decision explanations)
   var _info=useState(null),infoSheet=_info[0],setInfoSheet=_info[1];
   var _infoL3=useState(false),showLayer3=_infoL3[0],setShowLayer3=_infoL3[1];
@@ -5908,6 +6050,7 @@ function Forge(props){
   function startCardioTimer(proto){
     var rounds=getProtoRounds(proto);
     warmUpAudio();
+    try{if(_audioCtx&&_audioCtx.state==="suspended"){var _rp=_audioCtx.resume();if(_rp&&typeof _rp.then==="function")_rp.then(function(){},function(){});}}catch(e){}
     // Sprint 6 (Apr2026): 3-second GET READY pre-countdown before work phase begins.
     // User explicitly asked for 3-2-1-Work instead of the timer starting immediately.
     // phase:"prep" is a synthetic 3-second phase handled by getCardioRemaining,
@@ -6196,7 +6339,7 @@ function Forge(props){
     var elapsed=Math.floor((now-restStart-restPausedAccum)/1000);
     return restDur-elapsed;
   }
-  function startRest(durationSec){setRestDur(durationSec||60);setRestStart(Date.now());setRestPausedAt(null);setRestPausedAccum(0);warmUpAudio();sarahSay("rest");}
+  function startRest(durationSec){setRestDur(durationSec||60);setRestStart(Date.now());setRestPausedAt(null);setRestPausedAccum(0);warmUpAudio();try{if(_audioCtx&&_audioCtx.state==="suspended"){var _rp=_audioCtx.resume();if(_rp&&typeof _rp.then==="function")_rp.then(function(){},function(){});}}catch(e){}sarahSay("rest");}
   function clearRest(){var wasActive=!!restStart;setRestStart(null);setRestPausedAt(null);setRestPausedAccum(0);if(wasActive)sarahStop();}
   // D-Apr2026: pause/resume the rest countdown. Pause freezes the remaining
   // seconds in place; resume shifts accumulated pause time forward so the
@@ -6526,7 +6669,15 @@ function Forge(props){
       var entry = log[k];
       if (!entry || !entry.sets) return;
       var sets = [];
-      entry.sets.forEach(function(s) { if (s && s.w && s.r) { var sd={w: s.w, r: s.r}; if(s.rir!==undefined&&s.rir!==null) sd.rir=s.rir; sets.push(sd); }});
+      if((ex.tech==="myo"||ex.tech==="restpause")&&entry.myo&&entry.myo.activationReps>0&&entry.myo.w>0){
+        var totalMiniReps=0;var miniArr=[];
+        for(var _smi=0;_smi<(entry.myo.miniSets||[]).length;_smi++){var ms=entry.myo.miniSets[_smi];if(ms&&ms.r>0){totalMiniReps+=ms.r;miniArr.push({r:ms.r});}}
+        var totalR=entry.myo.activationReps+totalMiniReps;
+        var myoRir=(entry.myo.rir!==undefined&&entry.myo.rir!==null)?entry.myo.rir:null;
+        sets.push({w:entry.myo.w,r:totalR,activationReps:entry.myo.activationReps,miniSets:miniArr,rir:myoRir});
+      } else {
+        entry.sets.forEach(function(s) { if (s && s.w && s.r) { var sd={w: s.w, r: s.r}; if(s.rir!==undefined&&s.rir!==null) sd.rir=s.rir; sets.push(sd); }});
+      }
       if (sets.length === 0) return;
 
       exData.push({name: ex.name, muscle: ex.muscle, tech: ex.tech, sets: sets});
@@ -7242,34 +7393,6 @@ function Forge(props){
     return viable;
   }
 
-  // ═══ START NEW PROGRAM — confirmation guard ═══
-  // Always shows a confirmation dialog before wiping the current program.
-  // onConfirm callback runs the actual reset + navigate logic.
-  function requestNewProgram(onConfirm) {
-    if (program.length > 0) {
-      setConfirmModal({ onConfirm: onConfirm });
-    } else {
-      onConfirm();
-    }
-  }
-
-  function executeNewProgram() {
-    setWeekNum(1);
-    setADay(0);
-    setCompletedDays([]);
-    setRestDaysChecked([]);
-    sSet("forge_completedDays", []);
-    sSet("forge_restdays", []);
-    setMesoSwaps({});
-    sSet("forge_swaps", {});
-    setScreen("setup");
-    setView("setup");
-    setStep(0);
-    setSetupMode("choose");
-    setLog({});
-    setConfirmModal(null);
-  }
-
   function generateProg(){
     if(!goal||!split||!method)return;
 
@@ -7639,6 +7762,11 @@ function Forge(props){
   function logSet(di,ei,si,w,r,rir,band,hook,distance){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false};var ns=prev.sets.slice();var existing=ns[si]||{};ns[si]={w:parseFloat(w)||existing.w||0,r:parseInt(r)||existing.r||0,rir:rir!==undefined?rir:(existing.rir!==undefined?existing.rir:null),band:band||existing.band||null,hook:hook||existing.hook||null,distance:distance||existing.distance||null};n[k]={sets:ns,done:prev.done};return n;});}
   function logRIR(di,ei,si,rir){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false};var ns=prev.sets.slice();var existing=ns[si]||{};ns[si]=Object.assign({},existing,{rir:rir});n[k]={sets:ns,done:prev.done};return n;});}
   function logBand(di,ei,si,band,hook,distance){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false};var ns=prev.sets.slice();var existing=ns[si]||{};ns[si]=Object.assign({},existing,{band:band||null,hook:hook||null,distance:distance||null});n[k]={sets:ns,done:prev.done};return n;});}
+  function logMyoActivation(di,ei,w,r){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false,myo:null};var myo=Object.assign({},prev.myo||{w:0,activationReps:0,miniSets:[]});myo.w=parseFloat(w)||myo.w||0;myo.activationReps=parseInt(r)||myo.activationReps||0;n[k]=Object.assign({},prev,{myo:myo});return n;});}
+  function logMyoMini(di,ei,miniIdx,r){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false,myo:null};var myo=Object.assign({},prev.myo||{w:0,activationReps:0,miniSets:[]});var ms=myo.miniSets.slice();ms[miniIdx]={r:parseInt(r)||0};myo.miniSets=ms;n[k]=Object.assign({},prev,{myo:myo});return n;});}
+  function addMyoMini(di,ei){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false,myo:null};var myo=Object.assign({},prev.myo||{w:0,activationReps:0,miniSets:[]});var ms=myo.miniSets.slice();ms.push({r:0});myo.miniSets=ms;n[k]=Object.assign({},prev,{myo:myo});return n;});}
+  function removeMyoMini(di,ei){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false,myo:null};var myo=Object.assign({},prev.myo||{w:0,activationReps:0,miniSets:[]});var ms=myo.miniSets.slice();if(ms.length>0)ms.pop();myo.miniSets=ms;n[k]=Object.assign({},prev,{myo:myo});return n;});}
+  function logMyoRIR(di,ei,rir){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false,myo:null};var myo=Object.assign({},prev.myo||{w:0,activationReps:0,miniSets:[]});myo.rir=rir;n[k]=Object.assign({},prev,{myo:myo});return n;});}
   function getAlts(muscle,cur){var pool=EX[muscle]||[];pool=pool.filter(function(e){return banned.indexOf(e.n)<0;});var b=pool.filter(function(e){return e.n!==cur;}).slice(0,3);var r=pool.filter(function(e){return e.n!==cur&&b.indexOf(e)<0;});return{best:b,rest:r};}
 
   // ═══ EXERCISE SWAP SCOPE ═══
@@ -7982,23 +8110,6 @@ function Forge(props){
     </div>;
   }
 
-  // ═══ NEW PROGRAM CONFIRMATION MODAL ═══
-  function renderConfirmModal() {
-    if (!confirmModal) return null;
-    return <div onClick={function() { setConfirmModal(null); }} style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.8)",zIndex:110,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
-      <div onClick={function(e) { e.stopPropagation(); }} style={{background:C.sf,border:"1px solid "+C.bdr,borderRadius:20,padding:24,maxWidth:340,width:"100%",textAlign:"center"}}>
-        <div style={{fontSize:24,marginBottom:12}}>{"⚠️"}</div>
-        <div style={{fontSize:18,fontWeight:700,fontFamily:FD,letterSpacing:2,color:C.acc,marginBottom:12}}>START NEW PROGRAM?</div>
-        <div style={{fontSize:13,color:C.mid,lineHeight:1.7,marginBottom:8}}>This will replace your current program.</div>
-        <div style={{fontSize:12,color:C.dim,lineHeight:1.6,marginBottom:20}}>Your workout history, PRs, and settings will be preserved.</div>
-        <div style={{display:"flex",gap:10}}>
-          <button onClick={function() { setConfirmModal(null); }} style={{flex:1,padding:"12px 0",background:"transparent",color:C.dim,border:"1px solid "+C.bdr,borderRadius:12,fontSize:13,fontWeight:700,fontFamily:FD,cursor:"pointer",letterSpacing:1}}>CANCEL</button>
-          <button onClick={function() { if (confirmModal && confirmModal.onConfirm) confirmModal.onConfirm(); }} style={{flex:1,padding:"12px 0",background:C.acc,color:"#000",border:"none",borderRadius:12,fontSize:13,fontWeight:700,fontFamily:FD,cursor:"pointer",letterSpacing:1}}>YES, START NEW</button>
-        </div>
-      </div>
-    </div>;
-  }
-
   // ═══ MID-FLIGHT ADJUST POPUP (Apr 2026) ═══
   // Sheet for in-workout exercise tweaks: set count +/- with scope picker, swap surface,
   // and live muscle-group volume context (current / MEV / MAV / MRV).
@@ -8249,7 +8360,6 @@ function Forge(props){
       <style>{CSS_ANIM}</style>
       <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
       {renderPopup()}
-      {renderConfirmModal()}
       {renderAdjustPopup()}
       {renderMesoLenModal()}
       {renderInfoSheet()}
@@ -8367,7 +8477,7 @@ function Forge(props){
             {screen==="setup"&&setupMode==="choose"&&<span style={{fontSize:10,color:C.dim,fontFamily:FD}}>Setup</span>}
           </div>
           {screen!=="setup"&&program.length>0&&<span style={{fontSize:10,color:C.dim,fontFamily:FD}}>{sessIdx.length+" sessions"}</span>}
-          {screen==="setup"&&program.length>0&&<button onClick={function(){if(setupMode==="custom"){if(step>0){setStep(step-1);}else{setSetupMode("choose");}}else if(setupMode==="preset"){if(presetPick){setPresetPick(null);setGoal(null);setSplit(null);setMethod(null);}else{setSetupMode("choose");}}else{setScreen("dashboard");}}} style={{padding:"5px 14px",fontSize:12,fontFamily:FD,background:"transparent",border:"1px solid "+C.bdr,borderRadius:8,color:C.dim,cursor:"pointer",letterSpacing:1}}>BACK</button>}
+          {screen==="setup"&&<button onClick={function(){if(setupMode==="custom"&&step>0){setStep(step-1);}else if(setupMode==="custom"&&step===0){setSetupMode("choose");}else if(setupMode==="preset"&&presetPick){setPresetPick(null);setGoal(null);setSplit(null);setMethod(null);}else if(setupMode==="preset"&&!presetPick){setSetupMode("choose");}else if(setupMode==="choose"&&program.length>0){setScreen("dashboard");}else if(program.length>0){setScreen("dashboard");}}} style={{padding:"5px 14px",fontSize:12,fontFamily:FD,background:"transparent",border:"1px solid "+C.bdr,borderRadius:8,color:C.dim,cursor:"pointer",letterSpacing:1}}>{setupMode==="choose"&&program.length>0?"DASHBOARD":"BACK"}</button>}
           {screen==="workout"&&<button onClick={function(){if(view==="readiness")setScreen("dashboard");else if(view==="workout")setView("readiness");else if(view==="edit")setView("preview");else if(view==="preview"){setScreen("dashboard");}else if(view==="summary")setView("workout");else if(view==="rest")setView("summary");setEditDay(null);setEditPick(null);}} style={{padding:"5px 14px",fontSize:12,fontFamily:FD,background:"transparent",border:"1px solid "+C.bdr,borderRadius:8,color:C.dim,cursor:"pointer",letterSpacing:1}}>BACK</button>}
         </div>
       </div>
@@ -8963,7 +9073,7 @@ function Forge(props){
         {/* Program Management */}
         {cd(<div>
           {hd("PROGRAM")}
-          <button onClick={function(){requestNewProgram(executeNewProgram);}} style={{width:"100%",padding:"12px 0",background:C.blu+"15",color:C.blu,border:"1px solid "+C.blu+"40",borderRadius:12,fontSize:13,fontWeight:700,fontFamily:FD,cursor:"pointer",marginBottom:8}}>NEW PROGRAM</button>
+          <button onClick={function(){if(!confirm("Start a new program? Your history and PRs will be kept, but your current meso progress will reset."))return;setWeekNum(1);setADay(0);setCompletedDays([]);setRestDaysChecked([]);sSet("forge_completedDays",[]);sSet("forge_restdays",[]);setMesoSwaps({});sSet("forge_swaps",{});setScreen("setup");setView("setup");setStep(0);}} style={{width:"100%",padding:"12px 0",background:C.blu+"15",color:C.blu,border:"1px solid "+C.blu+"40",borderRadius:12,fontSize:13,fontWeight:700,fontFamily:FD,cursor:"pointer",marginBottom:8}}>NEW PROGRAM</button>
           <button onClick={function(){if(confirm("Reset your program and start fresh? Your workout history and PRs will be kept.")){sSet("forge_program",[]);sSet("forge_config",null);sSet("forge_completedDays",[]);sSet("forge_restdays",[]);setProgram([]);setCompletedDays([]);setRestDaysChecked([]);setWeekNum(1);setADay(0);setMesoSwaps({});sSet("forge_swaps",{});setScreen("setup");setView("setup");setStep(0);}}} style={{width:"100%",padding:"10px 0",background:"transparent",color:C.orn,border:"1px solid "+C.orn+"40",borderRadius:12,fontSize:12,fontFamily:FD,cursor:"pointer"}}>RESET PROGRAM</button>
           {sessIdx.length>0&&<button onClick={rollbackLastSession} style={{width:"100%",padding:"10px 0",background:"transparent",color:C.dim,border:"1px solid "+C.bdr,borderRadius:12,fontSize:12,fontFamily:FD,cursor:"pointer",marginBottom:8}}>UNDO LAST SESSION</button>}
           <div style={{fontSize:10,color:C.dim,marginTop:6}}>New Program keeps your config. Reset clears everything and starts over. Undo removes last session from tracking. History and PRs are always kept.</div>
@@ -9483,7 +9593,18 @@ function Forge(props){
               {(function(){
                 var last=getLastData(ex.name);
                 if(!last||!last.sets||isCardio)return null;
-                var summary=last.sets.map(function(s){return s.w+"lb x "+s.r;}).join("  |  ");
+                var summary="";
+                if((ex.tech==="myo"||ex.tech==="restpause")&&last.sets.length>0&&last.sets[0].activationReps){
+                  var ls0=last.sets[0];
+                  var miniStr="";
+                  if(ls0.miniSets&&ls0.miniSets.length>0){
+                    var parts=[];for(var _mi=0;_mi<ls0.miniSets.length;_mi++){parts.push(ls0.miniSets[_mi].r);}
+                    miniStr=parts.join("+");
+                  }
+                  summary=ls0.w+"lb: "+ls0.activationReps+" activation"+(miniStr?" + "+miniStr+" mini":"")+" = "+ls0.r+" total";
+                } else {
+                  summary=last.sets.map(function(s){return s.w+"lb x "+s.r;}).join("  |  ");
+                }
                 return <div style={{background:C.bar,borderRadius:8,padding:"8px 12px",marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <div><div style={{fontSize:10,fontWeight:700,fontFamily:FD,letterSpacing:1,color:C.blu,marginBottom:2}}>LAST SESSION</div><div style={{fontSize:11,color:C.mid}}>{summary}</div></div>
                   {last.date&&<div style={{fontSize:9,color:C.dim}}>{last.date}</div>}
@@ -9610,6 +9731,18 @@ function Forge(props){
               </div>):(<div>
                 {/* C5 — Glanceable set progress: huge current-set indicator + dot row */}
                 {(function(){
+                  if(ex.tech==="myo"||ex.tech==="restpause"){
+                    var _myoD=lg.myo||{w:0,activationReps:0,miniSets:[]};
+                    var _actDone=_myoD.w>0&&_myoD.activationReps>0;
+                    var _miniCount=(_myoD.miniSets||[]).length;
+                    var _miniDone=0;
+                    for(var _mc=0;_mc<_miniCount;_mc++){if(_myoD.miniSets[_mc]&&_myoD.miniSets[_mc].r>0)_miniDone++;}
+                    return <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                      <div style={{fontSize:11,fontFamily:FD,letterSpacing:2,color:C.dim}}>{ex.tech==="myo"?"MYO":"RP"}</div>
+                      <div style={{fontSize:13,fontFamily:FD,color:_actDone?C.grn:C.dim}}>{"ACT "+(_actDone?"\u2713":"\u2014")}</div>
+                      <div style={{fontSize:13,fontFamily:FD,color:_miniDone>0?C.acc:C.dim}}>{"MINIS "+_miniDone+"/"+_miniCount}</div>
+                    </div>;
+                  }
                   var _isBandC5=ex.name.indexOf("Band")>=0||ex.name.indexOf("Banded")>=0;
                   var _isBWC5=ex.tech==="primer"||ex.tech==="corrective"||ex.name.indexOf("Pushup")>=0||ex.name.indexOf("Push-up")>=0||ex.name.indexOf("Pull-up")>=0||ex.name.indexOf("Chin-up")>=0||ex.name.indexOf("Dip")>=0||ex.name.indexOf("Plank")>=0||ex.name.indexOf("Bodyweight")>=0;
                   var doneCnt=0;
@@ -9628,7 +9761,54 @@ function Forge(props){
                   <span style={{fontSize:11,color:C.dim,flex:1,minWidth:0}}>{ex.note?ex.note:ex.tech==="myo"?"MYO-REP: 12-20 reps activation, then 3-5 mini-sets of 3-5 reps (15s rest)":ex.tech==="restpause"?"REST-PAUSE: To failure, 15s rest, to failure, 15s, to failure":ex.tech==="preexhaust"?"PRE-EXHAUST: Superset with next exercise, no rest between":ex.tech==="mechanical"?"MECHANICAL DROP: Same weight, switch to easier angle when you fail":ex.tech==="giant"?"GIANT SET: No rest between exercises in the circuit":ex.tech==="density"?"DENSITY: Alternate 5 reps with partner exercise, beat total reps":"Target: "+numSets+" sets x "+ex.reps}</span>
                   {(function(){var isP=ex.tech==="primer"||ex.tech==="corrective"||ex.tier==="primer"||ex.tier==="corrective";if(isP)return infoBtn("primer_no_rir");var _setsKey=(weekNum<=1)?"sets_mev":(weekNum>=mesoLen)?"sets_mrv":(weekNum>=mesoLen-1)?"sets_mav":"sets_mev";return infoBtn(_setsKey);})()}
                 </div>
-                {Array.from({length:numSets}).map(function(_,si){var setData=(lg.sets&&lg.sets[si])||{w:"",r:""};
+                {(ex.tech==="myo"||ex.tech==="restpause")&&(function(){
+                  var myoData=lg.myo||{w:0,activationReps:0,miniSets:[]};
+                  var miniSets=myoData.miniSets||[];
+                  if(miniSets.length===0){
+                    var defCount=ex.tech==="myo"?3:2;
+                    for(var _mi=0;_mi<defCount;_mi++){addMyoMini(aDay,i);}
+                  }
+                  var totalMiniReps=0;
+                  for(var _mj=0;_mj<miniSets.length;_mj++){totalMiniReps+=(miniSets[_mj]&&miniSets[_mj].r)||0;}
+                  var totalReps=(myoData.activationReps||0)+totalMiniReps;
+                  var techCol=ex.tech==="myo"?C.pur:C.red;
+                  var techName=ex.tech==="myo"?"MYO-REP":"REST-PAUSE";
+                  return <div>
+                    <div style={{background:techCol+"10",border:"1px solid "+techCol+"30",borderRadius:10,padding:12,marginBottom:10}}>
+                      <div style={{fontSize:10,fontWeight:700,fontFamily:FD,letterSpacing:1,color:techCol,marginBottom:8}}>ACTIVATION SET</div>
+                      <div style={{display:"flex",alignItems:"center",gap:10}}>
+                        <input type="number" inputMode="decimal" value={myoData.w||""} onChange={function(e){logMyoActivation(aDay,i,e.target.value,myoData.activationReps);}} placeholder="lb" style={{width:80,height:48,padding:"6px",fontSize:18,fontFamily:FB,fontWeight:700,background:C.bar,color:C.txt,border:"1px solid "+C.bdr,borderRadius:10,outline:"none",textAlign:"center",boxSizing:"border-box",fontVariantNumeric:"tabular-nums lining-nums",WebkitAppearance:"none"}}/>
+                        <span style={{color:C.dim,fontSize:13}}>x</span>
+                        <input type="number" inputMode="numeric" value={myoData.activationReps||""} onChange={function(e){logMyoActivation(aDay,i,myoData.w,e.target.value);}} placeholder="reps" style={{width:80,height:48,padding:"6px",fontSize:18,fontFamily:FB,fontWeight:700,background:C.bar,color:C.txt,border:"1px solid "+C.bdr,borderRadius:10,outline:"none",textAlign:"center",boxSizing:"border-box",fontVariantNumeric:"tabular-nums lining-nums",WebkitAppearance:"none"}}/>
+                        {(myoData.w>0&&myoData.activationReps>0)&&<div style={{width:36,height:36,borderRadius:8,background:C.grn+"25",border:"1px solid "+C.grn+"50",display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:18,color:C.grn}}>{"\u2713"}</span></div>}
+                      </div>
+                    </div>
+                    <div style={{marginBottom:10}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                        <div style={{fontSize:10,fontWeight:700,fontFamily:FD,letterSpacing:1,color:C.mid}}>MINI-SETS</div>
+                        <div style={{display:"flex",gap:6}}>
+                          <button onClick={function(){addMyoMini(aDay,i);}} style={{padding:"4px 10px",fontSize:10,fontFamily:FD,fontWeight:700,background:C.blu+"15",color:C.blu,border:"1px solid "+C.blu+"40",borderRadius:6,cursor:"pointer"}}>+ ADD</button>
+                          {miniSets.length>0&&<button onClick={function(){removeMyoMini(aDay,i);}} style={{padding:"4px 10px",fontSize:10,fontFamily:FD,fontWeight:700,background:C.red+"15",color:C.red,border:"1px solid "+C.red+"40",borderRadius:6,cursor:"pointer"}}>- REMOVE</button>}
+                        </div>
+                      </div>
+                      {miniSets.map(function(ms,mi){return <div key={mi} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0",borderBottom:mi<miniSets.length-1?"1px solid "+C.bdr:"none"}}>
+                        <span style={{fontSize:11,color:C.dim,fontFamily:FD,width:50}}>{"MINI "+(mi+1)}</span>
+                        <input type="number" inputMode="numeric" value={(ms&&ms.r)||""} onChange={function(e){logMyoMini(aDay,i,mi,e.target.value);}} placeholder="reps" style={{width:72,height:40,padding:"4px",fontSize:16,fontFamily:FB,fontWeight:700,background:C.bar,color:C.txt,border:"1px solid "+C.bdr,borderRadius:8,outline:"none",textAlign:"center",boxSizing:"border-box",fontVariantNumeric:"tabular-nums lining-nums",WebkitAppearance:"none"}}/>
+                        <span style={{fontSize:10,color:C.dim}}>{"@ "+(myoData.w||"--")+"lb"}</span>
+                        {(ms&&ms.r>0)&&<span style={{fontSize:14,color:C.grn}}>{"\u2713"}</span>}
+                      </div>;})}
+                    </div>
+                    {totalReps>0&&<div style={{background:C.acc+"12",borderRadius:8,padding:"8px 12px",marginBottom:10,textAlign:"center"}}>
+                      <span style={{fontSize:11,fontFamily:FD,letterSpacing:1,color:C.acc}}>{(myoData.activationReps||0)+" activation + "+totalMiniReps+" mini = "+totalReps+" total reps"}</span>
+                    </div>}
+                    {(myoData.w>0&&myoData.activationReps>0)&&<div style={{display:"flex",alignItems:"center",gap:6,padding:"6px 0 10px 0",borderBottom:"1px solid "+C.bdr}}>
+                      <span style={{fontSize:10,color:C.dim,fontFamily:FD,width:28,letterSpacing:1}}>RIR</span>
+                      {[0,1,2,3,4].map(function(rv){var sel=(myoData.rir!==undefined&&myoData.rir!==null)&&myoData.rir===rv;var rc=rv===0?C.red:rv<=1?C.orn:rv<=2?C.acc:C.grn;return <button key={rv} onClick={function(){logMyoRIR(aDay,i,rv);}} style={{width:40,height:36,fontSize:13,fontWeight:sel?700:500,fontFamily:FD,background:sel?rc+"25":"transparent",color:sel?rc:C.dim,border:"1.5px solid "+(sel?rc+"60":C.bdr),borderRadius:8,cursor:"pointer",padding:0}}>{rv}</button>;})}
+                      <span style={{fontSize:9,color:C.dim,marginLeft:4,flex:1}}>{myoData.rir===0?"failure":myoData.rir===1?"1 left":myoData.rir===2?"2 left":myoData.rir===3?"3 left":myoData.rir===4?"easy":""}</span>
+                    </div>}
+                  </div>;
+                })()}
+                {(ex.tech!=="myo"&&ex.tech!=="restpause")&&Array.from({length:numSets}).map(function(_,si){var setData=(lg.sets&&lg.sets[si])||{w:"",r:""};
                   var rec=getRecommendation(ex.name,si);
                   var wPlaceholder=rec?String(rec.w):"lb";
                   var rPlaceholder=rec?(rec.r<12?String(rec.r+1):String(rec.r)):"reps";
@@ -9685,7 +9865,13 @@ function Forge(props){
                     </div>}
                   </div>;})}
 
-                {(function(){var isBand=ex.name.indexOf("Band")>=0||ex.name.indexOf("Banded")>=0;var allFilled=true;for(var si=0;si<numSets;si++){var sd=(lg.sets&&lg.sets[si])||{};var hasWeight=sd.w||(isBand&&sd.band);if(!hasWeight||!sd.r)allFilled=false;}return allFilled?<div style={{marginTop:10}}>{mainBtn("EXERCISE DONE",function(){setLog(function(p){var n=Object.assign({},p);n[k]=Object.assign({},n[k],{done:true});return n;});if(!timerStart)startTimer();try{sarahSay("nice_work");}catch(e){}})}</div>:null;})()}
+                {(function(){
+                  if(ex.tech==="myo"||ex.tech==="restpause"){
+                    var actFilled=lg.myo&&lg.myo.activationReps>0&&lg.myo.w>0;
+                    return actFilled?<div style={{marginTop:10}}>{mainBtn("EXERCISE DONE",function(){setLog(function(p){var n=Object.assign({},p);n[k]=Object.assign({},n[k],{done:true});return n;});if(!timerStart)startTimer();try{sarahSay("nice_work");}catch(e){}})}</div>:null;
+                  }
+                  var isBand=ex.name.indexOf("Band")>=0||ex.name.indexOf("Banded")>=0;var allFilled=true;for(var si=0;si<numSets;si++){var sd=(lg.sets&&lg.sets[si])||{};var hasWeight=sd.w||(isBand&&sd.band);if(!hasWeight||!sd.r)allFilled=false;}return allFilled?<div style={{marginTop:10}}>{mainBtn("EXERCISE DONE",function(){setLog(function(p){var n=Object.assign({},p);n[k]=Object.assign({},n[k],{done:true});return n;});if(!timerStart)startTimer();try{sarahSay("nice_work");}catch(e){}})}</div>:null;
+                })()}
                 {/* REST TIMER QUICK BUTTONS (between sets) — C9 kit-aware */}
                 {!lg.done&&timerStart&&(function(){
                   var _override=exRestMap[ex.name]||null;
@@ -9778,7 +9964,15 @@ function Forge(props){
           </div>;
         })()}
 
-        {cd(<div>{hd("SESSION STATS")}<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8}}>{(function(){var ts=0,tv=0,rirSum=0,rirCount=0;Object.keys(log).forEach(function(k){if(k.indexOf(aDay+"-")===0&&log[k]){log[k].sets.forEach(function(s){if(s&&s.w&&s.r){ts++;tv+=s.w*s.r;}if(s&&s.rir!==undefined&&s.rir!==null){rirSum+=s.rir;rirCount++;}});}});var avgRir=rirCount>0?Math.round(rirSum/rirCount*10)/10:null;var avgRPE=avgRir!==null?(10-avgRir).toFixed(1):null;var timeVal=actualMin>0?actualMin+"m":(program[aDay]?Math.round(program[aDay].correctedEst||program[aDay].est||0):"--")+"m";var timeCol=actualMin>0?(actualMin>(program[aDay]?Math.round(program[aDay].correctedEst||program[aDay].est||0):99)?C.orn:C.grn):C.grn;var volK=tv>0?Math.round(tv/1000):null;return[{l:"Sets",n:ts>0?ts:null,v:ts||"--",c:C.acc},{l:"Volume",n:volK,suffix:"k lbs",v:tv>0?Math.round(tv/1000)+"k lbs":"--",c:C.blu},{l:"Avg RPE",v:avgRPE||"--",c:avgRPE>=9?C.red:avgRPE>=7.5?C.orn:C.grn},{l:"Time",v:timeVal,c:timeCol}];})().map(function(s){var hasNum=typeof s.n==="number"&&!isNaN(s.n);return <div key={s.l} style={{background:C.bar,borderRadius:12,padding:12,textAlign:"center"}}><div style={{fontSize:9,color:C.dim,fontFamily:FD,letterSpacing:1}}>{s.l}</div><div style={{fontSize:18,fontWeight:700,fontFamily:FD,color:s.c,marginTop:4,fontVariantNumeric:"tabular-nums lining-nums"}}>{hasNum?<CountUp value={s.n} duration={800} suffix={s.suffix||""}/>:s.v}</div></div>;})}</div></div>)}
+        {cd(<div>{hd("SESSION STATS")}<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8}}>{(function(){var ts=0,tv=0,rirSum=0,rirCount=0;Object.keys(log).forEach(function(k){if(k.indexOf(aDay+"-")===0&&log[k]){
+  if(log[k].myo&&log[k].myo.w>0&&log[k].myo.activationReps>0){
+    ts++;var _myoTotal=log[k].myo.activationReps;
+    for(var _mi=0;_mi<(log[k].myo.miniSets||[]).length;_mi++){if(log[k].myo.miniSets[_mi]&&log[k].myo.miniSets[_mi].r)_myoTotal+=log[k].myo.miniSets[_mi].r;}
+    tv+=log[k].myo.w*_myoTotal;
+    if(log[k].myo.rir!==undefined&&log[k].myo.rir!==null){rirSum+=log[k].myo.rir;rirCount++;}
+  }
+  log[k].sets.forEach(function(s){if(s&&s.w&&s.r){ts++;tv+=s.w*s.r;}if(s&&s.rir!==undefined&&s.rir!==null){rirSum+=s.rir;rirCount++;}});
+}});var avgRir=rirCount>0?Math.round(rirSum/rirCount*10)/10:null;var avgRPE=avgRir!==null?(10-avgRir).toFixed(1):null;var timeVal=actualMin>0?actualMin+"m":(program[aDay]?Math.round(program[aDay].correctedEst||program[aDay].est||0):"--")+"m";var timeCol=actualMin>0?(actualMin>(program[aDay]?Math.round(program[aDay].correctedEst||program[aDay].est||0):99)?C.orn:C.grn):C.grn;var volK=tv>0?Math.round(tv/1000):null;return[{l:"Sets",n:ts>0?ts:null,v:ts||"--",c:C.acc},{l:"Volume",n:volK,suffix:"k lbs",v:tv>0?Math.round(tv/1000)+"k lbs":"--",c:C.blu},{l:"Avg RPE",v:avgRPE||"--",c:avgRPE>=9?C.red:avgRPE>=7.5?C.orn:C.grn},{l:"Time",v:timeVal,c:timeCol}];})().map(function(s){var hasNum=typeof s.n==="number"&&!isNaN(s.n);return <div key={s.l} style={{background:C.bar,borderRadius:12,padding:12,textAlign:"center"}}><div style={{fontSize:9,color:C.dim,fontFamily:FD,letterSpacing:1}}>{s.l}</div><div style={{fontSize:18,fontWeight:700,fontFamily:FD,color:s.c,marginTop:4,fontVariantNumeric:"tabular-nums lining-nums"}}>{hasNum?<CountUp value={s.n} duration={800} suffix={s.suffix||""}/>:s.v}</div></div>;})}</div></div>)}
 
         {/* ═══ PER-MUSCLE VOLUME BREAKDOWN ═══ */}
         {(function(){
@@ -9906,7 +10100,6 @@ function Forge(props){
         <div style={{display:"flex",gap:10,flexDirection:"column"}}>
           {aDay<program.length-1&&mainBtn("NEXT DAY",function(){setView("rest");})}
           {secBtn("BACK TO DASHBOARD",function(){setScreen("dashboard");})}
-          {secBtn("NEW PROGRAM",function(){requestNewProgram(executeNewProgram);})}
         </div>
       </div>)}
 
