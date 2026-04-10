@@ -8985,7 +8985,16 @@ function Forge(props){
               {sched.map(function(s,si){
                 if(s.type==="train"){
                   var done=isDayCompleted(weekNum,s.dayIdx);
-                  return <div key={si} style={{flex:1,textAlign:"center",padding:"8px 2px",background:done?C.grn+"15":C.bar,border:"1px solid "+(done?C.grn+"40":C.bdr),borderRadius:10}}>
+                  var _calDayIdx=s.dayIdx;
+                  return <div key={si} onClick={(function(di,isDone){return function(){
+                    if(!isDone){showSnack("No completed workout on this day",null);return;}
+                    var match=null;
+                    for(var ci=0;ci<completedDays.length;ci++){
+                      if(completedDays[ci].weekNum===weekNum&&completedDays[ci].dayIdx===di){match=completedDays[ci];break;}
+                    }
+                    if(match){loadPastSession(match.weekNum,match.dayIdx,match.date);}
+                    else{showSnack("Session data not found",null);}
+                  };})(_calDayIdx,done)} style={{flex:1,textAlign:"center",padding:"8px 2px",background:done?C.grn+"15":C.bar,border:"1px solid "+(done?C.grn+"40":C.bdr),borderRadius:10,cursor:done?"pointer":"default"}}>
                     <div style={{fontSize:8,color:C.dim,fontFamily:FD}}>{dayNames[si]||""}</div>
                     <div style={{fontSize:10,fontWeight:700,fontFamily:FD,color:done?C.grn:C.acc,marginTop:2}}>{"D"+(s.dayIdx+1)}</div>
                     <div style={{fontSize:7,color:done?C.grn:C.dim,marginTop:1}}>{done?"✓":(s.label||"").split(" ")[0].substring(0,5)}</div>
