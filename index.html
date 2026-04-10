@@ -5225,7 +5225,7 @@ function extractMesoSelections(sessions){
       var e=sessions[si].exercises[ei];
       if(e.muscle&&e.muscle!=="cardio"&&e.muscle!=="corrective"&&e.muscle!=="carry"&&e.muscle!=="grit"&&e.tier!=="primer"){
         if(!sel[dayKey][e.muscle])sel[dayKey][e.muscle]=[];
-        sel[dayKey][e.muscle].push(e.name);
+        sel[dayKey][e.muscle].push({name:e.name,tech:e.tech||"straight"});
       }
     }
   }
@@ -5239,24 +5239,34 @@ function applyMesoLock(sessions,locked){
     for(var ei=0;ei<sessions[si].exercises.length;ei++){
       var e=sessions[si].exercises[ei];
       if(!e.muscle||!locked[dayKey][e.muscle])continue;
-      var lockedNames=locked[dayKey][e.muscle];
+      var lockedEntries=locked[dayKey][e.muscle];
       // Find the exercise index for this slot
       var slotIdx=0;
       for(var pi=0;pi<ei;pi++){
         if(sessions[si].exercises[pi].muscle===e.muscle&&
            sessions[si].exercises[pi].tier!=="primer")slotIdx++;
       }
-      if(slotIdx<lockedNames.length){
-        var targetName=lockedNames[slotIdx];
+      if(slotIdx<lockedEntries.length){
+        var entry=lockedEntries[slotIdx];
+        // Support both old format (string name) and new format ({name,tech} object)
+        var targetName=typeof entry==="string"?entry:entry.name;
+        var targetTech=typeof entry==="object"&&entry.tech?entry.tech:null;
+        var patch={};
         if(targetName!==e.name){
           // Find the exercise in the pool
           var pool=EX[e.muscle]||[];
           for(var pi2=0;pi2<pool.length;pi2++){
             if(pool[pi2].n===targetName){
-              sessions[si].exercises[ei]=Object.assign({},e,{name:pool[pi2].n,mv:pool[pi2].mv});
+              patch.name=pool[pi2].n;
+              patch.mv=pool[pi2].mv;
               break;
             }
           }
+        }
+        // Restore locked tech if available
+        if(targetTech){patch.tech=targetTech;}
+        if(Object.keys(patch).length>0){
+          sessions[si].exercises[ei]=Object.assign({},e,patch);
         }
       }
     }
@@ -8075,6 +8085,9 @@ function Forge(props){
   // ═══ EXERCISE SWAP SCOPE ═══
   function doSwap(dayIdx, exIdx, newEx, scope) {
     // scope: "workout" = just this workout, "meso" = rest of mesocycle
+    // Capture old exercise name before state update
+    var oldExRef = program[dayIdx] && program[dayIdx].exercises[exIdx];
+    var oldName = oldExRef ? oldExRef.name : "";
     setProgram(function(prev) {
       var np = JSON.parse(JSON.stringify(prev));
       var old = np[dayIdx].exercises[exIdx];
@@ -8082,7 +8095,6 @@ function Forge(props){
       np[dayIdx].exercises[exIdx] = replacement;
       if (scope === "meso") {
         // Also swap in all other days that have the same exercise
-        var oldName = old.name;
         for (var d = 0; d < np.length; d++) {
           for (var e = 0; e < np[d].exercises.length; e++) {
             if (d === dayIdx && e === exIdx) continue;
@@ -8092,13 +8104,18 @@ function Forge(props){
           }
         }
       }
+      // Persist program immediately so swaps survive unexpected reloads
+      sSet("forge_program", np);
+      // Update meso lock with new selections
+      var _swSplitId = splitObj.id || "custom";
+      var _swMethodId = methodObj.id || "straight";
+      setMesoExercises(_swSplitId, _swMethodId, extractMesoSelections(np));
       return np;
     });
     if (scope === "meso") {
       // Store swap so it persists when program regenerates
       var newSwaps = Object.assign({}, mesoSwaps);
-      var oldEx = program[dayIdx].exercises[exIdx];
-      newSwaps[oldEx.name] = newEx.n || newEx.name;
+      newSwaps[oldName] = newEx.n || newEx.name;
       setMesoSwaps(newSwaps);
       sSet("forge_swaps", newSwaps);
     }
@@ -8620,11 +8637,17 @@ function Forge(props){
       var exs = np[dayIdx].exercises;
       var moved = exs.splice(fromIdx, 1)[0];
       exs.splice(toIdx, 0, moved);
+      // Persist immediately so reorders survive unexpected reloads
+      sSet("forge_program", np);
+      var _roSplitId = splitObj.id || "custom";
+      var _roMethodId = methodObj.id || "straight";
+      setMesoExercises(_roSplitId, _roMethodId, extractMesoSelections(np));
       return np;
     });
     var msg = movedName ? ("Moved \u201c"+movedName+"\u201d") : "Exercise reordered";
     showSnack(msg, function(){
       setProgram(prevSnapshot);
+      sSet("forge_program", prevSnapshot);
     });
   }
   function onDragStart(ei, e) {
@@ -8699,6 +8722,7 @@ function Forge(props){
                 var eqF=null;if(presetPick){var pObj=PRESETS.find(function(x){return x.id===presetPick;});if(pObj&&pObj.equip)eqF=pObj.equip;}
                 var overrideMethodObj=METHODS.find(function(x){return x.id===m.id;});
                 var newProg=buildProgram(splitObj,overrideMethodObj||methodObj,goalObj,mins,1,mesoLen,null,exHist,readMod,newGenCount,banned,eqF);
+                var _moSplitId=splitObj.id||"custom";var _moMethodId=(overrideMethodObj||methodObj).id||"straight";setMesoExercises(_moSplitId,_moMethodId,extractMesoSelections(newProg));
                 setProgram(newProg);setWeekNum(1);setADay(0);setCompletedDays([]);sSet("forge_completedDays",[]);setRestDaysChecked([]);sSet("forge_restdays",[]);
                 sSet("forge_program",newProg);sSet("forge_config",{goal:goal,split:split,method:m.id,mins:mins,mesoLen:mesoLen,weekNum:1,numDays:numDays,genCount:newGenCount,presetCd:presetCd,specMuscles:specMuscles,dbKit:dbKit});
                 setReviewMode(true);setEditDay(0);setEditPick(null);setScreen("workout");setView("edit");
@@ -9758,7 +9782,7 @@ function Forge(props){
             </div>;})}
         </div>)}
         <div style={{marginTop:10}}>{reviewMode
-          ?<div><button onClick={function(){var newGC=genCount+1;setGenCount(newGC);var eqF=null;if(presetPick){var pObj=PRESETS.find(function(x){return x.id===presetPick;});if(pObj&&pObj.equip)eqF=pObj.equip;}var newProg=buildProgram(splitObj,methodObj,goalObj,mins,1,mesoLen,null,exHist,readMod,newGC,banned,eqF);setProgram(newProg);setEditDay(0);setEditPick(null);sSet("forge_program",newProg);sSet("forge_config",{goal:goal,split:split,method:method,mins:mins,mesoLen:mesoLen,weekNum:1,numDays:numDays,genCount:newGC,presetCd:presetCd,specMuscles:specMuscles,dbKit:dbKit});}} style={{width:"100%",padding:"14px 0",marginBottom:8,background:C.pur+"15",color:C.pur,border:"1px solid "+C.pur+"40",borderRadius:14,fontSize:15,fontWeight:700,fontFamily:FD,letterSpacing:2,cursor:"pointer"}}>REGENERATE</button>{mainBtn("CONFIRM PROGRAM",function(){sSet("forge_program",program);setReviewMode(false);setScreen("dashboard");})}</div>
+          ?<div><button onClick={function(){var newGC=genCount+1;setGenCount(newGC);var eqF=null;if(presetPick){var pObj=PRESETS.find(function(x){return x.id===presetPick;});if(pObj&&pObj.equip)eqF=pObj.equip;}var newProg=buildProgram(splitObj,methodObj,goalObj,mins,1,mesoLen,null,exHist,readMod,newGC,banned,eqF);var _rSplitId=splitObj.id||"custom";var _rMethodId=methodObj.id||"straight";setMesoExercises(_rSplitId,_rMethodId,extractMesoSelections(newProg));if(mesoSwaps&&Object.keys(mesoSwaps).length>0){for(var _rd=0;_rd<newProg.length;_rd++){for(var _re=0;_re<newProg[_rd].exercises.length;_re++){var _swapTo=mesoSwaps[newProg[_rd].exercises[_re].name];if(_swapTo){var _swapEx=null;var _swPool=EX[newProg[_rd].exercises[_re].muscle]||[];for(var _sp=0;_sp<_swPool.length;_sp++){if(_swPool[_sp].n===_swapTo){_swapEx=_swPool[_sp];break;}}if(_swapEx)newProg[_rd].exercises[_re]=Object.assign({},newProg[_rd].exercises[_re],{name:_swapEx.n,mv:_swapEx.mv});}}}}if(setOverrides&&Object.keys(setOverrides).length>0){for(var _sod=0;_sod<newProg.length;_sod++){for(var _soe=0;_soe<newProg[_sod].exercises.length;_soe++){var _ovC=setOverrides[newProg[_sod].exercises[_soe].name];if(typeof _ovC==="number"&&_ovC>=1){newProg[_sod].exercises[_soe]=Object.assign({},newProg[_sod].exercises[_soe],{sets:_ovC});}}}}setProgram(newProg);setEditDay(0);setEditPick(null);sSet("forge_program",newProg);sSet("forge_config",{goal:goal,split:split,method:method,mins:mins,mesoLen:mesoLen,weekNum:1,numDays:numDays,genCount:newGC,presetCd:presetCd,specMuscles:specMuscles,dbKit:dbKit});}} style={{width:"100%",padding:"14px 0",marginBottom:8,background:C.pur+"15",color:C.pur,border:"1px solid "+C.pur+"40",borderRadius:14,fontSize:15,fontWeight:700,fontFamily:FD,letterSpacing:2,cursor:"pointer"}}>REGENERATE</button>{mainBtn("CONFIRM PROGRAM",function(){sSet("forge_program",program);setReviewMode(false);setScreen("dashboard");})}</div>
           :mainBtn("DONE EDITING",function(){sSet("forge_program",program);setADay(0);setAEx(0);setLog({});setReadiness(null);setSessionSaved(false);setNewPRs([]);setView("readiness");})
         }</div>
       </div>)}
