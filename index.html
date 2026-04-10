@@ -2728,10 +2728,19 @@ try {
   });
 } catch(e) { console.warn("Firebase init skipped (no config):", e.message); }
 
+var _gDriveToken = null; // Google OAuth access token for Drive uploads
+var _gDriveTokenExp = 0;  // token expiry timestamp (ms)
 function fbSignIn() {
   if (!_fbAuth) return Promise.reject("No Firebase");
   var provider = new firebase.auth.GoogleAuthProvider();
-  return _fbAuth.signInWithPopup(provider);
+  provider.addScope("https://www.googleapis.com/auth/drive.file");
+  return _fbAuth.signInWithPopup(provider).then(function(result) {
+    if (result && result.credential && result.credential.accessToken) {
+      _gDriveToken = result.credential.accessToken;
+      _gDriveTokenExp = Date.now() + 3500000; // ~58 min (tokens last 60 min)
+    }
+    return result;
+  });
 }
 function fbSignOut() {
   if (!_fbAuth) return Promise.resolve();
@@ -5786,6 +5795,7 @@ function Forge(props){
   // to the exercise with the most data points when null.
   var _trajEx=useState(null),trajEx=_trajEx[0],setTrajEx=_trajEx[1];
   var _saved=useState(false),sessionSaved=_saved[0],setSessionSaved=_saved[1];
+  var _dbs=useState(null),driveBackupStatus=_dbs[0],setDriveBackupStatus=_dbs[1];
   // D-Apr2026: Forces re-render when toggling _forgeVoiceOn (which lives outside React state)
   var _settingsTick=useState(0),settingsTick=_settingsTick[0],setSettingsTick=_settingsTick[1];
   // ═══ WORKOUT TIMER ═══
@@ -6585,6 +6595,10 @@ function Forge(props){
       setWeekNum(weekNum + 1);
       sSet("forge_config", {goal: goal, split: split, method: method, mins: mins, mesoLen: mesoLen, weekNum: weekNum + 1, numDays: numDays, genCount: genCount, presetCd: presetCd, specMuscles: specMuscles, presetPick: presetPick, dbKit: dbKit});
     }
+    // ═══ AUTO-BACKUP TO DRIVE ON MESO FINISH ═══
+    if (allDone && weekNum >= mesoLen) {
+      try { exportToDrive(true); } catch(e) { console.warn("Auto-backup skipped:", e); }
+    }
 
     setSessionSaved(true);
   }
@@ -6701,6 +6715,152 @@ function Forge(props){
     // ── Generate + download ──
     var fileName="FORGE_Backup_"+(authUser?authUser.email.split("@")[0]+"_":"")+(dateStr())+".xlsx";
     XLSX.writeFile(wb,fileName);
+  }
+
+  // ═══ GOOGLE DRIVE AUTO-BACKUP (triggered on meso finish) ═══
+  function _refreshDriveToken() {
+    if (!_fbAuth || !_fbAuth.currentUser) return Promise.reject("Not signed in");
+    var provider = new firebase.auth.GoogleAuthProvider();
+    provider.addScope("https://www.googleapis.com/auth/drive.file");
+    return _fbAuth.currentUser.reauthenticateWithPopup(provider).then(function(result) {
+      if (result && result.credential && result.credential.accessToken) {
+        _gDriveToken = result.credential.accessToken;
+        _gDriveTokenExp = Date.now() + 3500000;
+      }
+      return _gDriveToken;
+    });
+  }
+  function _ensureDriveToken() {
+    if (_gDriveToken && Date.now() < _gDriveTokenExp) return Promise.resolve(_gDriveToken);
+    return _refreshDriveToken();
+  }
+  function _findOrCreateFolder(token, folderName) {
+    // Search for existing folder
+    var q = "name='" + folderName + "' and mimeType='application/vnd.google-apps.folder' and trashed=false";
+    return fetch("https://www.googleapis.com/drive/v3/files?q=" + encodeURIComponent(q) + "&fields=files(id,name)", {
+      headers: {"Authorization": "Bearer " + token}
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      if (data.files && data.files.length > 0) return data.files[0].id;
+      // Create folder
+      return fetch("https://www.googleapis.com/drive/v3/files", {
+        method: "POST",
+        headers: {"Authorization": "Bearer " + token, "Content-Type": "application/json"},
+        body: JSON.stringify({name: folderName, mimeType: "application/vnd.google-apps.folder"})
+      }).then(function(r) { return r.json(); }).then(function(f) { return f.id; });
+    });
+  }
+  function exportToDrive(silent) {
+    if (typeof XLSX === "undefined") { if (!silent) alert("SheetJS not loaded."); return Promise.reject("No XLSX"); }
+    return _ensureDriveToken().then(function(token) {
+      // Build workbook (reuse exportToExcel logic)
+      var wb = XLSX.utils.book_new();
+      // Sheet 1: Sessions
+      var sessRows = [["Date","Workout","Goal","Split","Method","Readiness","Performance"]];
+      (sessIdx || []).forEach(function(s) {
+        sessRows.push([s.date||"",s.label||"",s.goal||"",s.split||"",s.method||"",
+          s.readiness!==undefined?Math.round((s.readiness||1)*100)+"%":"",
+          s.perf===0?"Worse":s.perf===1?"Same":s.perf===2?"Better":""]);
+      });
+      var wsSess = XLSX.utils.aoa_to_sheet(sessRows);
+      wsSess["!cols"]=[{wch:12},{wch:20},{wch:14},{wch:14},{wch:12},{wch:10},{wch:12}];
+      XLSX.utils.book_append_sheet(wb, wsSess, "Sessions");
+      // Sheet 2: Exercise History
+      var histRows = [["Exercise","Date","Set#","Weight (lb)","Reps","RIR","Est 1RM"]];
+      var exNames = Object.keys(exHist || {});
+      exNames.sort();
+      exNames.forEach(function(name) {
+        var h = exHist[name] || [];
+        h.forEach(function(s) {
+          if (!s.sets) return;
+          s.sets.forEach(function(set, si) {
+            var e1rm = set.r > 0 ? Math.round(set.w * (1 + set.r / 30)) : set.w;
+            histRows.push([name, s.date||"", si+1, set.w||0, set.r||0, set.rir!==undefined?set.rir:"", e1rm]);
+          });
+        });
+      });
+      var wsHist = XLSX.utils.aoa_to_sheet(histRows);
+      wsHist["!cols"]=[{wch:28},{wch:12},{wch:6},{wch:12},{wch:6},{wch:6},{wch:10}];
+      XLSX.utils.book_append_sheet(wb, wsHist, "Exercise History");
+      // Sheet 3: Personal Records
+      var prRows = [["Exercise","Best Weight","Best Reps","Total Volume","Est 1RM","Date"]];
+      var prKeys = Object.keys(prs || {});
+      prKeys.sort(function(a,b) { return (prs[b].e1rm||0) - (prs[a].e1rm||0); });
+      prKeys.forEach(function(name) {
+        var p = prs[name];
+        var e1rm = p.e1rm || Math.round(p.w * (1 + p.r / 30));
+        prRows.push([name, p.w||0, p.r||0, p.vol||0, e1rm, p.date||""]);
+      });
+      var wsPR = XLSX.utils.aoa_to_sheet(prRows);
+      wsPR["!cols"]=[{wch:28},{wch:12},{wch:10},{wch:12},{wch:10},{wch:12}];
+      XLSX.utils.book_append_sheet(wb, wsPR, "Personal Records");
+      // Sheet 4: Config
+      var cfgRows = [["Setting","Value"]];
+      cfgRows.push(["Goal",goal||""]);cfgRows.push(["Split",split||""]);
+      cfgRows.push(["Method",method||""]);cfgRows.push(["Session Minutes",mins||""]);
+      cfgRows.push(["Meso Length",mesoLen||""]);cfgRows.push(["Current Week",weekNum||""]);
+      cfgRows.push(["Export Date",new Date().toISOString()]);
+      cfgRows.push(["Account",authUser?authUser.email:"not signed in"]);
+      cfgRows.push(["Export Trigger","meso_finish"]);
+      var wsCfg = XLSX.utils.aoa_to_sheet(cfgRows);
+      wsCfg["!cols"]=[{wch:20},{wch:50}];
+      XLSX.utils.book_append_sheet(wb, wsCfg, "Config");
+      // Sheet 5: Completed Days
+      var cdRows = [["Date","Week","Day Index","Label"]];
+      (completedDays || []).forEach(function(c) {
+        cdRows.push([c.date||"",c.wk||"",c.day!==undefined?c.day:"",c.label||""]);
+      });
+      var wsCD = XLSX.utils.aoa_to_sheet(cdRows);
+      wsCD["!cols"]=[{wch:12},{wch:8},{wch:10},{wch:20}];
+      XLSX.utils.book_append_sheet(wb, wsCD, "Completed Days");
+      // Sheet 6: e1RM Prediction Log
+      var plRows = [["Exercise","Date","Predicted e1RM","Actual e1RM","Residual","Model","Bias Applied","Confidence","Data Points"]];
+      var plKeys = Object.keys(predLog || {});
+      plKeys.sort();
+      plKeys.forEach(function(name) {
+        var entries = predLog[name] || [];
+        entries.forEach(function(e) {
+          plRows.push([name, e.date||"", e.predicted_e1rm||"", e.actual_e1rm||"",
+            e.residual!==undefined?Math.round(e.residual*1000)/10+"%":"",
+            e.model_type||"", e.bias_applied||"", e.confidence_tier_at_prediction||"",
+            e.data_point_count_at_prediction||""]);
+        });
+      });
+      var wsPL = XLSX.utils.aoa_to_sheet(plRows);
+      wsPL["!cols"]=[{wch:28},{wch:12},{wch:14},{wch:12},{wch:10},{wch:10},{wch:12},{wch:12},{wch:12}];
+      XLSX.utils.book_append_sheet(wb, wsPL, "Prediction Log");
+
+      // Generate blob
+      var wbOut = XLSX.write(wb, {bookType:"xlsx", type:"array"});
+      var blob = new Blob([wbOut], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+      var fileName = "FORGE_Backup_" + (authUser ? authUser.email.split("@")[0] + "_" : "") + dateStr() + ".xlsx";
+
+      // Upload to Drive in "FORGE Backups" folder
+      return _findOrCreateFolder(token, "FORGE Backups").then(function(folderId) {
+        var metadata = {name: fileName, parents: [folderId]};
+        var form = new FormData();
+        form.append("metadata", new Blob([JSON.stringify(metadata)], {type: "application/json"}));
+        form.append("file", blob);
+        return fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink", {
+          method: "POST",
+          headers: {"Authorization": "Bearer " + token},
+          body: form
+        });
+      }).then(function(r) { return r.json(); }).then(function(file) {
+        if (!silent) {
+          setDriveBackupStatus("Backed up to Google Drive");
+          setTimeout(function() { setDriveBackupStatus(null); }, 4000);
+        }
+        // Save last backup date
+        sSet("forge_last_drive_backup", dateStr());
+        return file;
+      });
+    }).catch(function(err) {
+      console.warn("Drive backup failed:", err);
+      if (!silent) {
+        setDriveBackupStatus("Drive backup failed — try again from Settings");
+        setTimeout(function() { setDriveBackupStatus(null); }, 5000);
+      }
+    });
   }
 
   // ═══ EXCEL RESTORE: Import data from .xlsx backup ═══
@@ -8640,8 +8800,11 @@ function Forge(props){
         </div>)}
         {cd(<div>
           {hd("DATA BACKUP")}
-          <div style={{fontSize:10,color:C.dim,marginBottom:10}}>Your account data as a full Excel workbook — sessions, exercise history, PRs, config, and more. Download anytime as a safety net.</div>
+          <div style={{fontSize:10,color:C.dim,marginBottom:10}}>Your training data auto-backs up to Google Drive every mesocycle. You can also export manually anytime.</div>
           <button onClick={exportToExcel} style={{width:"100%",padding:"12px 0",background:C.grn+"15",color:C.grn,border:"1px solid "+C.grn+"40",borderRadius:12,fontSize:13,fontWeight:700,fontFamily:FD,cursor:"pointer",letterSpacing:1,marginBottom:8}}>BACKUP TO EXCEL</button>
+          <button onClick={function(){exportToDrive(false);}} style={{width:"100%",padding:"12px 0",background:C.blu+"15",color:C.blu,border:"1px solid "+C.blu+"40",borderRadius:12,fontSize:13,fontWeight:700,fontFamily:FD,cursor:"pointer",letterSpacing:1,marginBottom:8}}>BACKUP TO GOOGLE DRIVE</button>
+          {driveBackupStatus&&<div style={{fontSize:11,color:C.grn,textAlign:"center",padding:"6px 0",marginBottom:4}}>{driveBackupStatus}</div>}
+          {sGet("forge_last_drive_backup",null)&&<div style={{fontSize:9,color:C.dim,textAlign:"center",marginBottom:6}}>Last Drive backup: {sGet("forge_last_drive_backup","never")}</div>}
           <div style={{position:"relative",marginBottom:8}}>
             <button onClick={function(){document.getElementById("forge-import-xlsx").click();}} style={{width:"100%",padding:"12px 0",background:C.blu+"15",color:C.blu,border:"1px solid "+C.blu+"40",borderRadius:12,fontSize:13,fontWeight:700,fontFamily:FD,cursor:"pointer",letterSpacing:1}}>RESTORE FROM EXCEL</button>
             <input id="forge-import-xlsx" type="file" accept=".xlsx,.xls" style={{display:"none"}} onChange={function(e){
@@ -9407,6 +9570,7 @@ function Forge(props){
       {/* ═══ SUMMARY ═══ */}
       {view==="summary"&&(<div className="view-slide">
         <div style={{textAlign:"center",padding:"24px 0 12px"}}><div style={{fontSize:30,fontFamily:FD,letterSpacing:3}}>SESSION DONE</div></div>
+        {driveBackupStatus&&<div style={{textAlign:"center",padding:"6px 12px",margin:"0 0 8px",background:C.grn+"15",border:"1px solid "+C.grn+"30",borderRadius:10,fontSize:11,color:C.grn}}>{driveBackupStatus}</div>}
 
         {/* ═══ C12 — PR CELEBRATION HERO (rendered first so it hits the user on arrival) ═══ */}
         {newPRs.length>0&&(function(){
