@@ -827,7 +827,7 @@ var useRef = React.useRef;
 // but every value is matched to a design token in :root. Any surface that
 // wants fresh tokens should prefer var(--*) in className CSS; C is only
 // for inline JSX style props and +alpha concatenations.
-var FORGE_VERSION="2.1.0";
+var FORGE_VERSION="3.0.0";
 var C={bg:"#0A0A0F",sf:"#121218",sf2:"#1C1C24",bdr:"#2A2A38",acc:"#FF6B35",grn:"#4ADE80",red:"#F87171",blu:"#60A5FA",pur:"#C084FC",orn:"#FB923C",txt:"#FAFAFA",dim:"#6B7280",mid:"#9CA3AF",bar:"#121218"};
 var FD="'Bebas Neue',sans-serif";var FB="'DM Sans',sans-serif";
 // ═══ FORGE LOGO IMAGES (from mockup sheet April 2026) ═══
@@ -6650,6 +6650,8 @@ function Forge(props){
   var _garmin=useState(function(){try{var g=localStorage.getItem("forge_garmin");return g?JSON.parse(g):null;}catch(e){return null;}}),garminData=_garmin[0],setGarminData=_garmin[1];
   var _specM=useState(["chest","shoulders","biceps","triceps"]),specMuscles=_specM[0],setSpecMuscles=_specM[1];
   var _specB=useState({}),specBudget=_specB[0],setSpecBudget=_specB[1]; // V2 #6: {muscle: points} 5-point budget
+  var _woState=useState({}),weightOverrides=_woState[0],setWeightOverrides=_woState[1]; // V2 #4: {exName: suggestedLbs} from transition wizard
+  var _ppState=useState(1),presetPhase=_ppState[0],setPresetPhase=_ppState[1]; // V2 #4: current AX preset phase (1-indexed)
   var _tempoPre=useState("hyp"),tempoPreset=_tempoPre[0],setTempoPreset=_tempoPre[1]; // V2 #7: active tempo preset id
   var _tempoOverlay=useState(null),tempoOverlay=_tempoOverlay[0],setTempoOverlay=_tempoOverlay[1]; // V2 #7: active tempo countdown {phase,sec,rep}
   useEffect(function(){
@@ -7024,6 +7026,9 @@ function Forge(props){
           if(cfg.dbKit&&KIT_PRESETS[cfg.dbKit]) setDbKit(cfg.dbKit); // C8
         }
       });
+      // V2 #4: load preset phase and transition weight overrides
+      sGet("forge_presetPhase",1).then(function(ph){if(typeof ph==="number")setPresetPhase(ph);});
+      sGet("forge_weightOverrides",{}).then(function(wo){if(wo&&typeof wo==="object")setWeightOverrides(wo);});
       // Sprint 1 — experience level (separate key so existing forge_config saves don't need refactor)
       sGet("forge_expLevel","intermediate").then(function(lvl){
         if(lvl==="beginner"||lvl==="intermediate"||lvl==="advanced")setExpLevel(lvl);
@@ -7584,6 +7589,11 @@ function Forge(props){
     if (allDone && weekNum < mesoLen) {
       setWeekNum(weekNum + 1);
       sSet("forge_config", {goal: goal, split: split, method: method, mins: mins, mesoLen: mesoLen, weekNum: weekNum + 1, numDays: numDays, genCount: genCount, presetCd: presetCd, specMuscles: specMuscles, presetPick: presetPick, dbKit: dbKit});
+      // V2 #4: Clear weight overrides after Week 1 — they served their purpose
+      if(weekNum===1&&weightOverrides&&Object.keys(weightOverrides).length>0){
+        setWeightOverrides({});
+        sSet("forge_weightOverrides",{});
+      }
     }
     // ═══ AUTO-BACKUP TO DRIVE ON MESO FINISH ═══
     if (allDone && weekNum >= mesoLen) {
@@ -8469,6 +8479,19 @@ function Forge(props){
   // Sprint 6 Item 4: builds e1rmCtx and passes it to both progression paths so
   // the trajectory model can override weight selection when the curve is confident.
   function getProgressionHint(exName,repRange,numSetsArg){
+    // V2 #4: If transition wizard set a weight override and we're in week 1, use it
+    if(weekNum===1&&weightOverrides&&weightOverrides[exName]){
+      var woWeight=weightOverrides[exName];
+      var woReps=repRange?parseInt(repRange):10;
+      return {
+        w:woWeight,
+        r:woReps,
+        sets:numSetsArg||3,
+        note:"New meso start: "+woWeight+" lb (from transition wizard, Week 1 +5%)",
+        lever:"start",
+        action:"mesoStart"
+      };
+    }
     var hist=exHist[exName];
     var exMuscle=findExerciseMuscle(exName);
     var ctx=buildE1rmCtxForExercise(exName,exMuscle,hist);
@@ -11250,6 +11273,9 @@ function Forge(props){
 
         // Shared modal overlay style
         var overlayS = {position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.92)",zIndex:9999,display:"flex",flexDirection:"column",alignItems:"center",overflowY:"auto",padding:"20px 16px 40px"};
+        // V2 #4: AX preset detection (shared across wizard screens)
+        var _axPreset = presetPick ? PRESETS.find(function(x){ return x.id === presetPick; }) : null;
+        var _axPhases = _axPreset && _axPreset.phases ? _axPreset.phases : null;
         var cardS = {background:C.sf,borderRadius:16,padding:"20px 18px",maxWidth:400,width:"100%",marginBottom:16};
         var headS = {fontFamily:"'Bebas Neue'",fontSize:28,color:C.acc,marginBottom:4,letterSpacing:1};
         var subS = {fontSize:13,color:C.dim,marginBottom:16};
@@ -11261,7 +11287,7 @@ function Forge(props){
           return <div style={overlayS}>
             <div style={cardS}>
               <div style={headS}>MESOCYCLE COMPLETE</div>
-              <div style={subS}>{td.mesoWeeks + " weeks | " + td.sessionCount + " sessions"}</div>
+              <div style={subS}>{td.mesoWeeks + " weeks | " + td.sessionCount + " sessions" + (presetPick && _axPreset ? " | " + _axPreset.n + " Phase " + presetPhase : "")}</div>
 
               {/* PR Summary */}
               <div style={{background:C.bg,borderRadius:12,padding:"14px 16px",marginBottom:14}}>
@@ -11315,20 +11341,71 @@ function Forge(props){
 
         // ─── SCREEN 2: CHOOSE PATH ───
         if (step === "choose") {
-          var paths = [
-            {id:"again",     icon:"\u{1F504}", label:"Run Again",        desc:"Same program, fresh meso. Weights auto-progress +5%."},
-            {id:"method",    icon:"\u{1F527}", label:"Switch Method",     desc:"Keep exercises, change training method (e.g. straight sets to myo-reps)."},
-            {id:"specialize",icon:"\u{1F3AF}", label:"Specialization",    desc:"Focus extra volume on a lagging muscle group."},
-            {id:"split",     icon:"\u{1F500}", label:"Change Split",      desc:"Switch to a different training split (e.g. PPL to Upper/Lower)."},
-            {id:"recovery",  icon:"\u{1F9D8}", label:"Recovery Block",    desc:"1-2 week deload at 50% volume. Reset fatigue before next push."},
-            {id:"new",       icon:"\u{2728}",  label:"New Program",       desc:"Start fresh with the setup wizard. Full reset."}
-          ];
+          // V2 #4: AX multi-phase path detection
+          var _axNextPhase = _axPhases ? _axPhases.find(function(ph){ return ph.phase === presetPhase + 1; }) : null;
+          var _axComplete = _axPhases && !_axNextPhase; // all phases done
+
+          var paths = [];
+          // If AX preset with next phase available, show it first
+          if (_axNextPhase) {
+            paths.push({id:"axAdvance", icon:"\u{1F680}", label:"Advance to Phase " + _axNextPhase.phase + ": " + _axNextPhase.n, desc:_axNextPhase.desc + " (" + _axPreset.n + ")"});
+          }
+          if (_axComplete) {
+            paths.push({id:"axComplete", icon:"\u{1F3C6}", label:_axPreset.n + " COMPLETE!", desc:"You finished all " + _axPhases.length + " phases. Start a new program or run the final phase again."});
+          }
+          paths.push({id:"again",     icon:"\u{1F504}", label:"Run Again",        desc:"Same program, fresh meso. Weights auto-progress +5%."});
+          paths.push({id:"method",    icon:"\u{1F527}", label:"Switch Method",     desc:"Keep exercises, change training method (e.g. straight sets to myo-reps)."});
+          paths.push({id:"specialize",icon:"\u{1F3AF}", label:"Specialization",    desc:"Focus extra volume on a lagging muscle group."});
+          paths.push({id:"split",     icon:"\u{1F500}", label:"Change Split",      desc:"Switch to a different training split (e.g. PPL to Upper/Lower)."});
+          paths.push({id:"recovery",  icon:"\u{1F9D8}", label:"Recovery Block",    desc:"1-2 week deload at 50% volume. Reset fatigue before next push."});
+          paths.push({id:"new",       icon:"\u{2728}",  label:"New Program",       desc:"Start fresh with the setup wizard. Full reset."});
           return <div style={overlayS}>
             <div style={cardS}>
               <div style={headS}>WHAT'S NEXT?</div>
               <div style={subS}>Choose how to start your next mesocycle</div>
               {paths.map(function(p, i) {
                 return <button key={i} style={{width:"100%",textAlign:"left",padding:"14px 16px",borderRadius:12,border:"1px solid "+C.bdr,background:C.bg,marginBottom:8,cursor:"pointer",display:"flex",alignItems:"flex-start",gap:12}} onClick={function(){
+                  if (p.id === "axAdvance" && _axNextPhase) {
+                    // AX multi-phase: advance to next phase
+                    var np = _axNextPhase;
+                    var newPhaseNum = np.phase;
+                    setPresetPhase(newPhaseNum);
+                    sSet("forge_presetPhase", newPhaseNum);
+                    // Update method and goal from the phase definition
+                    if(np.method) { setMethod(np.method); }
+                    if(np.goal) { setGoal(np.goal); }
+                    if(np.split) { setSplit(np.split); }
+                    // Regenerate program with new phase settings
+                    closeTW();
+                    setWeekNum(1);
+                    setCompletedDays([]);
+                    sSet("forge_completedDays", []);
+                    var _npGenCount = genCount + 1;
+                    setGenCount(_npGenCount);
+                    sSet("forge_config", {goal:np.goal||goal, split:np.split||split, method:np.method||method, mins:mins, mesoLen:mesoLen, weekNum:1, numDays:numDays, genCount:_npGenCount, presetCd:presetCd, specMuscles:specMuscles, presetPick:presetPick, dbKit:dbKit, specBudget:specBudget});
+                    // Regenerate
+                    var _npSplitObj = SPLITS.find(function(x){return x.id===(np.split||split);});
+                    var _npMethodObj = METHODS.find(function(x){return x.id===(np.method||method);});
+                    if(_npSplitObj && _npMethodObj){
+                      var _npGoalObj = GOALS.find(function(x){return x.id===(np.goal||goal);});
+                      var eqF=null;if(_axPreset&&_axPreset.equip)eqF=_axPreset.equip;
+                      var newProg=buildProgram(_npSplitObj,_npMethodObj,_npGoalObj||goalObj,mins,1,mesoLen,null,exHist,readMod,_npGenCount,banned,eqF,specBudget);
+                      setProgram(newProg);
+                      sSet("forge_program",newProg);
+                    }
+                    setScreen("dashboard");
+                    return;
+                  }
+                  if (p.id === "axComplete") {
+                    // All phases done — go to new program
+                    closeTW();
+                    setPresetPick(null);
+                    setPresetPhase(1);
+                    sSet("forge_presetPhase", 1);
+                    setProgram([]);
+                    setScreen("setup");
+                    return;
+                  }
                   if (p.id === "new") {
                     // Full reset to setup wizard
                     closeTW();
