@@ -2222,21 +2222,91 @@ var EQUIP_FILTERS = {
 };
 
 var SPLITS=[
-  {id:"fb3",n:"Full Body x3",d:3,desc:"Every muscle every session. High frequency, ideal for beginners or time-crunched schedules.",layout:[{n:"Full Body A",g:["chest","back","quads","shoulders","biceps"]},{n:"Full Body B",g:["back","chest","hams","triceps","shoulders"]},{n:"Full Body C",g:["quads","back","chest","hams","biceps","core"]}]},
-  {id:"ppl3",n:"PPL (rotating)",d:3,desc:"Push/Pull/Legs on rotation. Simple, effective, easy to remember.",layout:[{n:"Push",g:["chest","shoulders","triceps"]},{n:"Pull",g:["back","biceps"]},{n:"Legs",g:["quads","hams","core"]}]},
-  {id:"dc3",n:"DC Training A/B",d:3,desc:"Rest-pause: 1 all-out set per muscle, rotate 3 exercises. Advanced only.",layout:[{n:"Upper A",g:["chest","shoulders","triceps","back"]},{n:"Lower + Bis",g:["biceps","hams","quads","core"]},{n:"Upper B",g:["chest","shoulders","triceps","back"]}]},
-  {id:"ul4",n:"Upper / Lower",d:4,desc:"Gold standard for intermediates. Each muscle 2x/week with excellent recovery balance.",layout:[{n:"Upper A",g:["chest","back","shoulders","biceps","triceps"]},{n:"Lower A",g:["quads","hams","core"]},{n:"Upper B",g:["back","chest","shoulders","triceps","biceps"]},{n:"Lower B",g:["hams","quads","core"]}]},
-  {id:"tl4",n:"Torso / Limbs",d:4,desc:"Arms train fresh on limb days. Hidden 4x/wk arm frequency from compound overlap.",layout:[{n:"Torso A",g:["chest","back","shoulders"]},{n:"Limbs A",g:["quads","hams","biceps","triceps"]},{n:"Torso B",g:["back","chest","shoulders"]},{n:"Limbs B",g:["hams","quads","triceps","biceps","core"]}]},
-  {id:"pqph4",n:"Push+Quads / Pull+Hams",d:4,desc:"Full body stimulus every session. Upper + lower paired by movement pattern.",layout:[{n:"Push+Quads A",g:["chest","shoulders","triceps","quads"]},{n:"Pull+Hams A",g:["back","biceps","hams","core"]},{n:"Push+Quads B",g:["shoulders","chest","triceps","quads"]},{n:"Pull+Hams B",g:["back","biceps","hams","core"]}]},
-  {id:"ant4",n:"Antagonist Supersets",d:4,desc:"Opposing muscles paired. Cuts session time ~36% without losing gains.",layout:[{n:"Chest+Back",g:["chest","back"]},{n:"Quads+Hams",g:["quads","hams","core"]},{n:"Shoulders+Arms",g:["shoulders","biceps","triceps"]},{n:"Full+Weak Pts",g:["back","chest","quads","hams"]}]},
-  {id:"fbsp4",n:"Full Body + Specialization",d:4,desc:"3 full body days + 1 weak point blitz. Rotate focus area every 4-6 weeks.",layout:[{n:"Full Body A",g:["chest","back","quads","shoulders"]},{n:"Full Body B",g:["back","chest","hams","biceps","triceps"]},{n:"Full Body C",g:["quads","back","shoulders","hams"]},{n:"Specialization",g:["chest","shoulders","biceps","triceps"]}]},
-  {id:"smart5",n:"Smart Bro Split (AX)",d:5,desc:"AthleanX: no synergist conflicts between days. Compounds create hidden 2-3x frequency.",layout:[{n:"Chest+Biceps",g:["chest","biceps"]},{n:"Legs",g:["quads","hams","core"]},{n:"Back+Triceps",g:["back","triceps"]},{n:"Shoulders",g:["shoulders","back"]},{n:"Arms",g:["biceps","triceps"]}]},
-  {id:"nip5",n:"UL/PPL Hybrid (Nippard)",d:5,desc:"Upper/Lower + Push/Pull/Legs merged. Every muscle 2x/wk with varied stimuli.",layout:[{n:"Upper",g:["chest","back","shoulders","biceps","triceps"]},{n:"Lower",g:["quads","hams","core"]},{n:"Pull",g:["back","biceps","shoulders"]},{n:"Push",g:["chest","shoulders","triceps"]},{n:"Legs",g:["quads","hams","core"]}]},
-  {id:"phat5",n:"PHAT (Norton)",d:5,desc:"Power + hypertrophy days combined. Heavy compounds AND high-rep pump work.",layout:[{n:"Upper Power",g:["chest","back","shoulders"]},{n:"Lower Power",g:["quads","hams"]},{n:"Back+Shoulders Hyp",g:["back","shoulders","biceps"]},{n:"Lower Hyp",g:["quads","hams","core"]},{n:"Chest+Arms Hyp",g:["chest","biceps","triceps"]}]},
-  {id:"bro5",n:"Classic Bro Split",d:5,desc:"One muscle per day. Max per-session volume. The old-school approach.",layout:[{n:"Chest",g:["chest"]},{n:"Back",g:["back"]},{n:"Shoulders",g:["shoulders"]},{n:"Legs",g:["quads","hams","core"]},{n:"Arms",g:["biceps","triceps"]}]},
-  {id:"ppl6",n:"PPL x2",d:6,desc:"Push/Pull/Legs twice per week. High frequency + high volume for advanced.",layout:[{n:"Push A",g:["chest","shoulders","triceps"]},{n:"Pull A",g:["back","biceps"]},{n:"Legs A",g:["quads","hams","core"]},{n:"Push B",g:["shoulders","chest","triceps"]},{n:"Pull B",g:["back","biceps"]},{n:"Legs B",g:["hams","quads","core"]}]},
-  {id:"arn6",n:"Arnold Split",d:6,desc:"Chest+Back supersets, Shoulders+Arms, Legs. Classic high-volume. Needs caloric surplus.",layout:[{n:"Chest+Back A",g:["chest","back"]},{n:"Shoulders+Arms A",g:["shoulders","biceps","triceps"]},{n:"Legs A",g:["quads","hams","core"]},{n:"Chest+Back B",g:["back","chest"]},{n:"Shoulders+Arms B",g:["triceps","biceps","shoulders"]},{n:"Legs B",g:["hams","quads","core"]}]},
+  // methodPolicy: "agnostic" = user picks method; "locked" = split defines methods per day
+  // category: "build" = user-built program; "ax" = AthleanX preset (set on presets, not here)
+  {id:"fb3",n:"Full Body x3",d:3,methodPolicy:"agnostic",desc:"Every muscle every session. High frequency, ideal for beginners or time-crunched schedules.",layout:[{n:"Full Body A",g:["chest","back","quads","shoulders","biceps"]},{n:"Full Body B",g:["back","chest","hams","triceps","shoulders"]},{n:"Full Body C",g:["quads","back","chest","hams","biceps","core"]}]},
+  {id:"ppl3",n:"PPL (rotating)",d:3,methodPolicy:"agnostic",desc:"Push/Pull/Legs on rotation. Simple, effective, easy to remember.",layout:[{n:"Push",g:["chest","shoulders","triceps"]},{n:"Pull",g:["back","biceps"]},{n:"Legs",g:["quads","hams","core"]}]},
+  {id:"dc3",n:"DC Training A/B",d:3,methodPolicy:"locked",desc:"Rest-pause: 1 all-out set per muscle, rotate 3 exercises. Advanced only.",dayMethodRules:{"Upper A":{method:"dc",repRange:[6,10],rir:[0,1],restSec:120},"Lower + Bis":{method:"dc",repRange:[6,10],rir:[0,1],restSec:120},"Upper B":{method:"dc",repRange:[6,10],rir:[0,1],restSec:120}},lockedInfo:{title:"DC Training uses its own protocol",body:"Every exercise uses DC-style rest-pause: one all-out set to failure, rack the weight, 10-15 deep breaths, go again until failure, repeat once more. This IS the method \u2014 the split defines it."},layout:[{n:"Upper A",g:["chest","shoulders","triceps","back"]},{n:"Lower + Bis",g:["biceps","hams","quads","core"]},{n:"Upper B",g:["chest","shoulders","triceps","back"]}]},
+  {id:"ul4",n:"Upper / Lower",d:4,methodPolicy:"agnostic",desc:"Gold standard for intermediates. Each muscle 2x/week with excellent recovery balance.",layout:[{n:"Upper A",g:["chest","back","shoulders","biceps","triceps"]},{n:"Lower A",g:["quads","hams","core"]},{n:"Upper B",g:["back","chest","shoulders","triceps","biceps"]},{n:"Lower B",g:["hams","quads","core"]}]},
+  {id:"tl4",n:"Torso / Limbs",d:4,methodPolicy:"agnostic",desc:"Arms train fresh on limb days. Hidden 4x/wk arm frequency from compound overlap.",layout:[{n:"Torso A",g:["chest","back","shoulders"]},{n:"Limbs A",g:["quads","hams","biceps","triceps"]},{n:"Torso B",g:["back","chest","shoulders"]},{n:"Limbs B",g:["hams","quads","triceps","biceps","core"]}]},
+  {id:"pqph4",n:"Push+Quads / Pull+Hams",d:4,methodPolicy:"agnostic",desc:"Full body stimulus every session. Upper + lower paired by movement pattern.",layout:[{n:"Push+Quads A",g:["chest","shoulders","triceps","quads"]},{n:"Pull+Hams A",g:["back","biceps","hams","core"]},{n:"Push+Quads B",g:["shoulders","chest","triceps","quads"]},{n:"Pull+Hams B",g:["back","biceps","hams","core"]}]},
+  {id:"ant4",n:"Antagonist Supersets",d:4,methodPolicy:"agnostic",desc:"Opposing muscles paired. Cuts session time ~36% without losing gains.",layout:[{n:"Chest+Back",g:["chest","back"]},{n:"Quads+Hams",g:["quads","hams","core"]},{n:"Shoulders+Arms",g:["shoulders","biceps","triceps"]},{n:"Full+Weak Pts",g:["back","chest","quads","hams"]}]},
+  {id:"fbsp4",n:"Full Body + Specialization",d:4,methodPolicy:"agnostic",desc:"3 full body days + 1 weak point blitz. Rotate focus area every 4-6 weeks.",layout:[{n:"Full Body A",g:["chest","back","quads","shoulders"]},{n:"Full Body B",g:["back","chest","hams","biceps","triceps"]},{n:"Full Body C",g:["quads","back","shoulders","hams"]},{n:"Specialization",g:["chest","shoulders","biceps","triceps"]}]},
+  {id:"phul4",n:"PHUL",d:4,methodPolicy:"locked",desc:"Power Hypertrophy Upper Lower. Heavy compounds on power days, pump work on hypertrophy days. 4 days.",dayMethodRules:{"Power Upper":{method:"straight",repRange:[3,5],rir:[1,2],restSec:240,compoundOverride:"straight"},"Power Lower":{method:"straight",repRange:[3,5],rir:[1,2],restSec:300,compoundOverride:"straight"},"Hypertrophy Upper":{method:"userChoice",repRange:[8,12],rir:[2,3],restSec:90,compoundOverride:"straight"},"Hypertrophy Lower":{method:"userChoice",repRange:[8,12],rir:[2,3],restSec:90,compoundOverride:"straight"}},lockedInfo:{title:"PHUL uses its own periodization",body:"This split alternates Power and Hypertrophy days with different goals:\n\nPower Days \u2014 Heavy compounds, 3-5 reps, straight sets only, long rest (3-5 min). Goal: build strength that feeds hypertrophy days.\n\nHypertrophy Days \u2014 Moderate loads, 8-12 reps, shorter rest. You can choose an intensity technique (myo-reps, drop sets, etc.) for isolation exercises. Compounds still use straight sets."},layout:[{n:"Power Upper",g:["chest","back","shoulders","triceps"]},{n:"Power Lower",g:["quads","hams","core"]},{n:"Hypertrophy Upper",g:["chest","back","shoulders","biceps","triceps"]},{n:"Hypertrophy Lower",g:["quads","hams","core","biceps"]}]},
+  {id:"smart5",n:"Smart Bro Split (AX)",d:5,methodPolicy:"agnostic",desc:"AthleanX: no synergist conflicts between days. Compounds create hidden 2-3x frequency.",layout:[{n:"Chest+Biceps",g:["chest","biceps"]},{n:"Legs",g:["quads","hams","core"]},{n:"Back+Triceps",g:["back","triceps"]},{n:"Shoulders",g:["shoulders","back"]},{n:"Arms",g:["biceps","triceps"]}]},
+  {id:"nip5",n:"UL/PPL Hybrid (Nippard)",d:5,methodPolicy:"agnostic",desc:"Upper/Lower + Push/Pull/Legs merged. Every muscle 2x/wk with varied stimuli.",layout:[{n:"Upper",g:["chest","back","shoulders","biceps","triceps"]},{n:"Lower",g:["quads","hams","core"]},{n:"Pull",g:["back","biceps","shoulders"]},{n:"Push",g:["chest","shoulders","triceps"]},{n:"Legs",g:["quads","hams","core"]}]},
+  {id:"phat5",n:"PHAT (Norton)",d:5,methodPolicy:"locked",desc:"Power + hypertrophy days combined. Heavy compounds AND high-rep pump work.",dayMethodRules:{"Upper Power":{method:"straight",repRange:[3,5],rir:[1,2],restSec:240,compoundOverride:"straight"},"Lower Power":{method:"straight",repRange:[3,5],rir:[1,2],restSec:300,compoundOverride:"straight"},"Back+Shoulders Hyp":{method:"userChoice",repRange:[8,12],rir:[2,3],restSec:90,compoundOverride:"straight"},"Lower Hyp":{method:"userChoice",repRange:[8,12],rir:[2,3],restSec:90,compoundOverride:"straight"},"Chest+Arms Hyp":{method:"userChoice",repRange:[8,12],rir:[2,3],restSec:90,compoundOverride:"straight"}},lockedInfo:{title:"PHAT uses its own periodization",body:"PHAT alternates Power and Hypertrophy days:\n\nPower Days \u2014 Heavy compounds, 3-5 reps, straight sets, long rest (3-5 min). Strength foundation.\n\nHypertrophy Days \u2014 8-12 reps, shorter rest. Isolation exercises use your chosen intensity technique. Compounds stay with straight sets for safety at these loads."},layout:[{n:"Upper Power",g:["chest","back","shoulders"]},{n:"Lower Power",g:["quads","hams"]},{n:"Back+Shoulders Hyp",g:["back","shoulders","biceps"]},{n:"Lower Hyp",g:["quads","hams","core"]},{n:"Chest+Arms Hyp",g:["chest","biceps","triceps"]}]},
+  {id:"bro5",n:"Classic Bro Split",d:5,methodPolicy:"agnostic",desc:"One muscle per day. Max per-session volume. The old-school approach.",layout:[{n:"Chest",g:["chest"]},{n:"Back",g:["back"]},{n:"Shoulders",g:["shoulders"]},{n:"Legs",g:["quads","hams","core"]},{n:"Arms",g:["biceps","triceps"]}]},
+  {id:"ppl6",n:"PPL x2",d:6,methodPolicy:"agnostic",desc:"Push/Pull/Legs twice per week. High frequency + high volume for advanced.",layout:[{n:"Push A",g:["chest","shoulders","triceps"]},{n:"Pull A",g:["back","biceps"]},{n:"Legs A",g:["quads","hams","core"]},{n:"Push B",g:["shoulders","chest","triceps"]},{n:"Pull B",g:["back","biceps"]},{n:"Legs B",g:["hams","quads","core"]}]},
+  {id:"arn6",n:"Arnold Split",d:6,methodPolicy:"agnostic",desc:"Chest+Back supersets, Shoulders+Arms, Legs. Classic high-volume. Needs caloric surplus.",layout:[{n:"Chest+Back A",g:["chest","back"]},{n:"Shoulders+Arms A",g:["shoulders","biceps","triceps"]},{n:"Legs A",g:["quads","hams","core"]},{n:"Chest+Back B",g:["back","chest"]},{n:"Shoulders+Arms B",g:["triceps","biceps","shoulders"]},{n:"Legs B",g:["hams","quads","core"]}]},
 ];
+// Helper: check if a split is method-locked
+function isSplitLocked(splitId){var s=SPLITS.find(function(x){return x.id===splitId;});return s&&s.methodPolicy==="locked";}
+function getSplitLockedInfo(splitId){var s=SPLITS.find(function(x){return x.id===splitId;});return (s&&s.lockedInfo)||null;}
+function getDayMethodRule(splitId,dayLabel){var s=SPLITS.find(function(x){return x.id===splitId;});if(!s||!s.dayMethodRules)return null;return s.dayMethodRules[dayLabel]||null;}
+
+// ═══ V2 #3: PER-EXERCISE METHOD MIXING ═══
+// Classify exercises into compound/isolation/accessory categories for intelligent method defaults.
+// Tsartsapakis et al. 2026: advanced methods are volume-equivalent to straight sets (g=0.046),
+// but rest-pause is the only method with a significant positive coefficient. Compounds should
+// default to straight sets for safety; isolations get the user's chosen method.
+var LEG_MUSCLES=["quads","hams","core","calves","glutes"];
+function getExerciseClass(ex,muscle){
+  if(!ex)return "accessory";
+  var isLeg=LEG_MUSCLES.indexOf(muscle)>=0;
+  // Form-sensitive exercises always get straight sets
+  if(ex.n&&(ex.n.indexOf("Skull")>=0||ex.n.indexOf("Turkish")>=0))return "form_sensitive";
+  if(ex.t==="C"){
+    if(isLeg)return "compound_legs";
+    if(ex.mv==="press")return "compound_push";
+    if(ex.mv==="pull")return "compound_pull";
+    return "compound_push"; // fallback
+  }
+  if(ex.t==="B"){
+    // Bodyweight compounds (pushups, pullups) treated as compounds
+    if(ex.pat==="hp"||ex.pat==="vpl"||ex.pat==="hpl")return isLeg?"compound_legs":(ex.mv==="pull"?"compound_pull":"compound_push");
+    return "accessory";
+  }
+  // Isolation
+  if(isLeg)return "isolation_legs";
+  if(ex.mv==="press"||ex.ss==="push"||ex.ss==="siso")return (muscle==="triceps"||muscle==="shoulders")?"isolation_push":"isolation_push";
+  if(ex.mv==="pull"||ex.mv==="curl"||ex.ss==="pull")return "isolation_pull";
+  return "accessory";
+}
+
+// Default method per exercise class: "straight" means always straight sets; "userChoice" means use the user's global method
+var METHOD_DEFAULTS={
+  compound_push:  "straight",
+  compound_pull:  "straight",
+  compound_legs:  "straight",
+  isolation_push: "userChoice",
+  isolation_pull: "userChoice",
+  isolation_legs: "userChoice",
+  accessory:      "userChoice",
+  form_sensitive: "straight"
+};
+
+// Assign the appropriate method for a given exercise
+function assignExerciseMethod(ex,muscle,globalMethod,dayMethodRules,dayLabel){
+  // 1. If split is method-locked, check dayMethodRules first
+  if(dayMethodRules&&dayMethodRules[dayLabel]){
+    var rule=dayMethodRules[dayLabel];
+    if(rule.method!=="userChoice"){return {method:rule.method,source:"splitRule"};}
+    // userChoice day but compound override
+    if(rule.compoundOverride&&ex.t==="C"){return {method:rule.compoundOverride,source:"splitRule"};}
+  }
+  // 2. Check exercise class defaults
+  var exClass=getExerciseClass(ex,muscle);
+  if(METHOD_DEFAULTS[exClass]==="straight"){return {method:"straight",source:"default"};}
+  // 3. Apply user's global method choice
+  return {method:globalMethod,source:"default"};
+}
+
+// V2 method labels for UI display
+var METHOD_SHORT_LABELS={
+  straight:"Straight Sets",myo:"Myo-Reps",density:"EDT",giant:"Giant Sets",
+  preexh:"Pre-Exhaust",dc:"Rest-Pause",mech:"Mech. Drops",hybrid:"Auto",dup:"DUP"
+};
 
 // ═══ METHOD EVIDENCE TIERS (Sprint 2 B11) ═══
 // Each method is tagged with an evidence tier that reflects the quality and quantity
@@ -5407,6 +5477,13 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
   }
 
   splitObj.layout.forEach(function(day,di){var exs=[];var used=0;var firstComp=true;
+    // V2: Per-day method override for method-locked splits (PHUL, PHAT, DC, etc.)
+    var _dayRule=splitObj.dayMethodRules?splitObj.dayMethodRules[day.n]:null;
+    var _dayMid=_dayRule?(_dayRule.method==="userChoice"?mid:_dayRule.method):mid;
+    var _dayRir=_dayRule?_dayRule.rir:null; // [low,high] override
+    var _dayRestSec=_dayRule?_dayRule.restSec:null;
+    var _dayRepRange=_dayRule?(_dayRule.repRange[0]+"-"+_dayRule.repRange[1]):null;
+    var _dayCompoundOverride=_dayRule?_dayRule.compoundOverride:null;
     // Pre-calculate time budget per muscle group — VOLUME-PROPORTIONAL (Apr 2026).
     // Old logic: equal split (totalTime / numGroups). This starved compound-heavy
     // muscles (legs need 9-12 min) and over-fed small muscles (core needs 3-5 min).
@@ -5479,7 +5556,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       // Score all exercises, attach score, then tier-shuffle so similar-scored exercises rotate
       var rng=mulberry32(daySeed);
       var isPriorityMuscle=(goalObj&&goalObj.vol&&goalObj.vol[muscle]>=1.5);
-      var scoredRaw=pool.slice().map(function(e){var c={};for(var k in e)c[k]=e[k];c._score=scoreEx(e,mid,exHistory,gid,e.t==="C"?"compound":"isolation",equipFilter,muscle,isPriorityMuscle,wk,ml);return c;});
+      var scoredRaw=pool.slice().map(function(e){var c={};for(var k in e)c[k]=e[k];c._score=scoreEx(e,_dayMid,exHistory,gid,e.t==="C"?"compound":"isolation",equipFilter,muscle,isPriorityMuscle,wk,ml);return c;});
       scoredRaw.sort(function(a,b){return b._score-a._score;});
       var scored=tierShuffle(scoredRaw,rng);
       var comps=scored.filter(function(e){return e.t==="C";});
@@ -5505,7 +5582,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       // Research: Rest <60s between iso and compound to maintain pre-exhaust effect.
       // Best for 1-2 lagging muscles per block. Reduces compound force output but
       // ensures target muscle is limiting factor (not synergists).
-      if(mid==="preexh"){
+      if(_dayMid==="preexh"){
         var iso1=isos.length>0?isos[Math.floor(rng()*isos.length)]:(bw.length>0?bw[Math.floor(rng()*bw.length)]:null);
         var comp1=comps.length>0?comps[off%comps.length]:null;
         var pxTime=0;
@@ -5519,7 +5596,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       }
 
       // ── GIANT SETS: 4 exercises per muscle, circuit ──
-      if(mid==="giant"){
+      if(_dayMid==="giant"){
         var giants=[];
         // Shuffle and pick 4 from the full scored pool for variety
         var giantPool=seededShuffle(scored.slice(0,Math.min(8,scored.length)),rng);
@@ -5539,7 +5616,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       }
 
       // ── DENSITY/EDT: pair exercises in timed blocks ──
-      if(mid==="density"){
+      if(_dayMid==="density"){
         var comp2=comps.length>0?comps[off%comps.length]:null;
         var densityTime=Math.min(15,avail-groupUsed); // Cap at group budget
         if(comp2&&densityTime>=5){
@@ -5550,7 +5627,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       }
 
       // ── MECHANICAL DROP SETS: hardest angle first, same weight ──
-      if(mid==="mech"){
+      if(_dayMid==="mech"){
         var mechOrder=comps.filter(function(e){return e.drop;}).slice(0,3);
         if(mechOrder.length>=2){
           mechOrder.forEach(function(mx,mxi){
@@ -5567,7 +5644,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       // Research: Best for isolations/machines. Avoid heavy compounds (squats, deads).
       // Activation: 12-30 reps near failure. Mini-sets: 3-5 reps × 4-5 sets, 5-10s rest.
       // Progression: all mini-sets completed → +1 rep to activation next session.
-      if(mid==="myo"){
+      if(_dayMid==="myo"){
         var picked=[];var myUsed={};
         // Prefer isolations for myo-reps (research: compounds unsuitable due to setup/safety)
         var myoPreferred=seededShuffle(isos.concat(bw),rng);var myoComps=seededShuffle(comps,rng);
@@ -5594,7 +5671,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
 
       // ── DC REST-PAUSE (Dante Trudel): 1 exercise per muscle, rest-pause + extreme stretch ──
       // Research: DC uses 3-way exercise rotation (A/B/C), 1 RP set per muscle, widowmaker for quads
-      if(mid==="dc"){
+      if(_dayMid==="dc"){
         var dcPool=comps.length>0?comps:isos;
         // Rotate through 3 exercises across sessions (DC A/B/C rotation)
         var dcIdx=(off+Math.floor(genCount/3))%Math.max(1,dcPool.length);
@@ -5615,7 +5692,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       }
 
       // ── DUP (Daily Undulating Periodization): vary rep ranges by day ──
-      if(mid==="dup"){
+      if(_dayMid==="dup"){
         // Day type cycles: strength → hypertrophy → endurance across days
         var dupTypes=["strength","hypertrophy","endurance"];
         var dupType=dupTypes[di%dupTypes.length];
@@ -5663,7 +5740,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       var _mOcc=_muscleOccurrence[muscle]||0;
       var _repProfiles=["heavy","moderate","light"];
       var _repProfile=_repProfiles[_mOcc%Math.min(_mFreq,3)];
-      var _undulatedReps=_mFreq>=2?(_repProfile==="heavy"?"6-10":_repProfile==="moderate"?"8-12":"12-15"):baseReps;
+      var _undulatedReps=_dayRepRange?_dayRepRange:(_mFreq>=2?(_repProfile==="heavy"?"6-10":_repProfile==="moderate"?"8-12":"12-15"):baseReps);
       // Volume weighting: compounds get 60% of sets, isolations 40% (research: higher neuromuscular demand)
       var compCount=picked.filter(function(e){return e.t==="C";}).length;
       var isoCount=picked.length-compCount;
@@ -5673,7 +5750,9 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       var _groupExAdded=0;
       picked.forEach(function(ex){
         var tech="straight";
-        if(mid==="hybrid")tech=(ex.t==="I"&&ex.myo)?"myo":"straight";
+        if(_dayMid==="hybrid")tech=(ex.t==="I"&&ex.myo)?"myo":"straight";
+        // V2: Compound override for method-locked hypertrophy days (e.g., PHUL Hyp Upper — compounds stay straight)
+        if(_dayCompoundOverride&&ex.t==="C")tech=_dayCompoundOverride;
         var reps=tech==="myo"?"12-20 + 3-5x3-5":_undulatedReps;
         var sets=tech==="myo"?1:(ex.t==="C"?compSets:isoSets);
         if(phase==="deload"){reps="8-10 easy";sets=2;tech="straight";}
@@ -5686,8 +5765,11 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
             if(groupUsed+eTime>avail)return;
           } else { return; }
         }
-        var note=phase==="deload"?"DELOAD: 50% weight, easy reps. Should feel refreshing.":"W"+wk+" / "+rir+" RIR / "+phase;
-        exs.push({name:ex.n,muscle:muscle,tech:tech,sets:sets,reps:reps,time:eTime,mv:ex.mv,note:note,rir:rir});
+        var _exRir=(_dayRir?_dayRir[0]:rir);
+        // V2: Per-exercise method assignment
+        var _exMethod=assignExerciseMethod(ex,muscle,_dayMid,splitObj.dayMethodRules,day.n);
+        var note=phase==="deload"?"DELOAD: 50% weight, easy reps. Should feel refreshing.":(_dayRule?day.n.toUpperCase()+": "+reps+" @ "+_exRir+" RIR":"W"+wk+" / "+rir+" RIR / "+phase);
+        exs.push({name:ex.n,muscle:muscle,tech:tech,sets:sets,reps:reps,time:eTime,mv:ex.mv,note:note,rir:_exRir,exMethod:_exMethod.method,exMethodSource:_exMethod.source,exClass:getExerciseClass(ex,muscle),t:ex.t});
         _groupExAdded++;
         if(isComp)firstComp=false;used+=eTime;groupUsed+=eTime;
       });
@@ -6050,6 +6132,23 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       exs.splice(removeIdx,1);
       tot=exs.reduce(function(a,e){return a+e.time;},0);
     }
+    // V2: Post-process — stamp exMethod on any exercise that doesn't have it yet
+    for(var _emi=0;_emi<exs.length;_emi++){
+      if(!exs[_emi].exMethod){
+        var _emEx=null;var _emPool=EX[exs[_emi].muscle]||[];
+        for(var _emj=0;_emj<_emPool.length;_emj++){if(_emPool[_emj].n===exs[_emi].name){_emEx=_emPool[_emj];break;}}
+        if(_emEx){
+          var _emResult=assignExerciseMethod(_emEx,exs[_emi].muscle,_dayMid,splitObj.dayMethodRules,day.n);
+          exs[_emi].exMethod=_emResult.method;
+          exs[_emi].exMethodSource=_emResult.source;
+          exs[_emi].exClass=getExerciseClass(_emEx,exs[_emi].muscle);
+          exs[_emi].t=_emEx.t;
+        } else {
+          exs[_emi].exMethod=exs[_emi].tech||"straight";
+          exs[_emi].exMethodSource="fallback";
+        }
+      }
+    }
     // Apply learned time correction factor
     // D-Apr2026: per-day-label correction with global fallback. Meta is stamped on
     // the session so the UI can render the "based on N sessions" hint without
@@ -6059,7 +6158,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
     // D-Apr2026: round tot to integer minutes so the display never shows 22.9999997
     var estClean=Math.round(tot);
     var correctedEst=Math.round(tot*tf);
-    sessions.push({label:day.n,exercises:exs,est:estClean,correctedEst:correctedEst,timeFactor:tf,timeFactorSessions:tfMeta.sessions,timeFactorSource:tfMeta.source});
+    sessions.push({label:day.n,exercises:exs,est:estClean,correctedEst:correctedEst,timeFactor:tf,timeFactorSessions:tfMeta.sessions,timeFactorSource:tfMeta.source,dayMethodRule:_dayRule||null,dayMethod:_dayMid});
   });
   return sessions;
 }
@@ -6319,6 +6418,8 @@ function Forge(props){
   var _editSess=useState(null),editingSession=_editSess[0],setEditingSession=_editSess[1]; // null or {weekNum,dayIdx,date,data} for editing past workouts
   var _reviewMode=useState(false),reviewMode=_reviewMode[0],setReviewMode=_reviewMode[1]; // true after generate, shows edit before dashboard
   var _methodOverride=useState(null),methodOverride=_methodOverride[0],setMethodOverride=_methodOverride[1]; // {original,alternatives} for time conflict
+  var _lockedInfoModal=useState(false),lockedInfoModal=_lockedInfoModal[0],setLockedInfoModal=_lockedInfoModal[1]; // show method-locked split info
+  var _mesoTransition=useState(null),mesoTransition=_mesoTransition[0],setMesoTransition=_mesoTransition[1]; // V2: {step:"review"|"choose"|"weights", data:{...}}
   var _calPick=useState(null),calPick=_calPick[0],setCalPick=_calPick[1];
   // ═══ FIREBASE AUTH STATE ═══
   var _au=useState(null),authUser=_au[0],setAuthUser=_au[1];
@@ -6575,19 +6676,39 @@ function Forge(props){
     });
   }
 
-  // ═══ GET NEXT INCOMPLETE DAY ═══
+  // ═══ GET NEXT INCOMPLETE DAY (V2: sequential queue) ═══
   function getNextDay() {
+    // Sequential scheduling: find the first incomplete day starting from current aDay
     for (var d = 0; d < program.length; d++) {
+      var idx = (aDay + d) % program.length;
       var found = false;
       for (var c = 0; c < completedDays.length; c++) {
-        if (completedDays[c].weekNum === weekNum && completedDays[c].dayIdx === d) {
+        if (completedDays[c].weekNum === weekNum && completedDays[c].dayIdx === idx) {
           found = true;
           break;
         }
       }
-      if (!found) return d;
+      if (!found) return idx;
     }
     return 0;
+  }
+
+  // V2: Get absence adjustment for load/volume after extended rest
+  function getAbsenceAdjustment(daysSince) {
+    if (!daysSince || daysSince <= 4) return {loadMod: 1.0, volumeMod: 1.0, label: null};
+    if (daysSince <= 7) return {loadMod: 0.95, volumeMod: 0.75, label: "5-7 days off: -5% load, -25% volume"};
+    if (daysSince <= 14) return {loadMod: 0.90, volumeMod: 0.50, label: "1-2 weeks off: -10% load, -50% volume"};
+    return {loadMod: 0.80, volumeMod: 0.50, label: "2+ weeks off: -20% load, restart conservative"};
+  }
+
+  // V2: Workout queue preview — next N upcoming workouts
+  function getQueuePreview(count) {
+    var preview = [];
+    for (var d = 0; d < Math.min(count, program.length); d++) {
+      var idx = (aDay + d) % program.length;
+      if (program[idx]) preview.push({idx: idx, label: program[idx].label});
+    }
+    return preview;
   }
 
   // ═══ CHECK IF DAY COMPLETED ═══
@@ -6849,6 +6970,175 @@ function Forge(props){
     return {w: s.w, r: s.r, isExact: true};
   }
 
+  // ═══ V2 #4: MESOCYCLE TRANSITION DATA BUILDER ═══
+  // Gathers performance stats from the completed mesocycle for the transition wizard.
+  // Returns {prCount, stalledExercises[], volumeStart, volumeEnd, muscleBalance[], sessionCount, mesoWeeks, topPRs[]}
+  function buildTransitionData(hist, idx, wk) {
+    // 1. Count PRs hit during this mesocycle
+    var prCount = 0;
+    var topPRs = [];
+    var mesoStartDate = null;
+    // Find approximate meso start date from session index
+    var mesoSessions = [];
+    for (var i = 0; i < idx.length; i++) {
+      if (idx[i] && idx[i].date) {
+        mesoSessions.push(idx[i]);
+      }
+    }
+    // Use sessions from last (wk * program.length) entries as the meso window
+    var mesoSessionCount = wk * (program.length || 1);
+    var mesoSlice = mesoSessions.slice(Math.max(0, mesoSessions.length - mesoSessionCount));
+    if (mesoSlice.length > 0) {
+      mesoStartDate = mesoSlice[0].date;
+    }
+
+    // Scan PRs map for PRs set during this meso
+    var prKeys = Object.keys(prs);
+    for (var p = 0; p < prKeys.length; p++) {
+      var pr = prs[prKeys[p]];
+      if (pr && pr.date && mesoStartDate && pr.date >= mesoStartDate) {
+        prCount++;
+        topPRs.push({ name: prKeys[p], vol: pr.vol || (pr.w * pr.r), w: pr.w, r: pr.r });
+      }
+    }
+    // Sort topPRs by volume descending, take top 5
+    topPRs.sort(function(a, b) { return (b.vol || 0) - (a.vol || 0); });
+    if (topPRs.length > 5) topPRs = topPRs.slice(0, 5);
+
+    // 2. Find stalled exercises
+    var stalledExercises = [];
+    var allExNames = Object.keys(hist);
+    for (var e = 0; e < allExNames.length; e++) {
+      var exName = allExNames[e];
+      var exH = hist[exName];
+      if (!exH || exH.length < 2) continue;
+      var stallLvl = detectStall(exH, null);
+      if (stallLvl >= 2) {
+        stalledExercises.push({ name: exName, level: stallLvl });
+      }
+    }
+
+    // 3. Volume start vs end (week 1 planned vs final week planned)
+    var volumeStart = {};
+    var volumeEnd = {};
+    var muscleKeys = Object.keys(VOL_LM);
+    for (var m = 0; m < muscleKeys.length; m++) {
+      var mk = muscleKeys[m];
+      var vm2 = (goalObj && goalObj.vol && goalObj.vol[mk]) ? goalObj.vol[mk] : 1;
+      volumeStart[mk] = calcWeekVol(mk, 1, mesoLen, vm2, 0, null);
+      volumeEnd[mk] = calcWeekVol(mk, wk, mesoLen, vm2, 0, null);
+    }
+
+    // 4. Muscle balance vs landmarks
+    var muscleBalance = [];
+    for (var mb = 0; mb < muscleKeys.length; mb++) {
+      var mk2 = muscleKeys[mb];
+      var lm = VOL_LM[mk2];
+      var endVol = volumeEnd[mk2] || 0;
+      var status = "ok";
+      if (endVol < lm.mev) status = "below_mev";
+      else if (endVol >= lm.mrv) status = "at_mrv";
+      else if (endVol >= lm.mav) status = "above_mav";
+      muscleBalance.push({
+        muscle: mk2,
+        sets: endVol,
+        mev: lm.mev,
+        mav: lm.mav,
+        mrv: lm.mrv,
+        status: status,
+        startSets: volumeStart[mk2] || 0
+      });
+    }
+
+    // 5. Average performance and readiness across meso sessions
+    var avgPerf = 0;
+    var avgRead = 0;
+    var perfCount = 0;
+    for (var s = 0; s < mesoSlice.length; s++) {
+      if (mesoSlice[s].perf !== undefined) {
+        avgPerf += mesoSlice[s].perf;
+        perfCount++;
+      }
+      if (mesoSlice[s].readiness !== undefined) {
+        avgRead += mesoSlice[s].readiness;
+      }
+    }
+    if (perfCount > 0) {
+      avgPerf = Math.round(avgPerf / perfCount * 10) / 10;
+      avgRead = Math.round(avgRead / perfCount * 10) / 10;
+    }
+
+    return {
+      prCount: prCount,
+      topPRs: topPRs,
+      stalledExercises: stalledExercises,
+      volumeStart: volumeStart,
+      volumeEnd: volumeEnd,
+      muscleBalance: muscleBalance,
+      sessionCount: mesoSlice.length,
+      mesoWeeks: wk,
+      avgPerf: avgPerf,
+      avgRead: avgRead,
+      goal: goal,
+      split: split,
+      method: method
+    };
+  }
+
+  // ═══ V2 #4: NEW MESO WEIGHT AUTO-POPULATION ═══
+  // For each exercise in the current program, computes a starting weight for the new meso.
+  // Rule: previous Week 1 weight x 1.05, rounded to nearest 2.5. Stalled exercises keep same weight.
+  function getNewMesoWeights() {
+    var weights = {};
+    if (!program || !program.length) return weights;
+    for (var d = 0; d < program.length; d++) {
+      var day = program[d];
+      if (!day || !day.exercises) continue;
+      for (var e = 0; e < day.exercises.length; e++) {
+        var ex = day.exercises[e];
+        if (!ex || !ex.name) continue;
+        var hist = exHist[ex.name];
+        var isStalled = false;
+        if (hist && hist.length >= 2) {
+          var sl = detectStall(hist, null);
+          if (sl >= 2) isStalled = true;
+        }
+        // Find the earliest session in this meso (Week 1 weight)
+        var w1Weight = 0;
+        var latestWeight = 0;
+        if (hist && hist.length > 0) {
+          // Latest session weight
+          if (hist[0] && hist[0].sets && hist[0].sets.length > 0) {
+            latestWeight = hist[0].sets[0].w || 0;
+          }
+          // Try to find earliest meso session (approximate: go back program.length * mesoLen sessions)
+          var mesoDepth = Math.min(hist.length - 1, (program.length || 1) * (mesoLen || 4));
+          if (hist[mesoDepth] && hist[mesoDepth].sets && hist[mesoDepth].sets.length > 0) {
+            w1Weight = hist[mesoDepth].sets[0].w || 0;
+          }
+          if (w1Weight === 0) w1Weight = latestWeight;
+        }
+        var newW;
+        if (isStalled || w1Weight === 0) {
+          // Stalled: keep same weight, don't bump
+          newW = latestWeight || w1Weight;
+        } else {
+          // +5% from Week 1 weight, rounded to nearest 2.5
+          newW = Math.round((w1Weight * 1.05) / 2.5) * 2.5;
+        }
+        weights[d + "-" + e] = {
+          name: ex.name,
+          muscle: ex.muscle || "",
+          suggested: newW,
+          previous: latestWeight,
+          w1Previous: w1Weight,
+          stalled: isStalled
+        };
+      }
+    }
+    return weights;
+  }
+
   // ═══ SAVE SESSION TO PERSISTENT STORAGE ═══
   function saveSession() {
     var day = program[aDay];
@@ -7048,6 +7338,10 @@ function Forge(props){
       sSet("forge_completedDays", newCompletedDays);
     }
 
+    // V2: Sequential scheduling — auto-advance aDay to next in queue
+    var _nextSeq = (aDay + 1) % program.length;
+    setADay(_nextSeq);
+
     // Auto-advance week if all days are done
     var allDone = true;
     for (var ad = 0; ad < program.length; ad++) {
@@ -7067,6 +7361,9 @@ function Forge(props){
     // ═══ AUTO-BACKUP TO DRIVE ON MESO FINISH ═══
     if (allDone && weekNum >= mesoLen) {
       try { exportToDrive(true); } catch(e) { console.warn("Auto-backup skipped:", e); }
+      // V2: Trigger mesocycle transition wizard
+      var _transData=buildTransitionData(exHist,sessIdx,weekNum);
+      setMesoTransition({step:"review",data:_transData});
     }
 
     setSessionSaved(true);
@@ -8905,9 +9202,10 @@ function Forge(props){
         {step===1&&cd(<div>{hd("HOW MANY DAYS/WEEK?")}
           <div style={{display:"flex",gap:6,marginBottom:16}}>{[3,4,5,6].map(function(d){return pill(d+" DAYS",numDays===d,C.acc,function(){setNumDays(d);setSplit(null);},"d"+d);})}</div>
           {hd("CHOOSE A SPLIT ("+filtSplits.length+")")}
-          {filtSplits.map(function(s){var sel=split===s.id;return <button key={s.id} onClick={function(){setSplit(s.id);}} style={{width:"100%",textAlign:"left",padding:"14px 16px",marginBottom:8,background:sel?(C.acc+"12"):C.bar,border:"1px solid "+(sel?(C.acc+"50"):"transparent"),borderRadius:12,cursor:"pointer"}}>
-            <div style={{fontSize:15,fontWeight:700,color:sel?C.acc:C.txt,fontFamily:FD}}>{s.n}</div><div style={{fontSize:11,color:C.dim,marginTop:3,lineHeight:1.5}}>{s.desc}</div>
-            {sel&&<div style={{marginTop:8,display:"flex",flexWrap:"wrap",gap:4}}>{s.layout.map(function(d,i){return <span key={i} style={{fontSize:10,color:C.mid,background:C.sf2,padding:"3px 8px",borderRadius:6}}>{"D"+(i+1)+": "+d.n}</span>;})}</div>}
+          {filtSplits.map(function(s){var sel=split===s.id;var isLocked=s.methodPolicy==="locked";var hasUserChoice=isLocked&&s.dayMethodRules&&Object.keys(s.dayMethodRules).some(function(k){return s.dayMethodRules[k].method==="userChoice";});return <button key={s.id} onClick={function(){setSplit(s.id);if(isLocked&&!hasUserChoice){setMethod("straight");}}} style={{width:"100%",textAlign:"left",padding:"14px 16px",marginBottom:8,background:sel?(C.acc+"12"):C.bar,border:"1px solid "+(sel?(C.acc+"50"):"transparent"),borderRadius:12,cursor:"pointer"}}>
+            <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:15,fontWeight:700,color:sel?C.acc:C.txt,fontFamily:FD}}>{s.n}</span>{isLocked&&<span style={{fontSize:8,fontFamily:FD,letterSpacing:1,padding:"2px 6px",borderRadius:4,background:C.pur+"18",color:C.pur,border:"1px solid "+C.pur+"40"}}>OWN PERIODIZATION</span>}</div><div style={{fontSize:11,color:C.dim,marginTop:3,lineHeight:1.5}}>{s.desc}</div>
+            {sel&&<div style={{marginTop:8,display:"flex",flexWrap:"wrap",gap:4}}>{s.layout.map(function(d,i){var dr=getDayMethodRule(s.id,d.n);return <span key={i} style={{fontSize:10,color:dr?C.pur:C.mid,background:dr?(C.pur+"12"):C.sf2,padding:"3px 8px",borderRadius:6}}>{"D"+(i+1)+": "+d.n+(dr&&dr.method!=="userChoice"?" ("+dr.method+")":"")}</span>;})}</div>}
+            {sel&&isLocked&&s.lockedInfo&&<div style={{marginTop:10,padding:"10px 12px",background:C.pur+"08",border:"1px solid "+C.pur+"30",borderRadius:10}}><div style={{fontSize:11,fontFamily:FD,letterSpacing:1,color:C.pur,marginBottom:4}}>{s.lockedInfo.title}</div><div style={{fontSize:11,color:C.mid,lineHeight:1.55,whiteSpace:"pre-line"}}>{s.lockedInfo.body}</div></div>}
             {sel&&s.id==="fbsp4"&&<div style={{marginTop:10,borderTop:"1px solid "+C.bdr,paddingTop:10}}>
               <div style={{fontSize:11,fontFamily:FD,color:C.pur,letterSpacing:1,marginBottom:6}}>SPECIALIZATION DAY — PICK MUSCLES</div>
               <div style={{fontSize:10,color:C.dim,marginBottom:8}}>Choose 2-4 muscle groups for your weak point day.</div>
@@ -8924,13 +9222,47 @@ function Forge(props){
           </button>;})}
         </div>)}
 
-        {step===2&&cd(<div>{hd("TRAINING METHOD")}
-          <div style={{fontSize:11,color:C.dim,marginBottom:12}}>Overlays onto your split. Determines how each set is structured.</div>
-          {METHODS.map(function(m){var sel=method===m.id;return <div key={m.id} onClick={function(){setMethod(m.id);}} style={{marginBottom:8,width:"100%",textAlign:"left",padding:"14px 16px",background:sel?(C.blu+"12"):C.bar,border:"1px solid "+(sel?(C.blu+"50"):"transparent"),borderRadius:12,cursor:"pointer"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:14,fontWeight:700,color:sel?C.blu:C.txt,fontFamily:FD}}>{m.n}</span><div style={{display:"flex",alignItems:"center",gap:4}}>{m.sv>0&&<span style={{fontSize:10,color:C.grn,fontFamily:FD}}>{"SAVES "+m.sv+"% TIME"}</span>}{techBtn(m.id)}</div></div>
-              <div style={{fontSize:11,color:C.dim,marginTop:3,lineHeight:1.4}}>{m.d}</div>
-              {METHOD_EXPLAIN[m.id]&&<button onClick={function(e){e.stopPropagation();setPopup({type:"protocol",id:m.id});}} style={{marginTop:8,padding:"5px 14px",fontSize:10,fontFamily:FD,letterSpacing:1,background:C.pur+"10",color:C.pur,border:"1px solid "+C.pur+"30",borderRadius:6,cursor:"pointer"}}>LEARN MORE</button>}
-          </div>;})}
+        {step===2&&cd(<div>{(function(){
+          var _splitLocked=isSplitLocked(split);
+          var _splitObj=SPLITS.find(function(x){return x.id===split;});
+          var _hasUserChoice=_splitLocked&&_splitObj&&_splitObj.dayMethodRules&&Object.keys(_splitObj.dayMethodRules).some(function(k){return _splitObj.dayMethodRules[k].method==="userChoice";});
+          // Fully locked (no userChoice days) — auto-set method and show info
+          if(_splitLocked&&!_hasUserChoice){
+            return <div>{hd("METHOD (LOCKED BY SPLIT)")}
+              {_splitObj&&_splitObj.lockedInfo&&<div style={{padding:"14px 16px",background:C.pur+"08",border:"1px solid "+C.pur+"30",borderRadius:12,marginBottom:12}}>
+                <div style={{fontSize:13,fontFamily:FD,letterSpacing:1,color:C.pur,marginBottom:6}}>{_splitObj.lockedInfo.title}</div>
+                <div style={{fontSize:12,color:C.mid,lineHeight:1.6,whiteSpace:"pre-line"}}>{_splitObj.lockedInfo.body}</div>
+              </div>}
+              <div style={{padding:"10px 14px",background:C.bar,borderRadius:10,fontSize:11,color:C.dim}}>This split defines the training method for every day. No method selection needed.</div>
+            </div>;
+          }
+          // Partially locked (some userChoice days) — show method picker for hypertrophy days
+          if(_splitLocked&&_hasUserChoice){
+            var _ucDays=[];
+            if(_splitObj&&_splitObj.dayMethodRules){Object.keys(_splitObj.dayMethodRules).forEach(function(k){if(_splitObj.dayMethodRules[k].method==="userChoice")_ucDays.push(k);});}
+            return <div>{hd("HYPERTROPHY DAY METHOD")}
+              <div style={{fontSize:11,color:C.dim,marginBottom:8}}>{"Power days use straight sets (locked). Choose a method for: "+_ucDays.join(", ")+"."}</div>
+              {_splitObj&&_splitObj.lockedInfo&&<div style={{padding:"10px 12px",background:C.pur+"08",border:"1px solid "+C.pur+"30",borderRadius:10,marginBottom:12}}>
+                <div style={{fontSize:11,fontFamily:FD,letterSpacing:1,color:C.pur,marginBottom:4}}>{_splitObj.lockedInfo.title}</div>
+                <div style={{fontSize:11,color:C.mid,lineHeight:1.5,whiteSpace:"pre-line"}}>{_splitObj.lockedInfo.body}</div>
+              </div>}
+              {METHODS.map(function(m){var sel=method===m.id;return <div key={m.id} onClick={function(){setMethod(m.id);}} style={{marginBottom:8,width:"100%",textAlign:"left",padding:"14px 16px",background:sel?(C.blu+"12"):C.bar,border:"1px solid "+(sel?(C.blu+"50"):"transparent"),borderRadius:12,cursor:"pointer"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:14,fontWeight:700,color:sel?C.blu:C.txt,fontFamily:FD}}>{m.n}</span><div style={{display:"flex",alignItems:"center",gap:4}}>{m.sv>0&&<span style={{fontSize:10,color:C.grn,fontFamily:FD}}>{"SAVES "+m.sv+"% TIME"}</span>}{techBtn(m.id)}</div></div>
+                <div style={{fontSize:11,color:C.dim,marginTop:3,lineHeight:1.4}}>{m.d}</div>
+                {METHOD_EXPLAIN[m.id]&&<button onClick={function(e){e.stopPropagation();setPopup({type:"protocol",id:m.id});}} style={{marginTop:8,padding:"5px 14px",fontSize:10,fontFamily:FD,letterSpacing:1,background:C.pur+"10",color:C.pur,border:"1px solid "+C.pur+"30",borderRadius:6,cursor:"pointer"}}>LEARN MORE</button>}
+              </div>;})}
+            </div>;
+          }
+          // Agnostic — standard method picker
+          return <div>{hd("TRAINING METHOD")}
+            <div style={{fontSize:11,color:C.dim,marginBottom:12}}>Overlays onto your split. Determines how each set is structured.</div>
+            {METHODS.map(function(m){var sel=method===m.id;return <div key={m.id} onClick={function(){setMethod(m.id);}} style={{marginBottom:8,width:"100%",textAlign:"left",padding:"14px 16px",background:sel?(C.blu+"12"):C.bar,border:"1px solid "+(sel?(C.blu+"50"):"transparent"),borderRadius:12,cursor:"pointer"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:14,fontWeight:700,color:sel?C.blu:C.txt,fontFamily:FD}}>{m.n}</span><div style={{display:"flex",alignItems:"center",gap:4}}>{m.sv>0&&<span style={{fontSize:10,color:C.grn,fontFamily:FD}}>{"SAVES "+m.sv+"% TIME"}</span>}{techBtn(m.id)}</div></div>
+                <div style={{fontSize:11,color:C.dim,marginTop:3,lineHeight:1.4}}>{m.d}</div>
+                {METHOD_EXPLAIN[m.id]&&<button onClick={function(e){e.stopPropagation();setPopup({type:"protocol",id:m.id});}} style={{marginTop:8,padding:"5px 14px",fontSize:10,fontFamily:FD,letterSpacing:1,background:C.pur+"10",color:C.pur,border:"1px solid "+C.pur+"30",borderRadius:6,cursor:"pointer"}}>LEARN MORE</button>}
+            </div>;})}
+          </div>;
+        })()}
         </div>)}
 
         {step===3&&cd(<div>{hd("SESSION LENGTH")}<div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:20}}>{[30,45,60,75,90].map(function(t){return pill(t+" min",mins===t,C.grn,function(){setMins(t);},"t"+t);})}</div>
@@ -8940,7 +9272,16 @@ function Forge(props){
 
         <div style={{display:"flex",gap:10,marginTop:4}}>
           {step===0?secBtn("BACK",function(){setSetupMode("choose");}):secBtn("BACK",function(){setStep(step-1);})}
-          {step<3?mainBtn("NEXT",function(){setStep(step+1);},(step===0&&!goal)||(step===1&&(!split||(split==="fbsp4"&&specMuscles.length<2)))||(step===2&&!method)):mainBtn("GENERATE",function(){generateProg();setReviewMode(true);setEditDay(0);setEditPick(null);setScreen("workout");setView("edit");})}
+          {step<3?mainBtn("NEXT",function(){
+            // When advancing from step 1 with a fully-locked split (no userChoice days),
+            // auto-set method and skip step 2 entirely
+            if(step===1&&isSplitLocked(split)){
+              var _sObj=SPLITS.find(function(x){return x.id===split;});
+              var _anyUC=_sObj&&_sObj.dayMethodRules&&Object.keys(_sObj.dayMethodRules).some(function(k){return _sObj.dayMethodRules[k].method==="userChoice";});
+              if(!_anyUC){setMethod("straight");setStep(3);return;}
+            }
+            setStep(step+1);
+          },(step===0&&!goal)||(step===1&&(!split||(split==="fbsp4"&&specMuscles.length<2)))||(step===2&&!method)):mainBtn("GENERATE",function(){generateProg();setReviewMode(true);setEditDay(0);setEditPick(null);setScreen("workout");setView("edit");})}
         </div>
       </div>)}
       </div>)}
@@ -8988,22 +9329,28 @@ function Forge(props){
           {METHOD_EXPLAIN[method]&&<button onClick={function(){setPopup({type:"protocol",id:method});}} style={{marginTop:10,width:"100%",padding:"10px 0",background:C.pur+"12",color:C.pur,border:"1px solid "+C.pur+"30",borderRadius:10,fontSize:12,fontWeight:700,fontFamily:FD,cursor:"pointer",letterSpacing:1}}>PROTOCOL GUIDE: {methodObj.n.toUpperCase()}</button>}
           <button onClick={function(){if(presetPick&&PROGRAM_PHILOSOPHY[presetPick]){setPopup({type:"philosophy",presetId:presetPick});}else{setPopup({type:"philosophy",sections:getCustomPhilosophy(splitObj,methodObj,goalObj,mins)});}}} style={{marginTop:8,width:"100%",padding:"10px 0",background:C.blu+"12",color:C.blu,border:"1px solid "+C.blu+"30",borderRadius:10,fontSize:12,fontWeight:700,fontFamily:FD,cursor:"pointer",letterSpacing:1}}>PROGRAM PHILOSOPHY</button>
         </div>)}
-        {/* Next workout card */}
+        {/* Next workout card — V2: sequential queue */}
         {(function(){
           var nextD=getNextDay();
           var day=program[nextD];
           if(!day)return null;
           var done=isDayCompleted(weekNum,nextD);
+          var _dSince=getDaysSinceLastSession(completedDays);
+          var _absAdj=getAbsenceAdjustment(_dSince);
+          var _queuePrev=getQueuePreview(4);
           return cd(<div>
-            {hd(done?"ALL DAYS COMPLETE THIS WEEK":"NEXT WORKOUT")}
+            {hd(done?"ALL DAYS COMPLETE THIS WEEK":"UP NEXT")}
             <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
               <div style={{width:48,height:48,borderRadius:12,background:C.acc+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,fontWeight:700,color:C.acc,fontFamily:FD}}>{"D"+(nextD+1)}</div>
               <div>
                 <div style={{fontSize:16,fontWeight:700,fontFamily:FD}}>{day.label}</div>
                 <div style={{fontSize:11,color:C.dim}}>{"~"+Math.round(day.correctedEst||day.est||0)+" min • "+day.exercises.length+" exercises"}</div>
+                {_dSince!==null&&<div style={{fontSize:10,color:_dSince>=4?C.orn:C.dim,marginTop:2}}>{"Last trained: "+_dSince+" day"+(_dSince===1?"":"s")+" ago"}</div>}
               </div>
             </div>
+            {_absAdj.label&&<div style={{marginBottom:10,padding:"8px 12px",background:C.orn+"10",border:"1px solid "+C.orn+"30",borderRadius:8,fontSize:10,color:C.orn}}>{_absAdj.label}</div>}
             {mainBtn("START WORKOUT",function(){setADay(nextD);setAEx(0);setLog({});setReadiness(null);setSessionSaved(false);setNewPRs([]);setScreen("workout");setView("readiness");})}
+            {_queuePrev.length>1&&<div style={{marginTop:10,display:"flex",gap:4,alignItems:"center"}}><span style={{fontSize:9,color:C.dim,fontFamily:FD,letterSpacing:1}}>COMING UP:</span>{_queuePrev.slice(1).map(function(q,qi){return <span key={qi} style={{fontSize:9,color:C.mid,background:C.sf2,padding:"2px 8px",borderRadius:6}}>{q.label}</span>;})}</div>}
           </div>,C.acc+"20");
         })()}
         {/* Quick week overview */}
@@ -9138,6 +9485,27 @@ function Forge(props){
             </div>;
           })}
         </div>
+        {/* V2: Sequential queue card */}
+        {!calPick&&(function(){
+          var _nxt=getNextDay();
+          var _nxtDay=program[_nxt];
+          var _dSince=getDaysSinceLastSession(completedDays);
+          var _qp=getQueuePreview(program.length);
+          if(!_nxtDay)return null;
+          return cd(<div>
+            {hd("UP NEXT")}
+            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
+              <div style={{width:44,height:44,borderRadius:10,background:C.acc+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:700,color:C.acc,fontFamily:FD}}>{"D"+(_nxt+1)}</div>
+              <div>
+                <div style={{fontSize:15,fontWeight:700,fontFamily:FD}}>{_nxtDay.label}</div>
+                <div style={{fontSize:10,color:C.dim}}>{"~"+Math.round(_nxtDay.correctedEst||_nxtDay.est||0)+" min"}</div>
+                {_dSince!==null&&<div style={{fontSize:10,color:_dSince>=4?C.orn:C.dim}}>{"Last trained "+_dSince+" day"+(_dSince===1?"":"s")+" ago"}</div>}
+              </div>
+            </div>
+            {mainBtn("START WORKOUT",function(){setADay(_nxt);setAEx(0);setLog({});setReadiness(null);setSessionSaved(false);setNewPRs([]);setScreen("workout");setView("readiness");})}
+            {_qp.length>1&&<div style={{marginTop:12}}><div style={{fontSize:9,fontFamily:FD,letterSpacing:1.5,color:C.dim,marginBottom:6}}>QUEUE</div><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{_qp.map(function(q,qi){var isNext=qi===0;return <span key={qi} style={{fontSize:10,padding:"4px 10px",borderRadius:6,background:isNext?C.acc+"18":C.sf2,color:isNext?C.acc:C.mid,fontFamily:FD,border:"1px solid "+(isNext?C.acc+"40":"transparent")}}>{q.label}</span>;})}</div></div>}
+          </div>,C.acc+"20");
+        })()}
         {/* Calendar pick detail */}
         {calPick&&program[calPick.d]&&cd(<div>
           {hd("W"+calPick.w+" DAY "+(calPick.d+1)+": "+program[calPick.d].label)}
@@ -9745,7 +10113,7 @@ function Forge(props){
                     <div style={{width:14,height:2,background:C.dim,borderRadius:1}}/>
                   </div>
                   <div onClick={function(e){e.stopPropagation();setPopup({type:"exercise",id:ex.name});}} style={{cursor:"pointer"}}><ExSVG name={ex.name} mv={ex.mv} size={32}/></div>
-                  <div><div style={{fontSize:13,fontWeight:600}}>{ex.name}</div><div style={{fontSize:10,color:C.dim}}>{ex.muscle}{ex.tech!=="straight"?" / "+ex.tech.toUpperCase():""}</div>{renderExHint(ex.name, ex.muscle)}</div>
+                  <div><div style={{fontSize:13,fontWeight:600}}>{ex.name}</div><div style={{fontSize:10,color:C.dim}}>{ex.muscle}{ex.tech!=="straight"?" / "+ex.tech.toUpperCase():""}</div>{ex.exMethod&&ex.exMethod!=="straight"&&<span style={{fontSize:8,fontFamily:FD,letterSpacing:0.5,padding:"1px 5px",borderRadius:3,background:C.pur+"15",color:C.pur,border:"1px solid "+C.pur+"30",marginTop:2,display:"inline-block"}}>{METHOD_SHORT_LABELS[ex.exMethod]||ex.exMethod}</span>}{renderExHint(ex.name, ex.muscle)}</div>
                 </div>
                 <div style={{display:"flex",alignItems:"center",gap:4}}>{exBtn(ex.name)}{ex.tech!=="straight"&&techBtn(ex.tech)}<span style={{fontSize:10,color:C.acc,fontFamily:FD}}>SWAP</span></div>
               </div>
@@ -10152,7 +10520,7 @@ function Forge(props){
                   var techName=ex.tech==="myo"?"MYO-REP":"REST-PAUSE";
                   var _myoBand=ex.name.indexOf("Band")>=0||ex.name.indexOf("Banded")>=0;
                   var _myoWeighted=/\(weighted\)/i.test(ex.name)||/^Weighted /.test(ex.name)||/^DB /.test(ex.name);
-                  var _myoBW=!_myoWeighted&&(ex.tech==="primer"||ex.tech==="corrective"||ex.name.indexOf("Pushup")>=0||ex.name.indexOf("Push-up")>=0||ex.name.indexOf("Pull-up")>=0||ex.name.indexOf("Chin-up")>=0||ex.name.indexOf("Dip")>=0||ex.name.indexOf("Plank")>=0||ex.name.indexOf("Bodyweight")>=0||ex.name.indexOf("Human")>=0||ex.name.indexOf("Levitation")>=0||ex.name.indexOf("Pistol")>=0||ex.name.indexOf("Inverted")>=0||ex.name.indexOf("Pike")>=0||ex.name.indexOf("Diamond")>=0||ex.name.indexOf("Burpee")>=0||ex.name.indexOf("Mountain")>=0||ex.name.indexOf("Dead Bug")>=0||ex.name.indexOf("V-Up")>=0||ex.name.indexOf("Slick Floor")>=0||ex.name.indexOf("Towel")>=0||ex.name.indexOf("Headbanger")>=0||ex.name.indexOf("Sliding")>=0||ex.name.indexOf("Rolling")>=0);
+                  var _myoBW=!_myoWeighted&&(ex.t==="B"||ex.tech==="primer"||ex.tech==="corrective");
                   var _myoActDone=_myoBand?(myoData.band&&myoData.activationReps>0):_myoBW?(myoData.activationReps>0):(myoData.w>0&&myoData.activationReps>0);
                   return <div>
                     <div style={{background:techCol+"10",border:"1px solid "+techCol+"30",borderRadius:10,padding:12,marginBottom:10}}>
@@ -10207,7 +10575,7 @@ function Forge(props){
                   var rPlaceholder=rec?(rec.r<12?String(rec.r+1):String(rec.r)):"reps";
                   // D-Apr2026 BW detection: explicit "(weighted)" override wins — "Dead Bugs (weighted)" uses a DB.
                   var _isWeightedVariant=/\(weighted\)/i.test(ex.name)||/^Weighted /.test(ex.name)||/^DB /.test(ex.name);
-                  var setRir=setData.rir;var isBandEx=ex.name.indexOf("Band")>=0||ex.name.indexOf("Banded")>=0;var isBW=!_isWeightedVariant&&(ex.tech==="primer"||ex.tech==="corrective"||ex.name.indexOf("Pushup")>=0||ex.name.indexOf("Push-up")>=0||ex.name.indexOf("Pull-up")>=0||ex.name.indexOf("Chin-up")>=0||ex.name.indexOf("Dip")>=0||ex.name.indexOf("Inverted")>=0||ex.name.indexOf("Pike")>=0||ex.name.indexOf("Diamond")>=0||ex.name.indexOf("Burpee")>=0||ex.name.indexOf("Mountain")>=0||ex.name.indexOf("Dead Bug")>=0||ex.name.indexOf("V-Up")>=0||ex.name.indexOf("Plank")>=0||ex.name.indexOf("Bodyweight")>=0||ex.name.indexOf("Human")>=0||ex.name.indexOf("Levitation")>=0||ex.name.indexOf("Pistol")>=0||ex.name.indexOf("Slick Floor")>=0||ex.name.indexOf("Towel")>=0||ex.name.indexOf("Headbanger")>=0||ex.name.indexOf("Sliding")>=0||ex.name.indexOf("Rolling")>=0);
+                  var setRir=setData.rir;var isBandEx=ex.name.indexOf("Band")>=0||ex.name.indexOf("Banded")>=0;var isBW=!_isWeightedVariant&&(ex.t==="B"||ex.tech==="primer"||ex.tech==="corrective");
                   // D-Apr2026: Time-based loaded carries render a seconds input instead of reps.
                   var _isTB=isTimeBased(ex.name);
                   var isPrimerOrCorr=ex.tech==="primer"||ex.tech==="corrective"||ex.tier==="primer"||ex.tier==="corrective";var hasWR=setData.w&&setData.r;var hasBandR=isBandEx&&setData.band&&setData.r;var hasBWR=isBW&&setData.r;var setComplete=hasWR||hasBandR||hasBWR;
@@ -10523,6 +10891,199 @@ function Forge(props){
       </div>)}
 
       </div>)}
+
+      {/* ═══ V2 #4: MESOCYCLE TRANSITION WIZARD ═══ */}
+      {mesoTransition && (function(){
+        var td = mesoTransition.data || {};
+        var step = mesoTransition.step || "review";
+
+        function closeTW() { setMesoTransition(null); }
+        function goStep(s) { setMesoTransition(Object.assign({}, mesoTransition, {step: s})); }
+
+        // Shared modal overlay style
+        var overlayS = {position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.92)",zIndex:9999,display:"flex",flexDirection:"column",alignItems:"center",overflowY:"auto",padding:"20px 16px 40px"};
+        var cardS = {background:C.sf,borderRadius:16,padding:"20px 18px",maxWidth:400,width:"100%",marginBottom:16};
+        var headS = {fontFamily:"'Bebas Neue'",fontSize:28,color:C.acc,marginBottom:4,letterSpacing:1};
+        var subS = {fontSize:13,color:C.dim,marginBottom:16};
+        var btnPrimS = {width:"100%",padding:"14px 0",borderRadius:12,border:"none",background:C.acc,color:"#000",fontWeight:700,fontSize:15,cursor:"pointer",marginTop:12};
+        var btnSecS = {width:"100%",padding:"12px 0",borderRadius:12,border:"1px solid "+C.bdr,background:"transparent",color:C.tx,fontWeight:600,fontSize:14,cursor:"pointer",marginTop:8};
+
+        // ─── SCREEN 1: MESOCYCLE REVIEW ───
+        if (step === "review") {
+          return <div style={overlayS}>
+            <div style={cardS}>
+              <div style={headS}>MESOCYCLE COMPLETE</div>
+              <div style={subS}>{td.mesoWeeks + " weeks | " + td.sessionCount + " sessions"}</div>
+
+              {/* PR Summary */}
+              <div style={{background:C.bg,borderRadius:12,padding:"14px 16px",marginBottom:14}}>
+                <div style={{display:"flex",alignItems:"center",marginBottom:8}}>
+                  <span style={{fontSize:22,marginRight:8}}>&#127942;</span>
+                  <span style={{fontFamily:"'Bebas Neue'",fontSize:22,color:C.grn}}>{td.prCount + " PRs"}</span>
+                </div>
+                {td.topPRs && td.topPRs.length > 0 && td.topPRs.map(function(pr, i) {
+                  return <div key={i} style={{fontSize:12,color:C.dim,marginBottom:3}}>{pr.name + ": " + pr.w + " lb x " + pr.r + " reps"}</div>;
+                })}
+                {(!td.topPRs || td.topPRs.length === 0) && <div style={{fontSize:12,color:C.dim}}>No new PRs this mesocycle</div>}
+              </div>
+
+              {/* Stalled Exercises */}
+              {td.stalledExercises && td.stalledExercises.length > 0 && <div style={{background:C.bg,borderRadius:12,padding:"14px 16px",marginBottom:14}}>
+                <div style={{fontSize:13,fontWeight:700,color:C.red,marginBottom:6}}>{"Stalled (" + td.stalledExercises.length + ")"}</div>
+                {td.stalledExercises.map(function(se, i) {
+                  return <div key={i} style={{fontSize:12,color:C.dim,marginBottom:2}}>{se.name + (se.level >= 3 ? " (regressing)" : " (plateau)")}</div>;
+                })}
+              </div>}
+
+              {/* Volume Change */}
+              <div style={{background:C.bg,borderRadius:12,padding:"14px 16px",marginBottom:14}}>
+                <div style={{fontSize:13,fontWeight:700,color:C.tx,marginBottom:8}}>Volume Progression</div>
+                {td.muscleBalance && td.muscleBalance.map(function(mb, i) {
+                  var pct = mb.mrv > mb.mev ? Math.round((mb.sets - mb.mev) / (mb.mrv - mb.mev) * 100) : 0;
+                  pct = Math.min(100, Math.max(0, pct));
+                  var barColor = mb.status === "at_mrv" ? C.red : mb.status === "above_mav" ? C.grn : mb.status === "below_mev" ? C.dim : C.acc;
+                  return <div key={i} style={{marginBottom:8}}>
+                    <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:C.dim,marginBottom:2}}>
+                      <span>{mb.muscle}</span>
+                      <span>{mb.startSets + " -> " + mb.sets + " sets/wk"}</span>
+                    </div>
+                    <div style={{height:6,background:C.bg2 || "#1C1C22",borderRadius:3,overflow:"hidden"}}>
+                      <div style={{height:"100%",width:pct + "%",background:barColor,borderRadius:3,transition:"width 0.3s"}}></div>
+                    </div>
+                  </div>;
+                })}
+              </div>
+
+              {/* Avg Performance */}
+              {td.avgPerf > 0 && <div style={{fontSize:12,color:C.dim,marginBottom:12,textAlign:"center"}}>
+                {"Avg performance: " + td.avgPerf + "/5 | Avg readiness: " + td.avgRead}
+              </div>}
+
+              <button style={btnPrimS} onClick={function(){ goStep("choose"); }}>CHOOSE NEXT PATH</button>
+              <button style={btnSecS} onClick={closeTW}>Dismiss</button>
+            </div>
+          </div>;
+        }
+
+        // ─── SCREEN 2: CHOOSE PATH ───
+        if (step === "choose") {
+          var paths = [
+            {id:"again",     icon:"\u{1F504}", label:"Run Again",        desc:"Same program, fresh meso. Weights auto-progress +5%."},
+            {id:"method",    icon:"\u{1F527}", label:"Switch Method",     desc:"Keep exercises, change training method (e.g. straight sets to myo-reps)."},
+            {id:"specialize",icon:"\u{1F3AF}", label:"Specialization",    desc:"Focus extra volume on a lagging muscle group."},
+            {id:"split",     icon:"\u{1F500}", label:"Change Split",      desc:"Switch to a different training split (e.g. PPL to Upper/Lower)."},
+            {id:"recovery",  icon:"\u{1F9D8}", label:"Recovery Block",    desc:"1-2 week deload at 50% volume. Reset fatigue before next push."},
+            {id:"new",       icon:"\u{2728}",  label:"New Program",       desc:"Start fresh with the setup wizard. Full reset."}
+          ];
+          return <div style={overlayS}>
+            <div style={cardS}>
+              <div style={headS}>WHAT'S NEXT?</div>
+              <div style={subS}>Choose how to start your next mesocycle</div>
+              {paths.map(function(p, i) {
+                return <button key={i} style={{width:"100%",textAlign:"left",padding:"14px 16px",borderRadius:12,border:"1px solid "+C.bdr,background:C.bg,marginBottom:8,cursor:"pointer",display:"flex",alignItems:"flex-start",gap:12}} onClick={function(){
+                  if (p.id === "new") {
+                    // Full reset to setup wizard
+                    closeTW();
+                    setProgram([]);
+                    setScreen("setup");
+                    return;
+                  }
+                  if (p.id === "recovery") {
+                    // Start a mini recovery block: halve volume, reset week to 1
+                    closeTW();
+                    setWeekNum(1);
+                    sSet("forge_config", {goal:goal, split:split, method:method, mins:mins, mesoLen:2, weekNum:1, numDays:numDays, genCount:genCount, presetCd:presetCd, specMuscles:specMuscles, presetPick:presetPick, dbKit:dbKit});
+                    setCompletedDays([]);
+                    sSet("forge_completedDays", []);
+                    return;
+                  }
+                  if (p.id === "split") {
+                    closeTW();
+                    setProgram([]);
+                    setScreen("setup");
+                    return;
+                  }
+                  if (p.id === "method") {
+                    // Go to weights screen with current program, let them pick new method in setup
+                    closeTW();
+                    setProgram([]);
+                    setScreen("setup");
+                    return;
+                  }
+                  if (p.id === "specialize") {
+                    closeTW();
+                    setProgram([]);
+                    setScreen("setup");
+                    return;
+                  }
+                  // "again" — go to weights auto-population
+                  goStep("weights");
+                }}>
+                  <span style={{fontSize:20,lineHeight:"24px"}}>{p.icon}</span>
+                  <div>
+                    <div style={{fontSize:14,fontWeight:700,color:C.tx,marginBottom:2}}>{p.label}</div>
+                    <div style={{fontSize:12,color:C.dim,lineHeight:"16px"}}>{p.desc}</div>
+                  </div>
+                </button>;
+              })}
+              <button style={btnSecS} onClick={function(){ goStep("review"); }}>Back</button>
+            </div>
+          </div>;
+        }
+
+        // ─── SCREEN 3: WEIGHT AUTO-POPULATION ───
+        if (step === "weights") {
+          var _wData = mesoTransition.weightData || getNewMesoWeights();
+          // Store computed weights so re-renders don't recalc
+          if (!mesoTransition.weightData) {
+            setMesoTransition(Object.assign({}, mesoTransition, {weightData: _wData}));
+          }
+          var wKeys = Object.keys(_wData);
+          return <div style={overlayS}>
+            <div style={cardS}>
+              <div style={headS}>NEW MESO WEIGHTS</div>
+              <div style={subS}>Auto-populated from Week 1 +5%. Stalled exercises keep the same weight. Tap to edit.</div>
+
+              {wKeys.map(function(k, i) {
+                var wd = _wData[k];
+                return <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:C.bg,borderRadius:10,marginBottom:6}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:13,color:C.tx,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{wd.name}</div>
+                    <div style={{fontSize:10,color:C.dim}}>
+                      {wd.muscle + (wd.stalled ? " | STALLED" : "") + " | prev: " + wd.previous + " lb"}
+                    </div>
+                  </div>
+                  <input type="number" value={wd.suggested} onChange={function(ev){
+                    var newVal = parseFloat(ev.target.value) || 0;
+                    var newWD = Object.assign({}, _wData);
+                    newWD[k] = Object.assign({}, wd, {suggested: newVal});
+                    setMesoTransition(Object.assign({}, mesoTransition, {weightData: newWD}));
+                  }} style={{width:70,textAlign:"center",padding:"8px 4px",borderRadius:8,border:"1px solid "+C.bdr,background:C.sf,color:C.acc,fontFamily:"'Bebas Neue'",fontSize:20,fontWeight:700}} />
+                </div>;
+              })}
+
+              <button style={btnPrimS} onClick={function(){
+                // Apply: reset meso with new weights, advance weekNum to 1
+                // Save the weight overrides so buildProgram can use them
+                var overrides = {};
+                var owKeys = Object.keys(_wData);
+                for (var oi = 0; oi < owKeys.length; oi++) {
+                  overrides[_wData[owKeys[oi]].name] = _wData[owKeys[oi]].suggested;
+                }
+                sSet("forge_weightOverrides", overrides);
+                setWeekNum(1);
+                setCompletedDays([]);
+                sSet("forge_completedDays", []);
+                sSet("forge_config", {goal:goal, split:split, method:method, mins:mins, mesoLen:mesoLen, weekNum:1, numDays:numDays, genCount:genCount + 1, presetCd:presetCd, specMuscles:specMuscles, presetPick:presetPick, dbKit:dbKit});
+                closeTW();
+              }}>START NEW MESOCYCLE</button>
+              <button style={btnSecS} onClick={function(){ goStep("choose"); }}>Back</button>
+            </div>
+          </div>;
+        }
+
+        return null;
+      })()}
 
       {/* ═══ BOTTOM NAVIGATION BAR ═══ */}
       {(screen==="dashboard"||screen==="calendar"||screen==="stats"||screen==="settings")&&<div style={{position:"fixed",bottom:0,left:0,right:0,height:60,background:C.sf,borderTop:"1px solid "+C.bdr,display:"flex",justifyContent:"space-around",alignItems:"center",maxWidth:440,margin:"0 auto"}}>
