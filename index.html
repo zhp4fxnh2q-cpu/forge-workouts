@@ -2305,7 +2305,7 @@ function assignExerciseMethod(ex,muscle,globalMethod,dayMethodRules,dayLabel){
 // V2 method labels for UI display
 var METHOD_SHORT_LABELS={
   straight:"Straight Sets",myo:"Myo-Reps",density:"EDT",giant:"Giant Sets",
-  preexh:"Pre-Exhaust",dc:"Rest-Pause",mech:"Mech. Drops",hybrid:"Auto",dup:"DUP"
+  preexh:"Pre-Exhaust",dc:"Rest-Pause",mech:"Mech. Drops",hybrid:"Auto",dup:"DUP",tempo:"Tempo"
 };
 
 // ═══ METHOD EVIDENCE TIERS (Sprint 2 B11) ═══
@@ -2533,7 +2533,49 @@ var METHODS=[
   {id:"mech",n:"Mechanical Drop Sets",d:"Same weight, change angle to extend sets. No load change needed.",sv:30,tiers:{primer:false,str:false,corr:false,carry:false,grit:false}},
   {id:"hybrid",n:"Auto-Select (Smart)",d:"AthleanX 6-tier: primer, compound, hypertrophy, stretch, corrective, carry/grit. The full system.",sv:20,tiers:{primer:true,str:true,corr:true,carry:true,grit:true}},
   {id:"dup",n:"DUP (Undulating)",d:"Vary rep ranges within the same week: strength day (4-6), hypertrophy day (8-12), endurance day (15-20). Advanced periodization.",sv:10,tiers:{primer:true,str:true,corr:true,carry:false,grit:true}},
+  {id:"tempo",n:"Tempo Training",d:"Controlled rep speed with prescribed eccentric/concentric/pause durations. Maximizes time under tension for growth.",sv:15,tiers:{primer:true,str:false,corr:true,carry:false,grit:false}},
 ];
+
+// ═══ V2 #7: TEMPO TRAINING SYSTEM ═══
+// Tempo notation: E-P-C-L (Eccentric-Pause-Concentric-Lockout) in seconds.
+// e.g., 3-1-2-0 = 3s lowering, 1s bottom pause, 2s lifting, 0s lockout
+var TEMPO_PRESETS=[
+  {id:"hyp",    label:"Hypertrophy Standard", tempo:[3,1,2,0], desc:"3-1-2-0 — Moderate eccentric, controlled concentric. Best all-around growth stimulus."},
+  {id:"ecc",    label:"Eccentric Emphasis",    tempo:[4,1,1,0], desc:"4-1-1-0 — Slow eccentric (4s). Higher muscle damage, potent hypertrophy signal. Reduce load 10-15%."},
+  {id:"pause",  label:"Pause Reps",            tempo:[2,2,1,0], desc:"2-2-1-0 — 2s bottom pause eliminates stretch reflex. Builds starting strength and mind-muscle connection."},
+  {id:"speed",  label:"Speed / Power",         tempo:[1,0,1,0], desc:"1-0-1-0 — Fast, explosive. Best for force production and athletic transfer. Use 60-70% 1RM."},
+  {id:"slow",   label:"Super Slow",            tempo:[5,2,3,0], desc:"5-2-3-0 — 10s total TUT per rep. Extreme metabolic stress. Reduce load 30-40%. Only 4-6 reps needed."},
+  {id:"custom", label:"Custom",                tempo:[3,1,2,0], desc:"Set your own tempo prescription."}
+];
+
+// Tempo helpers
+function getTempoTUT(tempo){
+  // Total time-under-tension per rep in seconds
+  if(!tempo||!tempo.length)return 6;
+  return (tempo[0]||0)+(tempo[1]||0)+(tempo[2]||0)+(tempo[3]||0);
+}
+
+function getTempoRestMod(tempo){
+  // Longer TUT = more metabolic stress = can shorten rest slightly
+  var tut=getTempoTUT(tempo);
+  if(tut>=8) return 0.85; // super slow: 15% less rest
+  if(tut>=6) return 0.92; // standard tempo: 8% less rest
+  return 1.0; // fast tempo: normal rest
+}
+
+function getTempoRepAdjust(tempo){
+  // Slower tempo = fewer reps needed for same TUT budget
+  var tut=getTempoTUT(tempo);
+  if(tut>=10) return -4; // super slow: 4 fewer reps
+  if(tut>=7)  return -2; // eccentric emphasis: 2 fewer reps
+  if(tut>=5)  return 0;  // hyp standard: no adjustment
+  return 2;              // speed work: 2 extra reps
+}
+
+function formatTempo(tempo){
+  if(!tempo||!tempo.length)return "3-1-2-0";
+  return tempo[0]+"-"+tempo[1]+"-"+tempo[2]+"-"+tempo[3];
+}
 
 // ═══ PROTOCOL DEEP EXPLANATIONS ═══
 var METHOD_EXPLAIN={
@@ -2626,6 +2668,16 @@ var METHOD_EXPLAIN={
     science:"Undulating the stimulus prevents accommodation (repeated bout effect). Training across multiple rep ranges in the same week develops more complete motor unit recruitment, builds both myofibrillar and sarcoplasmic hypertrophy, and improves work capacity. Meta-analyses (Harries 2015, Grgic 2017) favor DUP for trained individuals.",
     structure:"3-4 days/week. Day A: 4 sets × 4-6 reps at 80-85% 1RM. Day B: 3 sets × 8-12 reps at 65-75%. Day C: 2 sets × 15-20 reps at 55-65%. Same core exercises across all days. Compounds first.",
     tips:"Track your weights per rep-range day separately. Your 'strength day' weight and your 'hypertrophy day' weight are different — don't confuse them. DUP works best when you keep the same exercises for 4-6 weeks before rotating."
+  },
+  "tempo":{
+    title:"TEMPO TRAINING",
+    origin:"Rooted in Australian strength coaching traditions (Ian King, Charles Poliquin). Prescribed tempo notation became mainstream through Poliquin's writings in the 1990s.",
+    how:"Each rep follows a strict tempo prescription: E-P-C-L (Eccentric-Pause-Concentric-Lockout). For example, 3-1-2-0 means 3 seconds lowering, 1 second pause at bottom, 2 seconds lifting, 0 seconds at the top. A metronome or countdown guides each phase.",
+    progression:"Progress by (1) increasing weight while maintaining the same tempo, (2) extending the eccentric or pause phases, or (3) adding reps within the tempo framework. When you hit the top of the rep range at the prescribed tempo, add weight.",
+    bestFor:"Lifters who rush through reps, need better mind-muscle connection, or want to maximize time under tension without adding external load. Excellent for home gym athletes with limited weight.",
+    science:"Schoenfeld 2015 meta-analysis: eccentric durations of 2-6 seconds optimize hypertrophy. Wilk 2020: slower eccentrics increase mechanical tension without requiring heavier loads. Tempo work effectively increases the stimulus per rep, letting lighter weights produce comparable growth signals to heavier loads at normal tempo.",
+    structure:"Per exercise: 3 sets of 6-10 reps at prescribed tempo. Rest 90-120s. Total TUT per set should be 30-50 seconds. Use 60-80% of your normal working weight depending on tempo chosen.",
+    tips:"Count in your head or use the in-app countdown. The eccentric (lowering) phase matters most — never rush it. If you cannot maintain the prescribed tempo, the weight is too heavy. Drop 10-15% and focus on execution."
   }
 };
 
@@ -3403,6 +3455,113 @@ var OVERLAP={
   hams:     {core:0.3,    back:0.1}        // RDLs → core + spinal erectors (back)
 };
 
+// ═══ V2 #5: FRACTIONAL VOLUME COUNTING (Pelland 2025) ═══
+// Direct sets count 1.0. Indirect (synergist) sets count 0.5.
+// This map uses {primaryMuscle}_{exerciseType} keys to define contributions.
+// Each key maps to an object of {targetMuscle: weight} pairs.
+// The primary muscle always gets 1.0 (implicit — not listed here).
+// Only INDIRECT contributions are listed. Isolation exercises (type I/B)
+// generally have no indirect contribution.
+//
+// Reference: Pelland et al. 2025 — "Indirect volume from multi-joint exercises
+// provides approximately half the hypertrophic stimulus of direct volume."
+var FRAC_CONTRIB = {
+  // ─── CHEST compounds ───
+  chest_C:     {triceps: 0.5, shoulders: 0.3},
+  chest_I:     {},  // flys, crossovers — chest isolation, no meaningful synergist load
+  chest_B:     {triceps: 0.4, shoulders: 0.2},  // pushups = lighter compound
+  // ─── BACK compounds ───
+  back_C:      {biceps: 0.5, shoulders: 0.2, core: 0.1},
+  back_I:      {},  // band pulldowns, face pulls — isolation
+  back_B:      {biceps: 0.4, core: 0.1},  // inverted rows, pull-ups
+  // ─── SHOULDERS ───
+  shoulders_C: {triceps: 0.3, chest: 0.1},  // OHP → triceps + small chest
+  shoulders_I: {},  // lateral raises, rear delts — isolation
+  shoulders_B: {triceps: 0.2},  // pike pushups etc
+  // ─── QUADS ───
+  quads_C:     {hams: 0.2, core: 0.4, glutes: 0.3},
+  quads_I:     {},
+  quads_B:     {hams: 0.2, core: 0.3, glutes: 0.2},  // pistol squats, BW squats
+  // ─── HAMS ───
+  hams_C:      {core: 0.3, back: 0.1, glutes: 0.3},
+  hams_I:      {},
+  hams_B:      {core: 0.2, glutes: 0.2},  // GHR, slick floor curls
+  // ─── BICEPS ───
+  biceps_C:    {back: 0.2},  // weighted chins (classified under biceps in some contexts)
+  biceps_I:    {},  // curls — pure isolation
+  biceps_B:    {},  // BW curls
+  // ─── TRICEPS ───
+  triceps_C:   {chest: 0.2, shoulders: 0.1},
+  triceps_I:   {},
+  triceps_B:   {},
+  // ─── CORE ───
+  core_C:      {},
+  core_I:      {},
+  core_B:      {}
+};
+
+// countFractionalVolume(sessions, weekNum)
+// Takes the current program sessions and returns per-muscle fractional set counts.
+// Returns {muscle: {direct: N, indirect: N, total: N}} for each muscle in VOL_LM.
+function countFractionalVolume(programDays, completedSessions, targetWeek) {
+  var counts = {};
+  var muscleKeys = Object.keys(VOL_LM);
+  for (var mi = 0; mi < muscleKeys.length; mi++) {
+    counts[muscleKeys[mi]] = {direct: 0, indirect: 0, total: 0};
+  }
+
+  // Scan each completed session for the target week
+  for (var d = 0; d < programDays.length; d++) {
+    var day = programDays[d];
+    if (!day || !day.exercises) continue;
+    // Check if this day was completed this week
+    var sessData = null;
+    for (var ci = 0; ci < completedSessions.length; ci++) {
+      if (completedSessions[ci].weekNum === targetWeek && completedSessions[ci].dayIdx === d) {
+        sessData = completedSessions[ci];
+        break;
+      }
+    }
+    // Count both completed (actual sets) and planned (from program)
+    for (var e = 0; e < day.exercises.length; e++) {
+      var ex = day.exercises[e];
+      if (!ex || !ex.muscle || ex.muscle === "cardio" || ex.muscle === "grit") continue;
+      if (ex.tier === "primer" || ex.tier === "corrective" || ex.tier === "carry") continue;
+      var sets = ex.sets || 3;
+      var primaryMuscle = ex.muscle;
+      var exType = ex.t || "C";  // fallback to compound
+
+      // Direct volume: 1.0 per set for primary muscle
+      if (counts[primaryMuscle]) {
+        counts[primaryMuscle].direct += sets;
+      }
+
+      // Indirect volume: look up fractional contributions
+      var fracKey = primaryMuscle + "_" + exType;
+      var contribs = FRAC_CONTRIB[fracKey];
+      if (contribs) {
+        var cKeys = Object.keys(contribs);
+        for (var ck = 0; ck < cKeys.length; ck++) {
+          var targetM = cKeys[ck];
+          var weight = contribs[cKeys[ck]];
+          if (counts[targetM]) {
+            counts[targetM].indirect += sets * weight;
+          }
+        }
+      }
+    }
+  }
+
+  // Compute totals: direct + (indirect * 0.5 as per Pelland 2025)
+  // The 0.5 is the meta-analytical weight — indirect sets provide ~50% stimulus
+  for (var mk = 0; mk < muscleKeys.length; mk++) {
+    var m = muscleKeys[mk];
+    counts[m].indirect = Math.round(counts[m].indirect * 10) / 10;
+    counts[m].total = Math.round((counts[m].direct + counts[m].indirect * 0.5) * 10) / 10;
+  }
+  return counts;
+}
+
 // ═══ LONG-HEAD TRICEP NEGLECT DETECTOR ═══
 // Horizontal/press-based tricep work (bench, dips, pushdowns) loads the lateral and
 // medial heads but leaves the long head relatively unstimulated because the long
@@ -3576,13 +3735,46 @@ function calcVolAdj(fb){
 //   v2 uses a square-root ramp: progress = sqrt((wk-1)/(ml-1)). This front-loads
 //   the ramp so week 2 is already ~60% of the way to MAV, matching Pelland 2025's
 //   observation that most muscles respond well early and then plateau.
-function calcWeekVol(muscle,wk,ml,goalMul,fbAdj,primarySetsMap){
+// ═══ V2 #6: BODY PART SPECIALIZATION (5-point budget) ═══
+// Users allocate 5 emphasis points across muscle groups. Each point adds ~8% volume
+// to that muscle's planned weekly sets. Zero-sum: points taken from one muscle
+// reduce its priority in program generation.
+//
+// specBudget = {chest:2, biceps:2, triceps:1} — allocate 5 points total
+// getSpecMultiplier(muscle, specBudget) returns 1.0 + (points * 0.08)
+var SPEC_TEMPLATES = [
+  {id:"none",    label:"Balanced (No Specialization)", budget:{}},
+  {id:"arms",    label:"Arms Specialization",          budget:{biceps:3, triceps:2}},
+  {id:"chest",   label:"Chest Focus",                  budget:{chest:3, shoulders:2}},
+  {id:"back",    label:"Back Width",                   budget:{back:3, biceps:2}},
+  {id:"legs",    label:"Leg Priority",                 budget:{quads:3, hams:2}},
+  {id:"shoulder",label:"Boulder Shoulders",             budget:{shoulders:3, chest:1, triceps:1}},
+  {id:"glutes",  label:"Glute & Posterior",             budget:{hams:3, core:2}},
+  {id:"upper",   label:"Upper Body Emphasis",           budget:{chest:2, back:2, shoulders:1}}
+];
+
+function getSpecPointsUsed(budget) {
+  if (!budget) return 0;
+  var total = 0;
+  var keys = Object.keys(budget);
+  for (var i = 0; i < keys.length; i++) { total += (budget[keys[i]] || 0); }
+  return total;
+}
+
+function getSpecMultiplier(muscle, budget) {
+  if (!budget || !budget[muscle]) return 1.0;
+  return 1.0 + (budget[muscle] * 0.08);
+}
+
+function calcWeekVol(muscle,wk,ml,goalMul,fbAdj,primarySetsMap,specBdg){
   var lm=VOL_LM[muscle];if(!lm)return 10;
   var denom=Math.max(1,ml-1);
   var progress=Math.sqrt(Math.max(0,wk-1)/denom);
   if(progress>1)progress=1;
   var base=lm.mev+Math.round((lm.mav-lm.mev)*progress);
-  base=Math.round(base*(goalMul||1));
+  // V2 #6: Apply specialization multiplier if budget has points for this muscle
+  var specMul = specBdg ? getSpecMultiplier(muscle, specBdg) : 1.0;
+  base=Math.round(base*(goalMul||1)*specMul);
   base+=(fbAdj||0);
   // Subtract indirect volume from compound overlap
   var overlapSets=0;
@@ -5446,7 +5638,7 @@ function selectExercisesForMuscle(scored,numExercises,goalObj,muscle,rng,equipFi
   }
   return picked;
 }
-function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHistory,readMod,genCount,banned,equipFilter){
+function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHistory,readMod,genCount,banned,equipFilter,specBdg){
   banned=banned||[];
   var tm=1-(methodObj.sv/100);var cl=goalObj.cd||0;var cm=cl>0?Math.min(10,cl*4):0;var lm=mins-cm;var sessions=[];
   var mid=methodObj.id;var wk=weekNum||1;var ml=mesoLen||4;var rir=getRIR(wk,ml);var phase=getMesoPhase(wk,ml);
@@ -5467,13 +5659,13 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
   var allMuscles=Object.keys(VOL_LM);
   for(var mi=0;mi<allMuscles.length;mi++){
     var m=allMuscles[mi];var vm=goalObj.vol[m]||1;
-    primarySetsEst[m]=calcWeekVol(m,wk,ml,vm,fbAdj?fbAdj[m]:0,null);
+    primarySetsEst[m]=calcWeekVol(m,wk,ml,vm,fbAdj?fbAdj[m]:0,null,specBdg);
   }
   // Second pass: compute final weekly volume with overlap subtracted
   var weeklyVols={};
   for(var mi2=0;mi2<allMuscles.length;mi2++){
     var m2=allMuscles[mi2];var vm2=goalObj.vol[m2]||1;
-    weeklyVols[m2]=calcWeekVol(m2,wk,ml,vm2,fbAdj?fbAdj[m2]:0,primarySetsEst);
+    weeklyVols[m2]=calcWeekVol(m2,wk,ml,vm2,fbAdj?fbAdj[m2]:0,primarySetsEst,specBdg);
   }
 
   splitObj.layout.forEach(function(day,di){var exs=[];var used=0;var firstComp=true;
@@ -5727,6 +5919,37 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
           if(groupUsed+dTime>avail)return; // Budget guard
           exs.push({name:ex.n,muscle:muscle,tech:"straight",sets:dupSets,reps:dupReps,time:dTime,mv:ex.mv,note:dupNote,rir:rir});
           if(ex.t==="C")firstComp=false;used+=dTime;groupUsed+=dTime;
+        });
+        return;
+      }
+
+      // ── V2 #7: TEMPO TRAINING ──
+      if(_dayMid==="tempo"){
+        var _tempoPicked=selectExercisesForMuscle(scored,numExercises,goalObj,muscle,rng,equipFilter,banned);
+        var _tempoPreset=TEMPO_PRESETS[0]; // Default: Hypertrophy Standard 3-1-2-0
+        var _tempoArr=_tempoPreset.tempo;
+        var _tempoTUT=getTempoTUT(_tempoArr);
+        var _tempoRepAdj=getTempoRepAdjust(_tempoArr);
+        var _tempoRestMod=getTempoRestMod(_tempoArr);
+        var _tempoBaseReps=baseReps;
+        // Parse base rep range and adjust for tempo
+        var _tbMatch=(_tempoBaseReps+"").match(/(\d+)\s*-\s*(\d+)/);
+        var _tLow=_tbMatch?parseInt(_tbMatch[1]):8;
+        var _tHigh=_tbMatch?parseInt(_tbMatch[2]):12;
+        _tLow=Math.max(3,_tLow+_tempoRepAdj);
+        _tHigh=Math.max(_tLow+2,_tHigh+_tempoRepAdj);
+        var _tempoReps=_tLow+"-"+_tHigh;
+        var _tempoStr=formatTempo(_tempoArr);
+        var _tempoNote="TEMPO "+_tempoStr+": "+_tempoArr[0]+"s eccentric, "+_tempoArr[1]+"s pause, "+_tempoArr[2]+"s concentric, "+_tempoArr[3]+"s lockout. TUT per rep: "+_tempoTUT+"s. Focus on control — if you cannot maintain tempo, drop weight 10-15%.";
+        _tempoPicked.forEach(function(ex){
+          var sets=ex.t==="C"?3:3;
+          var isComp=ex.t==="C";
+          var repsNum=(_tLow+_tHigh)/2;
+          var eTime=Math.round(exTime(sets,repsNum,isComp,firstComp&&isComp,"straight")*1.15); // tempo adds ~15% time
+          if(groupUsed+eTime>avail) return;
+          exs.push({name:ex.n,muscle:muscle,tech:"tempo",sets:sets,reps:_tempoReps,time:eTime,mv:ex.mv,
+            note:_tempoNote,rir:rir,tempo:_tempoArr,tempoStr:_tempoStr,tempoTUT:_tempoTUT});
+          if(ex.t==="C")firstComp=false;used+=eTime;groupUsed+=eTime;
         });
         return;
       }
@@ -6426,6 +6649,9 @@ function Forge(props){
   var _syncing=useState(false),syncing=_syncing[0],setSyncing=_syncing[1];
   var _garmin=useState(function(){try{var g=localStorage.getItem("forge_garmin");return g?JSON.parse(g):null;}catch(e){return null;}}),garminData=_garmin[0],setGarminData=_garmin[1];
   var _specM=useState(["chest","shoulders","biceps","triceps"]),specMuscles=_specM[0],setSpecMuscles=_specM[1];
+  var _specB=useState({}),specBudget=_specB[0],setSpecBudget=_specB[1]; // V2 #6: {muscle: points} 5-point budget
+  var _tempoPre=useState("hyp"),tempoPreset=_tempoPre[0],setTempoPreset=_tempoPre[1]; // V2 #7: active tempo preset id
+  var _tempoOverlay=useState(null),tempoOverlay=_tempoOverlay[0],setTempoOverlay=_tempoOverlay[1]; // V2 #7: active tempo countdown {phase,sec,rep}
   useEffect(function(){
     function onAuth(user){setAuthUser(user||null);}
     fbOnAuth(onAuth);
@@ -6794,6 +7020,7 @@ function Forge(props){
           if(typeof cfg.presetCd==="number") setPresetCd(cfg.presetCd);
           if(cfg.presetPick) setPresetPick(cfg.presetPick);
           if(cfg.specMuscles&&Array.isArray(cfg.specMuscles)&&cfg.specMuscles.length>0) setSpecMuscles(cfg.specMuscles);
+          if(cfg.specBudget&&typeof cfg.specBudget==="object") setSpecBudget(cfg.specBudget); // V2 #6
           if(cfg.dbKit&&KIT_PRESETS[cfg.dbKit]) setDbKit(cfg.dbKit); // C8
         }
       });
@@ -8027,7 +8254,7 @@ function Forge(props){
     // Derive equipment filter from selected preset (xero=bw, elastx=band, jacked=db, etc.)
     var eqF=null;
     if(presetPick){var pObj=PRESETS.find(function(x){return x.id===presetPick;});if(pObj&&pObj.equip)eqF=pObj.equip;}
-    var newProg=buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,null,exHist,readMod,newGenCount,banned,eqF);
+    var newProg=buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,null,exHist,readMod,newGenCount,banned,eqF,specBudget);
     // ═══ MESO-LOCK (System 6): lock exercises at week 1, restore on subsequent weeks ═══
     var _splitId=splitObj.id||"custom";var _methodId=methodObj.id||"straight";
     if(weekNum===1){
@@ -8160,14 +8387,24 @@ function Forge(props){
   }
 
   // ═══ VOLUME STATUS (weekly sets per muscle vs MEV/MAV/MRV) ═══
+  // V2 #5: Now includes fractional volume counting (Pelland 2025)
   function getVolumeStatus(){
     var status=[];
+    // Get fractional counts from current program
+    var fracCounts = countFractionalVolume(program, completedDays, weekNum);
     Object.keys(VOL_LM).forEach(function(m){
       var lm=VOL_LM[m];
       var vm2=goalObj.vol[m]||1;
-      var target=calcWeekVol(m,weekNum,mesoLen,vm2,0,null);
+      var target=calcWeekVol(m,weekNum,mesoLen,vm2,0,null,specBudget);
       var pct=Math.round((target-lm.mev)/(lm.mrv-lm.mev)*100);
-      status.push({muscle:m,sets:target,mev:lm.mev,mav:lm.mav,mrv:lm.mrv,pct:Math.min(100,Math.max(0,pct))});
+      var frac = fracCounts[m] || {direct:0, indirect:0, total:0};
+      status.push({
+        muscle:m, sets:target, mev:lm.mev, mav:lm.mav, mrv:lm.mrv,
+        pct:Math.min(100,Math.max(0,pct)),
+        directSets: frac.direct,
+        indirectSets: frac.indirect,
+        fracTotal: frac.total
+      });
     });
     return status;
   }
@@ -9018,7 +9255,7 @@ function Forge(props){
                 var newGenCount=genCount+1;setGenCount(newGenCount);
                 var eqF=null;if(presetPick){var pObj=PRESETS.find(function(x){return x.id===presetPick;});if(pObj&&pObj.equip)eqF=pObj.equip;}
                 var overrideMethodObj=METHODS.find(function(x){return x.id===m.id;});
-                var newProg=buildProgram(splitObj,overrideMethodObj||methodObj,goalObj,mins,1,mesoLen,null,exHist,readMod,newGenCount,banned,eqF);
+                var newProg=buildProgram(splitObj,overrideMethodObj||methodObj,goalObj,mins,1,mesoLen,null,exHist,readMod,newGenCount,banned,eqF,specBudget);
                 var _moSplitId=splitObj.id||"custom";var _moMethodId=(overrideMethodObj||methodObj).id||"straight";setMesoExercises(_moSplitId,_moMethodId,extractMesoSelections(newProg));
                 setProgram(newProg);setWeekNum(1);setADay(0);setCompletedDays([]);sSet("forge_completedDays",[]);setRestDaysChecked([]);sSet("forge_restdays",[]);
                 sSet("forge_program",newProg);sSet("forge_config",{goal:goal,split:split,method:m.id,mins:mins,mesoLen:mesoLen,weekNum:1,numDays:numDays,genCount:newGenCount,presetCd:presetCd,specMuscles:specMuscles,dbKit:dbKit});
@@ -9650,6 +9887,55 @@ function Forge(props){
             <div style={{fontSize:10,color:C.mid,lineHeight:1.5,marginTop:6,paddingTop:8,borderTop:"1px solid "+C.bdr}}>{freq.reason+"."}</div>
           </div>;
         })())}
+        {/* V2 #6 — Body Part Specialization */}
+        {cd(<div>
+          {hd("SPECIALIZATION")}
+          <div style={{fontSize:11,color:C.dim,marginBottom:10,lineHeight:1.55}}>{"Allocate 5 emphasis points to muscles you want to grow faster. Each point adds ~8% volume. " + getSpecPointsUsed(specBudget) + "/5 points used."}</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}}>
+            {SPEC_TEMPLATES.map(function(tmpl){
+              var isActive = JSON.stringify(specBudget) === JSON.stringify(tmpl.budget);
+              return <button key={tmpl.id} onClick={function(){
+                setSpecBudget(tmpl.budget);
+                sSet("forge_config",{goal:goal,split:split,method:method,mins:mins,mesoLen:mesoLen,weekNum:weekNum,numDays:numDays,genCount:genCount,presetCd:presetCd,specMuscles:specMuscles,presetPick:presetPick,dbKit:dbKit,specBudget:tmpl.budget});
+              }} style={{
+                padding:"6px 12px",fontSize:10,fontFamily:FD,letterSpacing:0.5,
+                background:isActive?C.acc+"18":"transparent",
+                color:isActive?C.acc:C.dim,
+                border:"1px solid "+(isActive?C.acc+"60":C.bdr),
+                borderRadius:8,cursor:"pointer"
+              }}>{tmpl.label}</button>;
+            })}
+          </div>
+          <div style={{fontSize:10,fontWeight:600,color:C.mid,marginBottom:6}}>CUSTOM BUDGET</div>
+          {Object.keys(VOL_LM).map(function(muscle){
+            var pts = (specBudget && specBudget[muscle]) || 0;
+            var used = getSpecPointsUsed(specBudget);
+            var canAdd = used < 5;
+            return <div key={muscle} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid "+C.bdr}}>
+              <span style={{fontSize:12,color:C.mid,textTransform:"capitalize",flex:1}}>{muscle}</span>
+              <div style={{display:"flex",alignItems:"center",gap:6}}>
+                <button onClick={function(){
+                  if(pts<=0) return;
+                  var nb=Object.assign({},specBudget);
+                  nb[muscle]=pts-1;
+                  if(nb[muscle]<=0) delete nb[muscle];
+                  setSpecBudget(nb);
+                  sSet("forge_config",{goal:goal,split:split,method:method,mins:mins,mesoLen:mesoLen,weekNum:weekNum,numDays:numDays,genCount:genCount,presetCd:presetCd,specMuscles:specMuscles,presetPick:presetPick,dbKit:dbKit,specBudget:nb});
+                }} style={{width:28,height:28,borderRadius:6,border:"1px solid "+C.bdr,background:pts>0?C.red+"18":"transparent",color:pts>0?C.red:C.dim,fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>{"-"}</button>
+                <span style={{width:20,textAlign:"center",fontSize:14,fontFamily:FD,fontWeight:700,color:pts>0?C.acc:C.dim}}>{pts}</span>
+                <button onClick={function(){
+                  if(!canAdd) return;
+                  var nb=Object.assign({},specBudget);
+                  nb[muscle]=(pts||0)+1;
+                  setSpecBudget(nb);
+                  sSet("forge_config",{goal:goal,split:split,method:method,mins:mins,mesoLen:mesoLen,weekNum:weekNum,numDays:numDays,genCount:genCount,presetCd:presetCd,specMuscles:specMuscles,presetPick:presetPick,dbKit:dbKit,specBudget:nb});
+                }} style={{width:28,height:28,borderRadius:6,border:"1px solid "+C.bdr,background:canAdd?C.grn+"18":"transparent",color:canAdd?C.grn:C.dim,fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>{"+"}</button>
+              </div>
+            </div>;
+          })}
+          {getSpecPointsUsed(specBudget)>0&&<div style={{fontSize:10,color:C.orn,marginTop:8}}>{"Note: Regenerate your program for specialization to take effect."}</div>}
+        </div>)}
+
         {/* Set Count Overrides — visibility into mid-flight tweaks */}
         {Object.keys(setOverrides||{}).length>0&&cd(<div>
           {hd("SET COUNT OVERRIDES")}
@@ -9884,6 +10170,39 @@ function Forge(props){
                   <span>{"MEV "+vs.mev}</span>
                   <span style={{position:"relative",left:(mevPct-50)+"%"}}>{"MAV "+vs.mav}</span>
                   <span>{"MRV "+vs.mrv}</span>
+                </div>
+              </div>;
+            })}
+          </div>);
+        })()}
+
+        {/* ═══ V2 #5: FRACTIONAL VOLUME (Pelland 2025) ═══ */}
+        {program.length>0&&(function(){
+          var volStatus=getVolumeStatus();
+          var hasFrac=volStatus.some(function(vs){return vs.indirectSets>0;});
+          if(!hasFrac) return null;
+          return cd(<div>
+            {hd("EFFECTIVE VOLUME · FRACTIONAL")}
+            <div style={{fontSize:10,color:C.dim,marginBottom:6,lineHeight:1.5}}>{"Direct sets + indirect synergist volume (Pelland 2025: indirect = 50% credit)"}</div>
+            {volStatus.map(function(vs){
+              if(vs.directSets===0&&vs.indirectSets===0) return null;
+              var totalEff=vs.fracTotal;
+              var pctMrv=Math.min(100,Math.round((totalEff/vs.mrv)*100));
+              var col=totalEff>=vs.mrv?C.red:totalEff>=vs.mav?C.orn:totalEff>=vs.mev?C.grn:C.blu;
+              var directPct=vs.mrv>0?Math.min(100,Math.round((vs.directSets/vs.mrv)*100)):0;
+              var indirectPct=vs.mrv>0?Math.min(100-directPct,Math.round((vs.indirectSets*0.5/vs.mrv)*100)):0;
+              return <div key={vs.muscle} style={{marginBottom:12}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+                  <span style={{fontSize:12,color:C.txt,textTransform:"capitalize",fontWeight:600}}>{vs.muscle}</span>
+                  <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <span style={{fontSize:9,color:C.dim}}>{vs.directSets+" direct"}</span>
+                    {vs.indirectSets>0&&<span style={{fontSize:9,color:C.pur||"#C084FC"}}>{"+" + vs.indirectSets + " indirect"}</span>}
+                    <span style={{fontSize:13,fontFamily:FD,color:col,fontWeight:700}}>{totalEff}</span>
+                  </div>
+                </div>
+                <div style={{height:8,background:C.bar,borderRadius:4,position:"relative",overflow:"hidden",display:"flex"}}>
+                  <div style={{height:"100%",width:directPct+"%",background:col,borderRadius:"4px 0 0 4px"}}/>
+                  {indirectPct>0&&<div style={{height:"100%",width:indirectPct+"%",background:C.pur||"#C084FC",opacity:0.5,borderRadius:"0 4px 4px 0"}}/>}
                 </div>
               </div>;
             })}
@@ -10150,7 +10469,7 @@ function Forge(props){
             </div>;})}
         </div>)}
         <div style={{marginTop:10}}>{reviewMode
-          ?<div><button onClick={function(){var newGC=genCount+1;setGenCount(newGC);var eqF=null;if(presetPick){var pObj=PRESETS.find(function(x){return x.id===presetPick;});if(pObj&&pObj.equip)eqF=pObj.equip;}var newProg=buildProgram(splitObj,methodObj,goalObj,mins,1,mesoLen,null,exHist,readMod,newGC,banned,eqF);var _rSplitId=splitObj.id||"custom";var _rMethodId=methodObj.id||"straight";setMesoExercises(_rSplitId,_rMethodId,extractMesoSelections(newProg));if(mesoSwaps&&Object.keys(mesoSwaps).length>0){for(var _rd=0;_rd<newProg.length;_rd++){for(var _re=0;_re<newProg[_rd].exercises.length;_re++){var _swapTo=mesoSwaps[newProg[_rd].exercises[_re].name];if(_swapTo){var _swapEx=null;var _swPool=EX[newProg[_rd].exercises[_re].muscle]||[];for(var _sp=0;_sp<_swPool.length;_sp++){if(_swPool[_sp].n===_swapTo){_swapEx=_swPool[_sp];break;}}if(_swapEx)newProg[_rd].exercises[_re]=Object.assign({},newProg[_rd].exercises[_re],{name:_swapEx.n,mv:_swapEx.mv});}}}}if(setOverrides&&Object.keys(setOverrides).length>0){for(var _sod=0;_sod<newProg.length;_sod++){for(var _soe=0;_soe<newProg[_sod].exercises.length;_soe++){var _ovC=setOverrides[newProg[_sod].exercises[_soe].name];if(typeof _ovC==="number"&&_ovC>=1){newProg[_sod].exercises[_soe]=Object.assign({},newProg[_sod].exercises[_soe],{sets:_ovC});}}}}setProgram(newProg);setEditDay(0);setEditPick(null);sSet("forge_program",newProg);sSet("forge_config",{goal:goal,split:split,method:method,mins:mins,mesoLen:mesoLen,weekNum:1,numDays:numDays,genCount:newGC,presetCd:presetCd,specMuscles:specMuscles,dbKit:dbKit});}} style={{width:"100%",padding:"14px 0",marginBottom:8,background:C.pur+"15",color:C.pur,border:"1px solid "+C.pur+"40",borderRadius:14,fontSize:15,fontWeight:700,fontFamily:FD,letterSpacing:2,cursor:"pointer"}}>REGENERATE</button>{mainBtn("CONFIRM PROGRAM",function(){sSet("forge_program",program);setReviewMode(false);setScreen("dashboard");})}</div>
+          ?<div><button onClick={function(){var newGC=genCount+1;setGenCount(newGC);var eqF=null;if(presetPick){var pObj=PRESETS.find(function(x){return x.id===presetPick;});if(pObj&&pObj.equip)eqF=pObj.equip;}var newProg=buildProgram(splitObj,methodObj,goalObj,mins,1,mesoLen,null,exHist,readMod,newGC,banned,eqF,specBudget);var _rSplitId=splitObj.id||"custom";var _rMethodId=methodObj.id||"straight";setMesoExercises(_rSplitId,_rMethodId,extractMesoSelections(newProg));if(mesoSwaps&&Object.keys(mesoSwaps).length>0){for(var _rd=0;_rd<newProg.length;_rd++){for(var _re=0;_re<newProg[_rd].exercises.length;_re++){var _swapTo=mesoSwaps[newProg[_rd].exercises[_re].name];if(_swapTo){var _swapEx=null;var _swPool=EX[newProg[_rd].exercises[_re].muscle]||[];for(var _sp=0;_sp<_swPool.length;_sp++){if(_swPool[_sp].n===_swapTo){_swapEx=_swPool[_sp];break;}}if(_swapEx)newProg[_rd].exercises[_re]=Object.assign({},newProg[_rd].exercises[_re],{name:_swapEx.n,mv:_swapEx.mv});}}}}if(setOverrides&&Object.keys(setOverrides).length>0){for(var _sod=0;_sod<newProg.length;_sod++){for(var _soe=0;_soe<newProg[_sod].exercises.length;_soe++){var _ovC=setOverrides[newProg[_sod].exercises[_soe].name];if(typeof _ovC==="number"&&_ovC>=1){newProg[_sod].exercises[_soe]=Object.assign({},newProg[_sod].exercises[_soe],{sets:_ovC});}}}}setProgram(newProg);setEditDay(0);setEditPick(null);sSet("forge_program",newProg);sSet("forge_config",{goal:goal,split:split,method:method,mins:mins,mesoLen:mesoLen,weekNum:1,numDays:numDays,genCount:newGC,presetCd:presetCd,specMuscles:specMuscles,dbKit:dbKit});}} style={{width:"100%",padding:"14px 0",marginBottom:8,background:C.pur+"15",color:C.pur,border:"1px solid "+C.pur+"40",borderRadius:14,fontSize:15,fontWeight:700,fontFamily:FD,letterSpacing:2,cursor:"pointer"}}>REGENERATE</button>{mainBtn("CONFIRM PROGRAM",function(){sSet("forge_program",program);setReviewMode(false);setScreen("dashboard");})}</div>
           :mainBtn("DONE EDITING",function(){sSet("forge_program",program);setADay(0);setAEx(0);setLog({});setReadiness(null);setSessionSaved(false);setNewPRs([]);setView("readiness");})
         }</div>
       </div>)}
@@ -10293,8 +10612,8 @@ function Forge(props){
           <div style={{fontSize:10,color:C.dim,marginTop:3}}>{METHOD_EXPLAIN[method].tips.substring(0,120)+"..."}</div>
         </div>}
         {program[aDay].exercises.map(function(ex,i){var k=aDay+"-"+i;var lg=log[k]||{sets:[],done:false};var isAct=i===aEx;var isDone=lg.done;var isCardio=ex.muscle==="cardio";
-          var techLabel=ex.tech==="myo"?"MYO":ex.tech==="restpause"?"RP":ex.tech==="preexhaust"?"PRE-X":ex.tech==="mechanical"?"MECH":ex.tech==="hiit"?"HIIT":"";
-          var techColor=ex.tech==="myo"?C.pur:ex.tech==="restpause"?C.red:ex.tech==="preexhaust"?C.acc:ex.tech==="hiit"?C.orn:C.dim;
+          var techLabel=ex.tech==="myo"?"MYO":ex.tech==="restpause"?"RP":ex.tech==="preexhaust"?"PRE-X":ex.tech==="mechanical"?"MECH":ex.tech==="hiit"?"HIIT":ex.tech==="tempo"?"TEMPO":"";
+          var techColor=ex.tech==="myo"?C.pur:ex.tech==="restpause"?C.red:ex.tech==="preexhaust"?C.acc:ex.tech==="hiit"?C.orn:ex.tech==="tempo"?C.blu:C.dim;
           var numSets=isCardio?1:ex.sets;
           var stall=getStallLevel(ex.name);
           // ── Confidence badge (Sprint 6 Item 4 — decoupled from progression hint) ──
@@ -10353,6 +10672,32 @@ function Forge(props){
                   {last.date&&<div style={{fontSize:9,color:C.dim}}>{last.date}</div>}
                 </div>;
               })()}
+              {/* V2 #7: TEMPO GUIDE BANNER */}
+              {ex.tech==="tempo"&&ex.tempo&&<div style={{background:C.blu+"12",border:"1px solid "+C.blu+"30",borderRadius:10,padding:"10px 14px",marginBottom:8}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+                  <div style={{fontSize:11,fontWeight:700,fontFamily:FD,letterSpacing:1.5,color:C.blu}}>TEMPO GUIDE</div>
+                  <div style={{fontSize:18,fontFamily:FB,color:C.acc,letterSpacing:2}}>{ex.tempoStr||formatTempo(ex.tempo)}</div>
+                </div>
+                <div style={{display:"flex",gap:4,marginBottom:4}}>
+                  <div style={{flex:1,textAlign:"center",padding:"6px 2px",background:C.bg,borderRadius:6}}>
+                    <div style={{fontSize:16,fontFamily:FB,color:C.red}}>{ex.tempo[0]+"s"}</div>
+                    <div style={{fontSize:8,color:C.dim,marginTop:1}}>LOWER</div>
+                  </div>
+                  <div style={{flex:1,textAlign:"center",padding:"6px 2px",background:C.bg,borderRadius:6}}>
+                    <div style={{fontSize:16,fontFamily:FB,color:C.orn}}>{ex.tempo[1]+"s"}</div>
+                    <div style={{fontSize:8,color:C.dim,marginTop:1}}>PAUSE</div>
+                  </div>
+                  <div style={{flex:1,textAlign:"center",padding:"6px 2px",background:C.bg,borderRadius:6}}>
+                    <div style={{fontSize:16,fontFamily:FB,color:C.grn}}>{ex.tempo[2]+"s"}</div>
+                    <div style={{fontSize:8,color:C.dim,marginTop:1}}>LIFT</div>
+                  </div>
+                  <div style={{flex:1,textAlign:"center",padding:"6px 2px",background:C.bg,borderRadius:6}}>
+                    <div style={{fontSize:16,fontFamily:FB,color:C.dim}}>{ex.tempo[3]+"s"}</div>
+                    <div style={{fontSize:8,color:C.dim,marginTop:1}}>LOCK</div>
+                  </div>
+                </div>
+                <div style={{fontSize:9,color:C.blu,textAlign:"center"}}>{"TUT per rep: "+ex.tempoTUT+"s | Use 60-80% of normal weight"}</div>
+              </div>}
               {/* EXERCISE NOTES */}
               {(function(){
                 var dayKey="w"+weekNum+"d"+aDay;
@@ -10843,13 +11188,16 @@ function Forge(props){
         {sessionSaved&&(function(){
           var volStatus=getVolumeStatus();
           return cd(<div>{hd("WEEKLY VOLUME STATUS")}
-            <div style={{fontSize:9,color:C.dim,marginBottom:8}}>Sets per muscle this week vs MEV/MAV/MRV landmarks</div>
+            <div style={{fontSize:9,color:C.dim,marginBottom:8}}>{"Sets per muscle this week vs MEV/MAV/MRV landmarks (Pelland 2025 fractional counting)"}</div>
             {volStatus.map(function(vs){
               var col=vs.pct>=85?C.red:vs.pct>=50?C.acc:C.grn;
+              var hasIndirect = vs.indirectSets > 0;
               return <div key={vs.muscle} style={{marginBottom:8}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
                   <span style={{fontSize:11,color:C.mid,textTransform:"capitalize"}}>{vs.muscle}</span>
-                  <span style={{fontSize:10,fontFamily:FD,color:col}}>{vs.sets+" sets"}</span>
+                  <span style={{fontSize:10,fontFamily:FD,color:col}}>
+                    {vs.directSets + " direct" + (hasIndirect ? " + " + vs.indirectSets + " indirect = " + vs.fracTotal + " eff" : " sets")}
+                  </span>
                 </div>
                 <div style={{height:6,background:C.bar,borderRadius:3,overflow:"hidden",position:"relative"}}>
                   <div style={{position:"absolute",left:0,top:0,bottom:0,width:"100%",background:col,borderRadius:3,transformOrigin:"left center",transform:"scaleX("+(vs.pct/100)+")",transition:"transform 300ms var(--ease-standard)",willChange:"transform"}}/>
