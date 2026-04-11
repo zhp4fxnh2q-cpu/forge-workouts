@@ -2649,36 +2649,37 @@ function metroPhaseChime(){
   }catch(e){}
 }
 
-// Tempo metronome voice — uses SpeechSynthesis for short phase cues.
-// Independent of the main Sarah voice queue so it doesn't block/get blocked.
-// Falls back to beeps if SpeechSynthesis unavailable or voice is off.
-function metroSpeak(text){
-  if(!_forgeVoiceOn)return;
+// Tempo metronome phase voice — uses real ElevenLabs voice keys via sarahSay().
+// Maps each phase transition to the closest existing ElevenLabs clip.
+// LOWER → "go" (short, punchy start signal)
+// PAUSE → sustained low tone (no speech — a held tone signals "stay here")
+// LIFT  → "push" (natural for concentric)
+// LOCK  → sustained tone (same as pause, rarely used since lockout is usually 0s)
+function metroPhaseVoice(phaseIdx){
+  if(phaseIdx===0)sarahSay("go");       // LOWER — "Go!"
+  else if(phaseIdx===1)metroHoldTone();  // PAUSE — sustained tone
+  else if(phaseIdx===2)sarahSay("push"); // LIFT — "Push!"
+  else metroHoldTone();                  // LOCK — sustained tone
+}
+
+// Sustained low tone for PAUSE/LOCK phases — signals "hold position"
+// Distinct from the tick beep: longer, lower pitch, gentle fade
+function metroHoldTone(){
   try{
-    if(typeof window==="undefined"||!("speechSynthesis" in window))return;
-    window.speechSynthesis.cancel();
-    var u=new SpeechSynthesisUtterance(text);
-    u.rate=1.15;u.pitch=1.0;u.volume=1;
-    var voices=window.speechSynthesis.getVoices();
-    if(voices&&voices.length){
-      var pref=null;
-      for(var vi=0;vi<voices.length;vi++){
-        var vn=(voices[vi].name||"").toLowerCase();
-        var vl=voices[vi].lang||"";
-        if(_forgeVoiceChoice==="daniel"){
-          if(/daniel|aaron|james|thomas|male|david|google.*uk/i.test(vn)&&vl.indexOf("en")===0){pref=voices[vi];break;}
-        } else {
-          if(/samantha|karen|tessa|moira|fiona|female|allison|ava|susan|nicky/i.test(vn)&&vl.indexOf("en")===0){pref=voices[vi];break;}
-        }
-      }
-      if(!pref){
-        for(var vj=0;vj<voices.length;vj++){
-          if(voices[vj].lang&&voices[vj].lang.indexOf("en")===0){pref=voices[vj];break;}
-        }
-      }
-      if(pref)u.voice=pref;
-    }
-    window.speechSynthesis.speak(u);
+    if(!_audioCtx)_audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    if(_audioCtx.state==="suspended")_audioCtx.resume();
+    var now=_audioCtx.currentTime;
+    var osc=_audioCtx.createOscillator();
+    var gain=_audioCtx.createGain();
+    osc.connect(gain);gain.connect(_audioCtx.destination);
+    osc.type="sine";
+    osc.frequency.value=220;
+    gain.gain.setValueAtTime(0.0001,now);
+    gain.gain.linearRampToValueAtTime(0.3,now+0.02);
+    gain.gain.linearRampToValueAtTime(0.15,now+0.35);
+    gain.gain.linearRampToValueAtTime(0.0001,now+0.5);
+    osc.start(now+0.002);
+    osc.stop(now+0.55);
   }catch(e){}
 }
 
@@ -5770,7 +5771,7 @@ function selectExercisesForMuscle(scored,numExercises,goalObj,muscle,rng,equipFi
   }
   return picked;
 }
-function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHistory,readMod,genCount,banned,equipFilter,specBdg){
+function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHistory,readMod,genCount,banned,equipFilter,specBdg,tempoPresetId){
   banned=banned||[];
   var tm=1-(methodObj.sv/100);var cl=goalObj.cd||0;var cm=cl>0?Math.min(10,cl*4):0;var lm=mins-cm;var sessions=[];
   var mid=methodObj.id;var wk=weekNum||1;var ml=mesoLen||4;var rir=getRIR(wk,ml);var phase=getMesoPhase(wk,ml);
@@ -6058,7 +6059,9 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       // ── V2 #7: TEMPO TRAINING ──
       if(_dayMid==="tempo"){
         var _tempoPicked=selectExercisesForMuscle(scored,numExercises,goalObj,muscle,rng,equipFilter,banned);
-        var _tempoPreset=TEMPO_PRESETS[0]; // Default: Hypertrophy Standard 3-1-2-0
+        var _tempoPreset=null;
+        if(tempoPresetId){for(var _tpi=0;_tpi<TEMPO_PRESETS.length;_tpi++){if(TEMPO_PRESETS[_tpi].id===tempoPresetId){_tempoPreset=TEMPO_PRESETS[_tpi];break;}}}
+        if(!_tempoPreset)_tempoPreset=TEMPO_PRESETS[0]; // fallback: Hypertrophy Standard 3-1-2-0
         var _tempoArr=_tempoPreset.tempo;
         var _tempoTUT=getTempoTUT(_tempoArr);
         var _tempoRepAdj=getTempoRepAdjust(_tempoArr);
@@ -6784,7 +6787,7 @@ function Forge(props){
   var _specB=useState({}),specBudget=_specB[0],setSpecBudget=_specB[1]; // V2 #6: {muscle: points} 5-point budget
   var _woState=useState({}),weightOverrides=_woState[0],setWeightOverrides=_woState[1]; // V2 #4: {exName: suggestedLbs} from transition wizard
   var _ppState=useState(1),presetPhase=_ppState[0],setPresetPhase=_ppState[1]; // V2 #4: current AX preset phase (1-indexed)
-  var _tempoPre=useState("hyp"),tempoPreset=_tempoPre[0],setTempoPreset=_tempoPre[1]; // V2 #7: active tempo preset id
+  var _tempoPre=useState(function(){return sGet("forge_tempoPreset","hyp");}),tempoPreset=_tempoPre[0],setTempoPreset=_tempoPre[1]; // V2 #7: active tempo preset id, persisted
   var _tempoOverlay=useState(null),tempoOverlay=_tempoOverlay[0],setTempoOverlay=_tempoOverlay[1]; // V2 #7: active tempo countdown {phase,sec,rep}
   useEffect(function(){
     function onAuth(user){setAuthUser(user||null);}
@@ -6848,10 +6851,9 @@ function Forge(props){
   // ═══ TEMPO METRONOME TICK ═══
   // tempoOverlay shape: {tempo:[3,1,2,0], phase:0, sec:3, rep:1, totalReps:8, paused:false, exName:"..."}
   // phase: 0=ecc, 1=pause, 2=con, 3=lock. sec counts DOWN from tempo[phase].
-  // Voice cues: speaks phase name on transition, counts down last 3s of long phases,
-  // announces rep number, uses existing sarahSay keys where available.
+  // Voice: uses real ElevenLabs keys via sarahSay() — "go" for lower, "push" for lift,
+  // sustained tone for hold phases, n_three/n_two/n_one for countdown.
   var _metroRef=useRef(null);
-  var _METRO_PHASE_WORDS=["Lower","Hold","Lift","Lock"];
   useEffect(function(){
     if(!tempoOverlay||tempoOverlay.paused)return;
     _metroRef.current=setInterval(function(){
@@ -6861,14 +6863,14 @@ function Forge(props){
         var sec=prev.sec-1;
         // Audio cues for countdown seconds
         if(sec>0){
-          // Speak countdown numbers for last 3 seconds of phases >= 4s
+          // ElevenLabs countdown for last 3 seconds of phases >= 4s
           if(t[prev.phase]>=4&&sec<=3){
             if(sec===3)sarahSay("n_three");
             else if(sec===2)sarahSay("n_two");
             else if(sec===1)sarahSay("n_one");
           } else {
-            // Regular tick beep (pitch varies by phase)
-            var freq=prev.phase===0?330:prev.phase===1?0:prev.phase===2?440:220;
+            // Phase-colored tick beep (lower=low, lift=higher, pause/lock=silent)
+            var freq=prev.phase===0?330:prev.phase===2?440:0;
             if(freq>0)metroTick(freq,0.2);
           }
         }
@@ -6876,22 +6878,22 @@ function Forge(props){
           // Phase complete — find next phase with >0s
           var nextP=getNextTempoPhase(t,prev.phase);
           if(nextP>=0){
-            // Advance to next phase — speak the phase name
-            metroPhaseChime();
-            metroSpeak(_METRO_PHASE_WORDS[nextP]);
+            // Advance to next phase — real ElevenLabs voice cue
+            metroPhaseVoice(nextP);
             return Object.assign({},prev,{phase:nextP,sec:t[nextP]});
           } else {
             // Rep complete
             metroRepChime();
             var nextRep=prev.rep+1;
             if(nextRep>prev.totalReps){
-              // All reps done — announce completion
-              metroSpeak("Done. Nice work.");
+              // All reps done
+              sarahSay("nice_work");
               return null;
             }
-            // Start next rep — announce rep number and first phase
+            // Start next rep — ElevenLabs "next_set" then first phase voice
+            sarahSay("next_set");
             var fp=getFirstTempoPhase(t);
-            metroSpeak("Rep " + nextRep + ". " + _METRO_PHASE_WORDS[fp]);
+            setTimeout(function(){metroPhaseVoice(fp);},400);
             return Object.assign({},prev,{phase:fp,sec:t[fp],rep:nextRep});
           }
         }
@@ -6905,8 +6907,8 @@ function Forge(props){
     warmUpAudio();
     var fp=getFirstTempoPhase(tempo);
     setTempoOverlay({tempo:tempo,phase:fp,sec:tempo[fp],rep:1,totalReps:reps||8,paused:false,exName:exName||""});
-    metroSpeak("Rep 1. " + _METRO_PHASE_WORDS[fp]);
-    metroTick(550,0.3);
+    sarahSay("begin");
+    setTimeout(function(){metroPhaseVoice(fp);},350);
   }
   function pauseMetronome(){
     setTempoOverlay(function(prev){if(!prev)return null;return Object.assign({},prev,{paused:true});});
@@ -6914,9 +6916,9 @@ function Forge(props){
   function resumeMetronome(){
     warmUpAudio();
     setTempoOverlay(function(prev){if(!prev)return null;return Object.assign({},prev,{paused:false});});
-    metroTick(550,0.3);
+    sarahSay("resuming");
   }
-  function stopMetronome(){setTempoOverlay(null);}
+  function stopMetronome(){setTempoOverlay(null);sarahSay("stop");}
 
   // ═══ CARDIO INTERVAL TIMER TICK (independent — works from Settings or workout) ═══
   // C2 audit: same crossing-detection pattern as the rest timer — catches
@@ -8469,7 +8471,7 @@ function Forge(props){
     // Derive equipment filter from selected preset (xero=bw, elastx=band, jacked=db, etc.)
     var eqF=null;
     if(presetPick){var pObj=PRESETS.find(function(x){return x.id===presetPick;});if(pObj&&pObj.equip)eqF=pObj.equip;}
-    var newProg=buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,null,exHist,readMod,newGenCount,banned,eqF,specBudget);
+    var newProg=buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,null,exHist,readMod,newGenCount,banned,eqF,specBudget,tempoPreset);
     // ═══ MESO-LOCK (System 6): lock exercises at week 1, restore on subsequent weeks ═══
     var _splitId=splitObj.id||"custom";var _methodId=methodObj.id||"straight";
     if(weekNum===1){
@@ -9483,7 +9485,7 @@ function Forge(props){
                 var newGenCount=genCount+1;setGenCount(newGenCount);
                 var eqF=null;if(presetPick){var pObj=PRESETS.find(function(x){return x.id===presetPick;});if(pObj&&pObj.equip)eqF=pObj.equip;}
                 var overrideMethodObj=METHODS.find(function(x){return x.id===m.id;});
-                var newProg=buildProgram(splitObj,overrideMethodObj||methodObj,goalObj,mins,1,mesoLen,null,exHist,readMod,newGenCount,banned,eqF,specBudget);
+                var newProg=buildProgram(splitObj,overrideMethodObj||methodObj,goalObj,mins,1,mesoLen,null,exHist,readMod,newGenCount,banned,eqF,specBudget,tempoPreset);
                 var _moSplitId=splitObj.id||"custom";var _moMethodId=(overrideMethodObj||methodObj).id||"straight";setMesoExercises(_moSplitId,_moMethodId,extractMesoSelections(newProg));
                 setProgram(newProg);setWeekNum(1);setADay(0);setCompletedDays([]);sSet("forge_completedDays",[]);setRestDaysChecked([]);sSet("forge_restdays",[]);
                 sSet("forge_program",newProg);sSet("forge_config",{goal:goal,split:split,method:m.id,mins:mins,mesoLen:mesoLen,weekNum:1,numDays:numDays,genCount:newGenCount,presetCd:presetCd,specMuscles:specMuscles,dbKit:dbKit});
@@ -10117,6 +10119,31 @@ function Forge(props){
         })())}
         {/* V2 #6 — Body Part Specialization */}
         {cd(<div>
+          {method==="tempo"&&<div style={{marginBottom:18}}>
+            {hd("TEMPO PRESCRIPTION")}
+            <div style={{fontSize:11,color:C.dim,marginBottom:10,lineHeight:1.55}}>{"Choose your tempo style. This controls rep speed for all tempo exercises. Current: " + formatTempo((TEMPO_PRESETS.find(function(tp){return tp.id===tempoPreset;})||TEMPO_PRESETS[0]).tempo)}{infoBtn("tempo_guide")}</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>
+              {TEMPO_PRESETS.filter(function(tp){return tp.id!=="custom";}).map(function(tp){
+                var isActive=tempoPreset===tp.id;
+                return <button key={tp.id} onClick={function(){
+                  setTempoPreset(tp.id);
+                  sSet("forge_tempoPreset",tp.id);
+                }} style={{
+                  padding:"8px 12px",fontSize:10,fontFamily:FD,letterSpacing:0.5,
+                  background:isActive?C.blu+"20":"transparent",
+                  color:isActive?C.blu:C.dim,
+                  border:"1px solid "+(isActive?C.blu+"60":C.bdr),
+                  borderRadius:8,cursor:"pointer"
+                }}>
+                  <div style={{fontWeight:700}}>{tp.label}</div>
+                  <div style={{fontSize:9,marginTop:2,color:isActive?C.mid:C.dim}}>{formatTempo(tp.tempo)}</div>
+                </button>;
+              })}
+            </div>
+            <div style={{fontSize:10,color:C.mid,lineHeight:1.5,background:C.bar,borderRadius:8,padding:"8px 12px",border:"1px solid "+C.bdr}}>
+              {(TEMPO_PRESETS.find(function(tp){return tp.id===tempoPreset;})||TEMPO_PRESETS[0]).desc}
+            </div>
+          </div>}
           {hd("SPECIALIZATION")}
           <div style={{fontSize:11,color:C.dim,marginBottom:10,lineHeight:1.55}}>{"Allocate 5 emphasis points to muscles you want to grow faster. Each point adds ~8% volume. " + getSpecPointsUsed(specBudget) + "/5 points used."}</div>
           <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}}>
@@ -10697,7 +10724,7 @@ function Forge(props){
             </div>;})}
         </div>)}
         <div style={{marginTop:10}}>{reviewMode
-          ?<div><button onClick={function(){var newGC=genCount+1;setGenCount(newGC);var eqF=null;if(presetPick){var pObj=PRESETS.find(function(x){return x.id===presetPick;});if(pObj&&pObj.equip)eqF=pObj.equip;}var newProg=buildProgram(splitObj,methodObj,goalObj,mins,1,mesoLen,null,exHist,readMod,newGC,banned,eqF,specBudget);var _rSplitId=splitObj.id||"custom";var _rMethodId=methodObj.id||"straight";setMesoExercises(_rSplitId,_rMethodId,extractMesoSelections(newProg));if(mesoSwaps&&Object.keys(mesoSwaps).length>0){for(var _rd=0;_rd<newProg.length;_rd++){for(var _re=0;_re<newProg[_rd].exercises.length;_re++){var _swapTo=mesoSwaps[newProg[_rd].exercises[_re].name];if(_swapTo){var _swapEx=null;var _swPool=EX[newProg[_rd].exercises[_re].muscle]||[];for(var _sp=0;_sp<_swPool.length;_sp++){if(_swPool[_sp].n===_swapTo){_swapEx=_swPool[_sp];break;}}if(_swapEx)newProg[_rd].exercises[_re]=Object.assign({},newProg[_rd].exercises[_re],{name:_swapEx.n,mv:_swapEx.mv});}}}}if(setOverrides&&Object.keys(setOverrides).length>0){for(var _sod=0;_sod<newProg.length;_sod++){for(var _soe=0;_soe<newProg[_sod].exercises.length;_soe++){var _ovC=setOverrides[newProg[_sod].exercises[_soe].name];if(typeof _ovC==="number"&&_ovC>=1){newProg[_sod].exercises[_soe]=Object.assign({},newProg[_sod].exercises[_soe],{sets:_ovC});}}}}setProgram(newProg);setEditDay(0);setEditPick(null);sSet("forge_program",newProg);sSet("forge_config",{goal:goal,split:split,method:method,mins:mins,mesoLen:mesoLen,weekNum:1,numDays:numDays,genCount:newGC,presetCd:presetCd,specMuscles:specMuscles,dbKit:dbKit});}} style={{width:"100%",padding:"14px 0",marginBottom:8,background:C.pur+"15",color:C.pur,border:"1px solid "+C.pur+"40",borderRadius:14,fontSize:15,fontWeight:700,fontFamily:FD,letterSpacing:2,cursor:"pointer"}}>REGENERATE</button>{mainBtn("CONFIRM PROGRAM",function(){sSet("forge_program",program);setReviewMode(false);setScreen("dashboard");})}</div>
+          ?<div><button onClick={function(){var newGC=genCount+1;setGenCount(newGC);var eqF=null;if(presetPick){var pObj=PRESETS.find(function(x){return x.id===presetPick;});if(pObj&&pObj.equip)eqF=pObj.equip;}var newProg=buildProgram(splitObj,methodObj,goalObj,mins,1,mesoLen,null,exHist,readMod,newGC,banned,eqF,specBudget,tempoPreset);var _rSplitId=splitObj.id||"custom";var _rMethodId=methodObj.id||"straight";setMesoExercises(_rSplitId,_rMethodId,extractMesoSelections(newProg));if(mesoSwaps&&Object.keys(mesoSwaps).length>0){for(var _rd=0;_rd<newProg.length;_rd++){for(var _re=0;_re<newProg[_rd].exercises.length;_re++){var _swapTo=mesoSwaps[newProg[_rd].exercises[_re].name];if(_swapTo){var _swapEx=null;var _swPool=EX[newProg[_rd].exercises[_re].muscle]||[];for(var _sp=0;_sp<_swPool.length;_sp++){if(_swPool[_sp].n===_swapTo){_swapEx=_swPool[_sp];break;}}if(_swapEx)newProg[_rd].exercises[_re]=Object.assign({},newProg[_rd].exercises[_re],{name:_swapEx.n,mv:_swapEx.mv});}}}}if(setOverrides&&Object.keys(setOverrides).length>0){for(var _sod=0;_sod<newProg.length;_sod++){for(var _soe=0;_soe<newProg[_sod].exercises.length;_soe++){var _ovC=setOverrides[newProg[_sod].exercises[_soe].name];if(typeof _ovC==="number"&&_ovC>=1){newProg[_sod].exercises[_soe]=Object.assign({},newProg[_sod].exercises[_soe],{sets:_ovC});}}}}setProgram(newProg);setEditDay(0);setEditPick(null);sSet("forge_program",newProg);sSet("forge_config",{goal:goal,split:split,method:method,mins:mins,mesoLen:mesoLen,weekNum:1,numDays:numDays,genCount:newGC,presetCd:presetCd,specMuscles:specMuscles,dbKit:dbKit});}} style={{width:"100%",padding:"14px 0",marginBottom:8,background:C.pur+"15",color:C.pur,border:"1px solid "+C.pur+"40",borderRadius:14,fontSize:15,fontWeight:700,fontFamily:FD,letterSpacing:2,cursor:"pointer"}}>REGENERATE</button>{mainBtn("CONFIRM PROGRAM",function(){sSet("forge_program",program);setReviewMode(false);setScreen("dashboard");})}</div>
           :mainBtn("DONE EDITING",function(){sSet("forge_program",program);setADay(0);setAEx(0);setLog({});setReadiness(null);setSessionSaved(false);setNewPRs([]);setView("readiness");})
         }</div>
       </div>)}
@@ -11643,7 +11670,7 @@ function Forge(props){
                     if(_npSplitObj && _npMethodObj){
                       var _npGoalObj = GOALS.find(function(x){return x.id===(np.goal||goal);});
                       var eqF=null;if(_axPreset&&_axPreset.equip)eqF=_axPreset.equip;
-                      var newProg=buildProgram(_npSplitObj,_npMethodObj,_npGoalObj||goalObj,mins,1,mesoLen,null,exHist,readMod,_npGenCount,banned,eqF,specBudget);
+                      var newProg=buildProgram(_npSplitObj,_npMethodObj,_npGoalObj||goalObj,mins,1,mesoLen,null,exHist,readMod,_npGenCount,banned,eqF,specBudget,tempoPreset);
                       setProgram(newProg);
                       sSet("forge_program",newProg);
                     }
