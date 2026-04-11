@@ -2577,6 +2577,99 @@ function formatTempo(tempo){
   return tempo[0]+"-"+tempo[1]+"-"+tempo[2]+"-"+tempo[3];
 }
 
+// ═══ TEMPO METRONOME ENGINE ═══
+// Phase order: 0=eccentric(lower), 1=pause, 2=concentric(lift), 3=lockout
+var TEMPO_PHASE_LABELS=["LOWER","PAUSE","LIFT","LOCK"];
+var TEMPO_PHASE_KEYS=["ecc","pause","con","lock"];
+
+function getTempoPhaseColor(phaseIdx,palette){
+  if(!palette)return "#60A5FA";
+  if(phaseIdx===0)return palette.red;
+  if(phaseIdx===1)return palette.orn;
+  if(phaseIdx===2)return palette.grn;
+  return palette.dim;
+}
+
+function getNextTempoPhase(tempo,currentPhase){
+  // Returns next phase index (0-3) that has >0 seconds, or -1 if rep is done
+  for(var p=currentPhase+1;p<4;p++){
+    if(tempo[p]&&tempo[p]>0)return p;
+  }
+  return -1; // rep complete
+}
+
+function getFirstTempoPhase(tempo){
+  for(var p=0;p<4;p++){
+    if(tempo[p]&&tempo[p]>0)return p;
+  }
+  return 0;
+}
+
+// Metronome beep: short tick for each countdown second
+function metroTick(freq,vol){
+  try{
+    if(!_audioCtx)_audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    if(_audioCtx.state==="suspended")_audioCtx.resume();
+    var now=_audioCtx.currentTime;
+    var osc=_audioCtx.createOscillator();
+    var gain=_audioCtx.createGain();
+    osc.connect(gain);gain.connect(_audioCtx.destination);
+    osc.frequency.value=freq||440;
+    var v=Math.min(1.0,vol||0.25);
+    gain.gain.setValueAtTime(0.0001,now);
+    gain.gain.linearRampToValueAtTime(v,now+0.005);
+    gain.gain.linearRampToValueAtTime(0.0001,now+0.08);
+    osc.start(now+0.002);
+    osc.stop(now+0.1);
+  }catch(e){}
+}
+
+// Phase-transition chime: rising tone
+function metroPhaseChime(){
+  try{
+    if(!_audioCtx)_audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    if(_audioCtx.state==="suspended")_audioCtx.resume();
+    var now=_audioCtx.currentTime;
+    var osc=_audioCtx.createOscillator();
+    var gain=_audioCtx.createGain();
+    osc.connect(gain);gain.connect(_audioCtx.destination);
+    osc.frequency.setValueAtTime(600,now);
+    osc.frequency.linearRampToValueAtTime(900,now+0.12);
+    gain.gain.setValueAtTime(0.0001,now);
+    gain.gain.linearRampToValueAtTime(0.35,now+0.01);
+    gain.gain.linearRampToValueAtTime(0.0001,now+0.15);
+    osc.start(now+0.002);
+    osc.stop(now+0.18);
+  }catch(e){}
+}
+
+// Rep-complete chime: two ascending tones
+function metroRepChime(){
+  try{
+    if(!_audioCtx)_audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    if(_audioCtx.state==="suspended")_audioCtx.resume();
+    var now=_audioCtx.currentTime;
+    var osc1=_audioCtx.createOscillator();
+    var g1=_audioCtx.createGain();
+    osc1.connect(g1);g1.connect(_audioCtx.destination);
+    osc1.frequency.value=880;
+    g1.gain.setValueAtTime(0.0001,now);
+    g1.gain.linearRampToValueAtTime(0.3,now+0.01);
+    g1.gain.linearRampToValueAtTime(0.0001,now+0.12);
+    osc1.start(now+0.002);
+    osc1.stop(now+0.15);
+    var osc2=_audioCtx.createOscillator();
+    var g2=_audioCtx.createGain();
+    osc2.connect(g2);g2.connect(_audioCtx.destination);
+    osc2.frequency.value=1100;
+    g2.gain.setValueAtTime(0.0001,now+0.15);
+    g2.gain.linearRampToValueAtTime(0.35,now+0.16);
+    g2.gain.linearRampToValueAtTime(0.0001,now+0.3);
+    osc2.start(now+0.15);
+    osc2.stop(now+0.35);
+  }catch(e){}
+}
+
 // ═══ PROTOCOL DEEP EXPLANATIONS ═══
 var METHOD_EXPLAIN={
   "straight":{
@@ -6713,6 +6806,64 @@ function Forge(props){
     return function(){clearInterval(id);};
   },[timerStart,timerPauseStart]);
 
+  // ═══ TEMPO METRONOME TICK ═══
+  // tempoOverlay shape: {tempo:[3,1,2,0], phase:0, sec:3, rep:1, totalReps:8, paused:false, exName:"..."}
+  // phase: 0=ecc, 1=pause, 2=con, 3=lock. sec counts DOWN from tempo[phase].
+  var _metroRef=useRef(null);
+  useEffect(function(){
+    if(!tempoOverlay||tempoOverlay.paused)return;
+    _metroRef.current=setInterval(function(){
+      setTempoOverlay(function(prev){
+        if(!prev||prev.paused)return prev;
+        var t=prev.tempo;
+        var sec=prev.sec-1;
+        // Tick sound every second
+        if(sec>0){
+          var freq=prev.phase===0?330:prev.phase===1?0:prev.phase===2?440:220;
+          if(freq>0)metroTick(freq,0.2);
+        }
+        if(sec<=0){
+          // Phase complete — find next phase with >0s
+          var nextP=getNextTempoPhase(t,prev.phase);
+          if(nextP>=0){
+            // Advance to next phase
+            metroPhaseChime();
+            return Object.assign({},prev,{phase:nextP,sec:t[nextP]});
+          } else {
+            // Rep complete
+            metroRepChime();
+            var nextRep=prev.rep+1;
+            if(nextRep>prev.totalReps){
+              // All reps done — stop metronome
+              return null;
+            }
+            // Start next rep from first active phase
+            var fp=getFirstTempoPhase(t);
+            return Object.assign({},prev,{phase:fp,sec:t[fp],rep:nextRep});
+          }
+        }
+        return Object.assign({},prev,{sec:sec});
+      });
+    },1000);
+    return function(){if(_metroRef.current)clearInterval(_metroRef.current);};
+  },[tempoOverlay&&!tempoOverlay.paused]);
+
+  function startMetronome(tempo,reps,exName){
+    warmUpAudio();
+    var fp=getFirstTempoPhase(tempo);
+    setTempoOverlay({tempo:tempo,phase:fp,sec:tempo[fp],rep:1,totalReps:reps||8,paused:false,exName:exName||""});
+    metroTick(550,0.3);
+  }
+  function pauseMetronome(){
+    setTempoOverlay(function(prev){if(!prev)return null;return Object.assign({},prev,{paused:true});});
+  }
+  function resumeMetronome(){
+    warmUpAudio();
+    setTempoOverlay(function(prev){if(!prev)return null;return Object.assign({},prev,{paused:false});});
+    metroTick(550,0.3);
+  }
+  function stopMetronome(){setTempoOverlay(null);}
+
   // ═══ CARDIO INTERVAL TIMER TICK (independent — works from Settings or workout) ═══
   // C2 audit: same crossing-detection pattern as the rest timer — catches
   // beeps missed while the screen was locked/backgrounded.
@@ -10720,7 +10871,53 @@ function Forge(props){
                   </div>
                 </div>
                 <div style={{fontSize:9,color:C.blu,textAlign:"center"}}>{"TUT per rep: "+ex.tempoTUT+"s | Use 60-80% of normal weight"}</div>
+                {/* Metronome start button */}
+                {!tempoOverlay&&<button onClick={function(){startMetronome(ex.tempo,ex.reps||8,ex.name);}} style={{display:"block",margin:"8px auto 0",padding:"8px 24px",fontSize:11,fontWeight:700,fontFamily:FD,letterSpacing:1.5,color:C.bg,background:C.blu,border:"none",borderRadius:8,cursor:"pointer"}}>START METRONOME</button>}
               </div>}
+              {/* TEMPO METRONOME OVERLAY */}
+              {ex.tech==="tempo"&&tempoOverlay&&tempoOverlay.exName===ex.name&&(function(){
+                var mo=tempoOverlay;
+                var phCol=getTempoPhaseColor(mo.phase,C);
+                var phLabel=TEMPO_PHASE_LABELS[mo.phase];
+                var totalTUT=getTempoTUT(mo.tempo);
+                // Elapsed seconds within this rep
+                var elapsedInRep=0;
+                for(var _pi=0;_pi<mo.phase;_pi++){elapsedInRep+=(mo.tempo[_pi]||0);}
+                elapsedInRep+=(mo.tempo[mo.phase]||0)-mo.sec;
+                var repPct=totalTUT>0?Math.round((elapsedInRep/totalTUT)*100):0;
+                return <div style={{background:phCol+"15",border:"2px solid "+phCol+"50",borderRadius:14,padding:"16px 14px",marginBottom:10,textAlign:"center",transition:"background 0.3s, border-color 0.3s"}}>
+                  {/* Rep counter */}
+                  <div style={{fontSize:10,fontFamily:FD,letterSpacing:2,color:C.mid,marginBottom:2}}>{"REP "+mo.rep+" / "+mo.totalReps}</div>
+                  {/* Phase label */}
+                  <div style={{fontSize:22,fontWeight:900,fontFamily:FD,letterSpacing:4,color:phCol,marginBottom:4}}>{phLabel}</div>
+                  {/* Big countdown number */}
+                  <div style={{fontSize:64,fontWeight:900,fontFamily:FB,color:C.txt,lineHeight:1,fontVariantNumeric:"tabular-nums lining-nums"}}>{mo.sec}</div>
+                  {/* Phase progress bar */}
+                  <div style={{margin:"10px auto",maxWidth:260,height:6,background:C.bar,borderRadius:3,overflow:"hidden"}}>
+                    <div style={{width:repPct+"%",height:"100%",background:phCol,borderRadius:3,transition:"width 0.3s"}}/>
+                  </div>
+                  {/* 4-phase indicator row */}
+                  <div style={{display:"flex",gap:4,justifyContent:"center",marginBottom:10}}>
+                    {[0,1,2,3].map(function(pi){
+                      if(!mo.tempo[pi]||mo.tempo[pi]===0)return null;
+                      var isActive=mo.phase===pi;
+                      var isDone=pi<mo.phase;
+                      var pColor=getTempoPhaseColor(pi,C);
+                      return <div key={pi} style={{padding:"4px 10px",borderRadius:6,background:isActive?pColor+"30":(isDone?pColor+"10":C.bar),border:"1.5px solid "+(isActive?pColor+"70":(isDone?pColor+"30":C.bdr)),transition:"all 0.3s"}}>
+                        <div style={{fontSize:isActive?14:11,fontWeight:isActive?900:600,fontFamily:FD,color:isActive?pColor:(isDone?pColor:C.dim)}}>{isActive?mo.sec+"s":mo.tempo[pi]+"s"}</div>
+                        <div style={{fontSize:7,color:isActive?pColor:C.dim,letterSpacing:1}}>{TEMPO_PHASE_LABELS[pi]}</div>
+                      </div>;
+                    })}
+                  </div>
+                  {/* Controls */}
+                  <div style={{display:"flex",gap:8,justifyContent:"center"}}>
+                    {!mo.paused&&<button onClick={pauseMetronome} style={{padding:"8px 20px",fontSize:11,fontWeight:700,fontFamily:FD,letterSpacing:1,color:C.acc,background:C.acc+"15",border:"1px solid "+C.acc+"40",borderRadius:8,cursor:"pointer"}}>PAUSE</button>}
+                    {mo.paused&&<button onClick={resumeMetronome} style={{padding:"8px 20px",fontSize:11,fontWeight:700,fontFamily:FD,letterSpacing:1,color:C.grn,background:C.grn+"15",border:"1px solid "+C.grn+"40",borderRadius:8,cursor:"pointer"}}>RESUME</button>}
+                    <button onClick={stopMetronome} style={{padding:"8px 20px",fontSize:11,fontWeight:700,fontFamily:FD,letterSpacing:1,color:C.dim,background:C.bar,border:"1px solid "+C.bdr,borderRadius:8,cursor:"pointer"}}>STOP</button>
+                  </div>
+                  {mo.paused&&<div style={{fontSize:12,fontWeight:700,fontFamily:FD,letterSpacing:2,color:C.acc,marginTop:8}}>PAUSED</div>}
+                </div>;
+              })()}
               {/* EXERCISE NOTES */}
               {(function(){
                 var dayKey="w"+weekNum+"d"+aDay;
