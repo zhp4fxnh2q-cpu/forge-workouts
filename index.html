@@ -2518,6 +2518,12 @@ var REASONS={
     layer1:"This method has mechanistic rationale and small studies but no clean meta-analytic support for hypertrophy outcomes yet.",
     layer2:"WEAK does not mean it does not work — it means direct evidence is thin. Use strategically for variety or specific goals, not as a default.",
     layer3:"FORGE tags weak-evidence methods visibly so you can make informed choices. Pre-exhaust and mechanical drop sets are the main examples — both have long histories in bodybuilding culture but limited controlled research."
+  },
+  tempo_guide:{
+    title:"How to Execute Tempo Training",
+    layer1:"Every rep has 4 phases, written as E-P-C-L: Eccentric (lowering the weight), Pause (hold at the stretched position), Concentric (lifting the weight), and Lockout (hold at the top). The number for each phase is how many seconds to spend there. For example, 3-1-2-0 means: lower for 3 seconds, pause 1 second at the bottom, lift for 2 seconds, zero pause at the top, then immediately start lowering again. The key rule: if you cannot maintain the prescribed tempo, the weight is too heavy. Drop 10-15% from your normal working weight and focus on smooth, controlled movement through every inch of the range of motion. Use the in-app metronome to pace each phase — it will count you through and announce each transition so you can focus on the muscle, not the clock.",
+    layer2:"Why it works: Tempo training increases time under tension (TUT) per rep without adding external load. This is especially powerful for dumbbell-only training where weight jumps can be too large. A 3-1-2-0 tempo turns a 1-second rep into a 6-second rep, tripling the mechanical tension stimulus. The eccentric (lowering) phase matters most for hypertrophy — that is where the most muscle damage and mechanical tension occur. Slowing it to 3-4 seconds forces the target muscle to absorb the load instead of using momentum. The pause at the bottom eliminates the stretch reflex, forcing the muscle to generate force from a dead stop. This builds starting strength and dramatically improves mind-muscle connection. Pick your tempo based on your goal: Hypertrophy Standard (3-1-2-0) is the all-around best choice. Eccentric Emphasis (4-1-1-0) maximizes muscle damage signaling — reduce load 10-15%. Pause Reps (2-2-1-0) build starting strength and control. Super Slow (5-2-3-0) creates extreme metabolic stress with very light weight — reduce load 30-40%, do only 4-6 reps.",
+    layer3:"Schoenfeld 2015 meta-analysis found eccentric durations of 2-6 seconds optimize hypertrophy, with no additional benefit beyond 6 seconds. Wilk et al. 2020 demonstrated that slower eccentrics increase mechanical tension and muscle activation (EMG) without requiring heavier loads, making tempo training particularly effective when equipment is limited. Burd et al. 2012 showed that slow, controlled reps with lighter loads (30% 1RM) produced equivalent muscle protein synthesis to heavy loads (90% 1RM) when taken to failure — the key mechanism is total TUT, not absolute load. Lacerda et al. 2020 found that 4-second eccentrics produced greater muscle thickness increases than 1-second eccentrics over 12 weeks in trained men. The Poliquin tempo notation system (E-P-C-L) originated from Charles Poliquin and Ian King in the 1990s and remains the standard in evidence-based programming."
   }
 };
 function getReason(key){return REASONS[key]||null;}
@@ -2640,6 +2646,39 @@ function metroPhaseChime(){
     gain.gain.linearRampToValueAtTime(0.0001,now+0.15);
     osc.start(now+0.002);
     osc.stop(now+0.18);
+  }catch(e){}
+}
+
+// Tempo metronome voice — uses SpeechSynthesis for short phase cues.
+// Independent of the main Sarah voice queue so it doesn't block/get blocked.
+// Falls back to beeps if SpeechSynthesis unavailable or voice is off.
+function metroSpeak(text){
+  if(!_forgeVoiceOn)return;
+  try{
+    if(typeof window==="undefined"||!("speechSynthesis" in window))return;
+    window.speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(text);
+    u.rate=1.15;u.pitch=1.0;u.volume=1;
+    var voices=window.speechSynthesis.getVoices();
+    if(voices&&voices.length){
+      var pref=null;
+      for(var vi=0;vi<voices.length;vi++){
+        var vn=(voices[vi].name||"").toLowerCase();
+        var vl=voices[vi].lang||"";
+        if(_forgeVoiceChoice==="daniel"){
+          if(/daniel|aaron|james|thomas|male|david|google.*uk/i.test(vn)&&vl.indexOf("en")===0){pref=voices[vi];break;}
+        } else {
+          if(/samantha|karen|tessa|moira|fiona|female|allison|ava|susan|nicky/i.test(vn)&&vl.indexOf("en")===0){pref=voices[vi];break;}
+        }
+      }
+      if(!pref){
+        for(var vj=0;vj<voices.length;vj++){
+          if(voices[vj].lang&&voices[vj].lang.indexOf("en")===0){pref=voices[vj];break;}
+        }
+      }
+      if(pref)u.voice=pref;
+    }
+    window.speechSynthesis.speak(u);
   }catch(e){}
 }
 
@@ -6809,7 +6848,10 @@ function Forge(props){
   // ═══ TEMPO METRONOME TICK ═══
   // tempoOverlay shape: {tempo:[3,1,2,0], phase:0, sec:3, rep:1, totalReps:8, paused:false, exName:"..."}
   // phase: 0=ecc, 1=pause, 2=con, 3=lock. sec counts DOWN from tempo[phase].
+  // Voice cues: speaks phase name on transition, counts down last 3s of long phases,
+  // announces rep number, uses existing sarahSay keys where available.
   var _metroRef=useRef(null);
+  var _METRO_PHASE_WORDS=["Lower","Hold","Lift","Lock"];
   useEffect(function(){
     if(!tempoOverlay||tempoOverlay.paused)return;
     _metroRef.current=setInterval(function(){
@@ -6817,28 +6859,39 @@ function Forge(props){
         if(!prev||prev.paused)return prev;
         var t=prev.tempo;
         var sec=prev.sec-1;
-        // Tick sound every second
+        // Audio cues for countdown seconds
         if(sec>0){
-          var freq=prev.phase===0?330:prev.phase===1?0:prev.phase===2?440:220;
-          if(freq>0)metroTick(freq,0.2);
+          // Speak countdown numbers for last 3 seconds of phases >= 4s
+          if(t[prev.phase]>=4&&sec<=3){
+            if(sec===3)sarahSay("n_three");
+            else if(sec===2)sarahSay("n_two");
+            else if(sec===1)sarahSay("n_one");
+          } else {
+            // Regular tick beep (pitch varies by phase)
+            var freq=prev.phase===0?330:prev.phase===1?0:prev.phase===2?440:220;
+            if(freq>0)metroTick(freq,0.2);
+          }
         }
         if(sec<=0){
           // Phase complete — find next phase with >0s
           var nextP=getNextTempoPhase(t,prev.phase);
           if(nextP>=0){
-            // Advance to next phase
+            // Advance to next phase — speak the phase name
             metroPhaseChime();
+            metroSpeak(_METRO_PHASE_WORDS[nextP]);
             return Object.assign({},prev,{phase:nextP,sec:t[nextP]});
           } else {
             // Rep complete
             metroRepChime();
             var nextRep=prev.rep+1;
             if(nextRep>prev.totalReps){
-              // All reps done — stop metronome
+              // All reps done — announce completion
+              metroSpeak("Done. Nice work.");
               return null;
             }
-            // Start next rep from first active phase
+            // Start next rep — announce rep number and first phase
             var fp=getFirstTempoPhase(t);
+            metroSpeak("Rep " + nextRep + ". " + _METRO_PHASE_WORDS[fp]);
             return Object.assign({},prev,{phase:fp,sec:t[fp],rep:nextRep});
           }
         }
@@ -6852,6 +6905,7 @@ function Forge(props){
     warmUpAudio();
     var fp=getFirstTempoPhase(tempo);
     setTempoOverlay({tempo:tempo,phase:fp,sec:tempo[fp],rep:1,totalReps:reps||8,paused:false,exName:exName||""});
+    metroSpeak("Rep 1. " + _METRO_PHASE_WORDS[fp]);
     metroTick(550,0.3);
   }
   function pauseMetronome(){
@@ -10849,7 +10903,10 @@ function Forge(props){
               {/* V2 #7: TEMPO GUIDE BANNER */}
               {ex.tech==="tempo"&&ex.tempo&&<div style={{background:C.blu+"12",border:"1px solid "+C.blu+"30",borderRadius:10,padding:"10px 14px",marginBottom:8}}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
-                  <div style={{fontSize:11,fontWeight:700,fontFamily:FD,letterSpacing:1.5,color:C.blu}}>TEMPO GUIDE</div>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}>
+                    <div style={{fontSize:11,fontWeight:700,fontFamily:FD,letterSpacing:1.5,color:C.blu}}>TEMPO GUIDE</div>
+                    {infoBtn("tempo_guide")}
+                  </div>
                   <div style={{fontSize:18,fontFamily:FB,color:C.acc,letterSpacing:2}}>{ex.tempoStr||formatTempo(ex.tempo)}</div>
                 </div>
                 <div style={{display:"flex",gap:4,marginBottom:4}}>
