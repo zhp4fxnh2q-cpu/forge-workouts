@@ -875,6 +875,7 @@ if(typeof document!=="undefined"){
 }
 function _scheduleBeep(freq,dur,vol){
   try{
+    if(!_audioCtx)return;
     var now=_audioCtx.currentTime;
     var osc=_audioCtx.createOscillator();
     var gain=_audioCtx.createGain();
@@ -6812,6 +6813,12 @@ function Forge(props){
     // workout timer hasn't been started yet (was the "no sound" bug). Also
     // pause logic now reads restPausedAt instead of the workout pause state.
     if(!restStart||restPausedAt)return; // no active rest, or rest is paused
+    // Eagerly warm up audio so beeps work on first tick (fix race condition)
+    warmUpAudio();
+    try{
+      if(!_audioCtx)_audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+      if(_audioCtx.state==="suspended")_audioCtx.resume();
+    }catch(e){}
     // Reset crossing tracker whenever rest restarts
     _lastRestRemRef.current=null;
     var id=setInterval(function(){
@@ -7055,8 +7062,8 @@ function Forge(props){
     return r.toFixed(2);
   }
   function startTimer(){setTimerStart(Date.now());setTimerNow(Date.now());setTimerPaused(0);setTimerPauseStart(null);}
-  function pauseTimer(){if(timerStart&&!timerPauseStart)setTimerPauseStart(Date.now());}
-  function resumeTimer(){if(timerPauseStart){setTimerPaused(function(p){return p+(Date.now()-timerPauseStart);});setTimerPauseStart(null);setTimerNow(Date.now());}}
+  function pauseTimer(){if(timerStart&&!timerPauseStart){setTimerPauseStart(Date.now());if(restStart&&!restPausedAt)pauseRest();}}
+  function resumeTimer(){if(timerPauseStart){setTimerPaused(function(p){return p+(Date.now()-timerPauseStart);});setTimerPauseStart(null);setTimerNow(Date.now());if(restPausedAt)resumeRest();}}
   function stopTimer(){
     var elapsed=getElapsedSec();
     setTimerStart(null);setTimerNow(null);setTimerPaused(0);setTimerPauseStart(null);
@@ -8838,13 +8845,32 @@ function Forge(props){
   function cd(ch,bc){return <div style={{background:C.sf,border:"1px solid "+(bc||C.bdr),borderRadius:16,padding:18,marginBottom:14}}>{ch}</div>;}
   function logSet(di,ei,si,w,r,rir,band,hook,distance){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false};var ns=prev.sets.slice();var existing=ns[si]||{};ns[si]={w:parseFloat(w)||existing.w||0,r:parseInt(r)||existing.r||0,rir:rir!==undefined?rir:(existing.rir!==undefined?existing.rir:null),band:band||existing.band||null,hook:hook||existing.hook||null,distance:distance||existing.distance||null};n[k]={sets:ns,done:prev.done};return n;});}
   function logRIR(di,ei,si,rir){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false};var ns=prev.sets.slice();var existing=ns[si]||{};ns[si]=Object.assign({},existing,{rir:rir});n[k]={sets:ns,done:prev.done};return n;});}
-  function logBand(di,ei,si,band,hook,distance){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false};var ns=prev.sets.slice();var existing=ns[si]||{};ns[si]=Object.assign({},existing,{band:band||null,hook:hook||null,distance:distance||null});n[k]={sets:ns,done:prev.done};return n;});}
+  // Band helpers — supports up to 4 different bands per set
+  function _getBands(sd){
+    // Backward compat: old data has sd.band (string), new has sd.bands (array)
+    if(sd.bands&&sd.bands.length)return sd.bands.slice();
+    if(sd.band)return [sd.band];
+    return [];
+  }
+  function _toggleBand(bands,id){
+    var idx=-1;for(var i=0;i<bands.length;i++){if(bands[i]===id){idx=i;break;}}
+    if(idx>=0){var nb=bands.slice();nb.splice(idx,1);return nb;}
+    if(bands.length>=4)return bands; // cap at 4
+    return bands.concat([id]);
+  }
+  function _bandLabel(bands){
+    if(!bands||!bands.length)return "";
+    return bands.map(function(bid){return (BAND_COLORS.find(function(b){return b.id===bid;})||{}).n||"";}).join(" + ");
+  }
+  function logBand(di,ei,si,bandId){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false};var ns=prev.sets.slice();var existing=ns[si]||{};var curBands=_getBands(existing);var newBands=_toggleBand(curBands,bandId);ns[si]=Object.assign({},existing,{bands:newBands,band:newBands.length===1?newBands[0]:newBands.length>0?newBands[0]:null});n[k]={sets:ns,done:prev.done};return n;});}
+  function logBandMeta(di,ei,si,hook,distance){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false};var ns=prev.sets.slice();var existing=ns[si]||{};ns[si]=Object.assign({},existing,{hook:hook!==undefined?hook:existing.hook||null,distance:distance!==undefined?distance:existing.distance||null});n[k]={sets:ns,done:prev.done};return n;});}
   function logMyoActivation(di,ei,w,r){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false,myo:null};var myo=Object.assign({},prev.myo||{w:0,activationReps:0,miniSets:[]});myo.w=parseFloat(w)||myo.w||0;myo.activationReps=parseInt(r)||myo.activationReps||0;n[k]=Object.assign({},prev,{myo:myo});return n;});}
   function logMyoMini(di,ei,miniIdx,r){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false,myo:null};var myo=Object.assign({},prev.myo||{w:0,activationReps:0,miniSets:[]});var ms=myo.miniSets.slice();ms[miniIdx]={r:parseInt(r)||0};myo.miniSets=ms;n[k]=Object.assign({},prev,{myo:myo});return n;});}
   function addMyoMini(di,ei){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false,myo:null};var myo=Object.assign({},prev.myo||{w:0,activationReps:0,miniSets:[]});var ms=myo.miniSets.slice();ms.push({r:0});myo.miniSets=ms;n[k]=Object.assign({},prev,{myo:myo});return n;});}
   function removeMyoMini(di,ei){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false,myo:null};var myo=Object.assign({},prev.myo||{w:0,activationReps:0,miniSets:[]});var ms=myo.miniSets.slice();if(ms.length>0)ms.pop();myo.miniSets=ms;n[k]=Object.assign({},prev,{myo:myo});return n;});}
   function logMyoRIR(di,ei,rir){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false,myo:null};var myo=Object.assign({},prev.myo||{w:0,activationReps:0,miniSets:[]});myo.rir=rir;n[k]=Object.assign({},prev,{myo:myo});return n;});}
-  function logMyoBand(di,ei,band,hook,distance){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false,myo:null};var myo=Object.assign({},prev.myo||{w:0,activationReps:0,miniSets:[]});myo.band=band||null;myo.hook=hook||null;myo.distance=distance||null;n[k]=Object.assign({},prev,{myo:myo});return n;});}
+  function logMyoBand(di,ei,bandId){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false,myo:null};var myo=Object.assign({},prev.myo||{w:0,activationReps:0,miniSets:[]});var curBands=_getBands(myo);var newBands=_toggleBand(curBands,bandId);myo.bands=newBands;myo.band=newBands.length===1?newBands[0]:newBands.length>0?newBands[0]:null;n[k]=Object.assign({},prev,{myo:myo});return n;});}
+  function logMyoBandMeta(di,ei,hook,distance){var k=di+"-"+ei;setLog(function(p){var n=Object.assign({},p);var prev=n[k]||{sets:[],done:false,myo:null};var myo=Object.assign({},prev.myo||{w:0,activationReps:0,miniSets:[]});if(hook!==undefined)myo.hook=hook||null;if(distance!==undefined)myo.distance=distance||null;n[k]=Object.assign({},prev,{myo:myo});return n;});}
   function getAlts(muscle,cur){var pool=EX[muscle]||[];pool=pool.filter(function(e){return banned.indexOf(e.n)<0;});var b=pool.filter(function(e){return e.n!==cur;}).slice(0,3);var r=pool.filter(function(e){return e.n!==cur&&b.indexOf(e)<0;});return{best:b,rest:r};}
 
   // ═══ EXERCISE SWAP SCOPE ═══
@@ -10818,6 +10844,11 @@ function Forge(props){
               <div style={{height:4,background:C.bar,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:"100%",background:timerColor,borderRadius:2,transformOrigin:"left center",transform:"scaleX("+(pct/100)+")",transition:"transform 1s var(--ease-standard)",willChange:"transform"}}></div></div>
               {over&&<div style={{fontSize:10,color:C.red,fontFamily:FD,marginTop:4,letterSpacing:1}}>{"OVER BY "+Math.abs(elapsedMin-target)+"min — Express compress next session"}</div>}
             </div>}
+            {/* ═══ REST QUICK-SELECT (always available in sticky bar) ═══ */}
+            {timerStart&&!restActive&&<div style={{marginTop:6,display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
+              <span style={{fontSize:9,color:C.dim,fontFamily:FD,letterSpacing:1}}>REST</span>
+              {[30,45,60,90,120,150,180].map(function(sec){var lbl=sec>=60?Math.floor(sec/60)+"m"+(sec%60>0?(sec%60)+"s":""):sec+"s";return <button key={sec} onClick={function(){startRest(sec);}} style={{padding:"4px 8px",fontSize:9,fontFamily:FD,fontWeight:700,background:C.blu+"10",color:C.blu,border:"1px solid "+C.blu+"28",borderRadius:6,cursor:"pointer"}}>{lbl}</button>;})}
+            </div>}
             {/* ═══ REST TIMER (between sets) — E10 ProgressRing ═══ */}
             {restActive&&(function(){
               var restProgress=restDur>0?Math.max(0,Math.min(1,(restDur-Math.max(0,restRem))/restDur)):0;
@@ -11127,8 +11158,8 @@ function Forge(props){
                   if(ex.tech==="myo"||ex.tech==="restpause"){
                     var _myoD=lg.myo||{w:0,activationReps:0,miniSets:[]};
                     var _isBandMyo=ex.name.indexOf("Band")>=0||ex.name.indexOf("Banded")>=0;
-                    var _isBWMyo=ex.name.indexOf("Pushup")>=0||ex.name.indexOf("Push-up")>=0||ex.name.indexOf("Pull-up")>=0||ex.name.indexOf("Chin-up")>=0||ex.name.indexOf("Dip")>=0||ex.name.indexOf("Plank")>=0||ex.name.indexOf("Bodyweight")>=0;
-                    var _actDone=_myoD.activationReps>0&&(_isBandMyo?!!_myoD.band:_isBWMyo?true:_myoD.w>0);
+                    var _isBWMyo=ex.t==="B"||ex.tech==="primer"||ex.tech==="corrective"||ex.name.indexOf("Pushup")>=0||ex.name.indexOf("Push-up")>=0||ex.name.indexOf("Pull-up")>=0||ex.name.indexOf("Chin-up")>=0||ex.name.indexOf("Dip")>=0||ex.name.indexOf("Plank")>=0||ex.name.indexOf("Bodyweight")>=0;
+                    var _actDone=_myoD.activationReps>0&&(_isBandMyo?(_getBands(_myoD).length>0):_isBWMyo?true:_myoD.w>0);
                     var _miniCount=(_myoD.miniSets||[]).length;
                     var _miniDone=0;
                     for(var _mc=0;_mc<_miniCount;_mc++){if(_myoD.miniSets[_mc]&&_myoD.miniSets[_mc].r>0)_miniDone++;}
@@ -11139,16 +11170,16 @@ function Forge(props){
                     </div>;
                   }
                   var _isBandC5=ex.name.indexOf("Band")>=0||ex.name.indexOf("Banded")>=0;
-                  var _isBWC5=ex.tech==="primer"||ex.tech==="corrective"||ex.name.indexOf("Pushup")>=0||ex.name.indexOf("Push-up")>=0||ex.name.indexOf("Pull-up")>=0||ex.name.indexOf("Chin-up")>=0||ex.name.indexOf("Dip")>=0||ex.name.indexOf("Plank")>=0||ex.name.indexOf("Bodyweight")>=0;
+                  var _isBWC5=ex.t==="B"||ex.tech==="primer"||ex.tech==="corrective"||ex.name.indexOf("Pushup")>=0||ex.name.indexOf("Push-up")>=0||ex.name.indexOf("Pull-up")>=0||ex.name.indexOf("Chin-up")>=0||ex.name.indexOf("Dip")>=0||ex.name.indexOf("Plank")>=0||ex.name.indexOf("Bodyweight")>=0;
                   var doneCnt=0;
-                  if(lg.sets&&lg.sets.length){for(var _si=0;_si<numSets;_si++){var _sd=lg.sets[_si]||{};var _wr=_sd.w&&_sd.r;var _br=_isBandC5&&_sd.band&&_sd.r;var _bwr=_isBWC5&&_sd.r;if(_wr||_br||_bwr)doneCnt++;}}
+                  if(lg.sets&&lg.sets.length){for(var _si=0;_si<numSets;_si++){var _sd=lg.sets[_si]||{};var _wr=_sd.w&&_sd.r;var _br=_isBandC5&&(_getBands(_sd).length>0)&&_sd.r;var _bwr=_isBWC5&&_sd.r;if(_wr||_br||_bwr)doneCnt++;}}
                   var curSet=Math.min(doneCnt+1,numSets);
                   return <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
                     <div style={{fontSize:11,fontFamily:FD,letterSpacing:2,color:C.dim}}>SET</div>
                     <div style={{fontSize:26,fontFamily:FB,fontWeight:700,color:doneCnt>=numSets?C.grn:C.acc,lineHeight:1,fontVariantNumeric:"tabular-nums lining-nums"}}>{curSet}</div>
                     <div style={{fontSize:13,color:C.dim,fontFamily:FD}}>{"/ "+numSets}</div>
                     <div style={{flex:1,display:"flex",gap:6,justifyContent:"flex-end"}}>
-                      {Array.from({length:numSets}).map(function(_,di){var _dd=(lg.sets&&lg.sets[di])||{};var _dwr=_dd.w&&_dd.r;var _dbr=_isBandC5&&_dd.band&&_dd.r;var _dbwr=_isBWC5&&_dd.r;var _done=_dwr||_dbr||_dbwr;return <div key={di} style={{width:10,height:10,borderRadius:"50%",background:_done?C.grn:(di===doneCnt?C.acc+"55":C.bar),border:"1.5px solid "+(_done?C.grn:(di===doneCnt?C.acc:C.bdr))}}/>;})}
+                      {Array.from({length:numSets}).map(function(_,di){var _dd=(lg.sets&&lg.sets[di])||{};var _dwr=_dd.w&&_dd.r;var _dbr=_isBandC5&&(_getBands(_dd).length>0)&&_dd.r;var _dbwr=_isBWC5&&_dd.r;var _done=_dwr||_dbr||_dbwr;return <div key={di} style={{width:10,height:10,borderRadius:"50%",background:_done?C.grn:(di===doneCnt?C.acc+"55":C.bar),border:"1.5px solid "+(_done?C.grn:(di===doneCnt?C.acc:C.bdr))}}/>;})}
                     </div>
                   </div>;
                 })()}
@@ -11171,7 +11202,8 @@ function Forge(props){
                   var _myoBand=ex.name.indexOf("Band")>=0||ex.name.indexOf("Banded")>=0;
                   var _myoWeighted=/\(weighted\)/i.test(ex.name)||/^Weighted /.test(ex.name)||/^DB /.test(ex.name);
                   var _myoBW=!_myoWeighted&&(ex.t==="B"||ex.tech==="primer"||ex.tech==="corrective");
-                  var _myoActDone=_myoBand?(myoData.band&&myoData.activationReps>0):_myoBW?(myoData.activationReps>0):(myoData.w>0&&myoData.activationReps>0);
+                  var _myoBands=_getBands(myoData);
+                  var _myoActDone=_myoBand?(_myoBands.length>0&&myoData.activationReps>0):_myoBW?(myoData.activationReps>0):(myoData.w>0&&myoData.activationReps>0);
                   return <div>
                     <div style={{background:techCol+"10",border:"1px solid "+techCol+"30",borderRadius:10,padding:12,marginBottom:10}}>
                       <div style={{fontSize:10,fontWeight:700,fontFamily:FD,letterSpacing:1,color:techCol,marginBottom:8}}>ACTIVATION SET</div>
@@ -11184,13 +11216,14 @@ function Forge(props){
                       </div>
                       {_myoBand&&<div style={{display:"flex",alignItems:"center",gap:3,padding:"8px 0 2px 0"}}>
                         <span style={{fontSize:9,color:C.dim,fontFamily:FD,width:24}}>BAND</span>
-                        {BAND_COLORS.map(function(bc){var sel=myoData.band===bc.id;return <button key={bc.id} onClick={function(){logMyoBand(aDay,i,sel?null:bc.id,myoData.hook,myoData.distance);}} style={{width:20,height:20,borderRadius:"50%",background:bc.c,border:"2px solid "+(sel?C.txt:C.bdr),cursor:"pointer",opacity:sel?1:0.6,transition:"all 0.2s"}} title={bc.n+" ("+bc.lbs+")"}/>;}) }
-                        {myoData.band&&<span style={{fontSize:8,color:C.dim,marginLeft:2}}>{(BAND_COLORS.find(function(b){return b.id===myoData.band;})||{}).n||""}</span>}
+                        {BAND_COLORS.map(function(bc){var sel=_myoBands.indexOf(bc.id)>=0;return <button key={bc.id} onClick={function(){logMyoBand(aDay,i,bc.id);}} style={{width:20,height:20,borderRadius:"50%",background:bc.c,border:"2px solid "+(sel?C.txt:C.bdr),cursor:"pointer",opacity:sel?1:0.6,transition:"all 0.2s"}} title={bc.n+" ("+bc.lbs+")"}/>;}) }
+                        {_myoBands.length>0&&<span style={{fontSize:8,color:C.dim,marginLeft:2}}>{_bandLabel(_myoBands)}</span>}
+                        {_myoBands.length>=4&&<span style={{fontSize:7,color:C.orn,marginLeft:2}}>MAX</span>}
                       </div>}
-                      {_myoBand&&myoData.band&&<div style={{display:"flex",alignItems:"center",gap:3,padding:"2px 0 4px 0"}}>
-                        <input type="number" value={myoData.hook||""} onChange={function(e){logMyoBand(aDay,i,myoData.band,e.target.value||null,myoData.distance);}} placeholder="hook" min="1" max="12" style={{width:40,padding:"4px",fontSize:11,fontFamily:FD,background:C.bar,color:C.txt,border:"1px solid "+C.bdr,borderRadius:6,outline:"none",textAlign:"center",boxSizing:"border-box"}}/>
+                      {_myoBand&&_myoBands.length>0&&<div style={{display:"flex",alignItems:"center",gap:3,padding:"2px 0 4px 0"}}>
+                        <input type="number" value={myoData.hook||""} onChange={function(e){logMyoBandMeta(aDay,i,e.target.value||null,myoData.distance);}} placeholder="hook" min="1" max="12" style={{width:40,padding:"4px",fontSize:11,fontFamily:FD,background:C.bar,color:C.txt,border:"1px solid "+C.bdr,borderRadius:6,outline:"none",textAlign:"center",boxSizing:"border-box"}}/>
                         <span style={{fontSize:9,color:C.dim}}>hook#</span>
-                        <input type="number" value={myoData.distance||""} onChange={function(e){logMyoBand(aDay,i,myoData.band,myoData.hook,e.target.value||null);}} placeholder="sq" min="1" style={{width:40,padding:"4px",fontSize:11,fontFamily:FD,background:C.bar,color:C.txt,border:"1px solid "+C.bdr,borderRadius:6,outline:"none",textAlign:"center",boxSizing:"border-box"}}/>
+                        <input type="number" value={myoData.distance||""} onChange={function(e){logMyoBandMeta(aDay,i,myoData.hook,e.target.value||null);}} placeholder="sq" min="1" style={{width:40,padding:"4px",fontSize:11,fontFamily:FD,background:C.bar,color:C.txt,border:"1px solid "+C.bdr,borderRadius:6,outline:"none",textAlign:"center",boxSizing:"border-box"}}/>
                         <span style={{fontSize:9,color:C.dim}}>mat sq</span>
                       </div>}
                     </div>
@@ -11205,7 +11238,7 @@ function Forge(props){
                       {miniSets.map(function(ms,mi){return <div key={mi} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0",borderBottom:mi<miniSets.length-1?"1px solid "+C.bdr:"none"}}>
                         <span style={{fontSize:11,color:C.dim,fontFamily:FD,width:50}}>{"MINI "+(mi+1)}</span>
                         <input type="number" inputMode="numeric" value={(ms&&ms.r)||""} onChange={function(e){logMyoMini(aDay,i,mi,e.target.value);}} placeholder="reps" style={{width:72,height:40,padding:"4px",fontSize:16,fontFamily:FB,fontWeight:700,background:C.bar,color:C.txt,border:"1px solid "+C.bdr,borderRadius:8,outline:"none",textAlign:"center",boxSizing:"border-box",fontVariantNumeric:"tabular-nums lining-nums",WebkitAppearance:"none"}}/>
-                        <span style={{fontSize:10,color:C.dim}}>{"@ "+(_myoBand?(myoData.band?((BAND_COLORS.find(function(b){return b.id===myoData.band;})||{}).n||"band"):"band"):_myoBW?"BW":((myoData.w||"--")+"lb"))}</span>
+                        <span style={{fontSize:10,color:C.dim}}>{"@ "+(_myoBand?(_myoBands.length>0?_bandLabel(_myoBands):"band"):_myoBW?"BW":((myoData.w||"--")+"lb"))}</span>
                         {(ms&&ms.r>0)&&<span style={{fontSize:14,color:C.grn}}>{"\u2713"}</span>}
                       </div>;})}
                     </div>
@@ -11263,27 +11296,28 @@ function Forge(props){
                       <span style={{fontSize:9,color:C.dim,marginLeft:4,flex:1}}>{setRir===0?"failure":setRir===1?"1 left":setRir===2?"2 left":setRir===3?"3 left":setRir===4?"easy":""}</span>
                       {si===0&&infoBtn(ex.t==="C"?"rir_compound":"rir_isolation")}
                     </div>}
-                    {(ex.name.indexOf("Band")>=0||ex.name.indexOf("Banded")>=0)&&<div style={{display:"flex",alignItems:"center",gap:3,padding:"4px 0 2px 48px",borderBottom:setData.band?"none":"1px solid "+C.bdr}}>
+                    {(ex.name.indexOf("Band")>=0||ex.name.indexOf("Banded")>=0)&&(function(){var _sb=_getBands(setData);var _hasBands=_sb.length>0;return <div><div style={{display:"flex",alignItems:"center",gap:3,padding:"4px 0 2px 48px",borderBottom:_hasBands?"none":"1px solid "+C.bdr}}>
                       <span style={{fontSize:9,color:C.dim,fontFamily:FD,width:24}}>BAND</span>
-                      {BAND_COLORS.map(function(bc){var sel=setData.band===bc.id;return <button key={bc.id} onClick={function(){logBand(aDay,i,si,sel?null:bc.id,setData.hook,setData.distance);}} style={{width:20,height:20,borderRadius:"50%",background:bc.c,border:"2px solid "+(sel?C.txt:C.bdr),cursor:"pointer",opacity:sel?1:0.6,transition:"all 0.2s"}} title={bc.n+" ("+bc.lbs+")"}/>;}) }
-                      {setData.band&&<span style={{fontSize:8,color:C.dim,marginLeft:2}}>{(BAND_COLORS.find(function(b){return b.id===setData.band;})||{}).n||""}</span>}
-                    </div>}
-                    {(ex.name.indexOf("Band")>=0||ex.name.indexOf("Banded")>=0)&&setData.band&&<div style={{display:"flex",alignItems:"center",gap:3,padding:"2px 0 4px 48px",borderBottom:"1px solid "+C.bdr}}>
-                      <input type="number" value={setData.hook||""} onChange={function(e){logBand(aDay,i,si,setData.band,e.target.value||null,setData.distance);}} placeholder="hook" min="1" max="12" style={{width:40,padding:"4px",fontSize:11,fontFamily:FD,background:C.bar,color:C.txt,border:"1px solid "+C.bdr,borderRadius:6,outline:"none",textAlign:"center",boxSizing:"border-box"}}/>
+                      {BAND_COLORS.map(function(bc){var sel=_sb.indexOf(bc.id)>=0;return <button key={bc.id} onClick={function(){logBand(aDay,i,si,bc.id);}} style={{width:20,height:20,borderRadius:"50%",background:bc.c,border:"2px solid "+(sel?C.txt:C.bdr),cursor:"pointer",opacity:sel?1:0.6,transition:"all 0.2s"}} title={bc.n+" ("+bc.lbs+")"}/>;}) }
+                      {_hasBands&&<span style={{fontSize:8,color:C.dim,marginLeft:2}}>{_bandLabel(_sb)}</span>}
+                      {_sb.length>=4&&<span style={{fontSize:7,color:C.orn,marginLeft:2}}>MAX</span>}
+                    </div>
+                    {_hasBands&&<div style={{display:"flex",alignItems:"center",gap:3,padding:"2px 0 4px 48px",borderBottom:"1px solid "+C.bdr}}>
+                      <input type="number" value={setData.hook||""} onChange={function(e){logBandMeta(aDay,i,si,e.target.value||null,setData.distance);}} placeholder="hook" min="1" max="12" style={{width:40,padding:"4px",fontSize:11,fontFamily:FD,background:C.bar,color:C.txt,border:"1px solid "+C.bdr,borderRadius:6,outline:"none",textAlign:"center",boxSizing:"border-box"}}/>
                       <span style={{fontSize:9,color:C.dim}}>hook#</span>
-                      <input type="number" value={setData.distance||""} onChange={function(e){logBand(aDay,i,si,setData.band,setData.hook,e.target.value||null);}} placeholder="sq" min="1" style={{width:40,padding:"4px",fontSize:11,fontFamily:FD,background:C.bar,color:C.txt,border:"1px solid "+C.bdr,borderRadius:6,outline:"none",textAlign:"center",boxSizing:"border-box"}}/>
+                      <input type="number" value={setData.distance||""} onChange={function(e){logBandMeta(aDay,i,si,setData.hook,e.target.value||null);}} placeholder="sq" min="1" style={{width:40,padding:"4px",fontSize:11,fontFamily:FD,background:C.bar,color:C.txt,border:"1px solid "+C.bdr,borderRadius:6,outline:"none",textAlign:"center",boxSizing:"border-box"}}/>
                       <span style={{fontSize:9,color:C.dim}}>mat sq</span>
-                    </div>}
+                    </div>}</div>;})()}
                   </div>;})}
 
                 {(function(){
                   if(ex.tech==="myo"||ex.tech==="restpause"){
                     var _myoBandDone=ex.name.indexOf("Band")>=0||ex.name.indexOf("Banded")>=0;
-                    var _myoBWDone=ex.name.indexOf("Pushup")>=0||ex.name.indexOf("Push-up")>=0||ex.name.indexOf("Pull-up")>=0||ex.name.indexOf("Chin-up")>=0||ex.name.indexOf("Dip")>=0||ex.name.indexOf("Plank")>=0||ex.name.indexOf("Bodyweight")>=0;
-                    var actFilled=lg.myo&&lg.myo.activationReps>0&&(_myoBandDone?!!lg.myo.band:_myoBWDone?true:lg.myo.w>0);
+                    var _myoBWDone=ex.t==="B"||ex.tech==="primer"||ex.tech==="corrective"||ex.name.indexOf("Pushup")>=0||ex.name.indexOf("Push-up")>=0||ex.name.indexOf("Pull-up")>=0||ex.name.indexOf("Chin-up")>=0||ex.name.indexOf("Dip")>=0||ex.name.indexOf("Plank")>=0||ex.name.indexOf("Bodyweight")>=0;
+                    var actFilled=lg.myo&&lg.myo.activationReps>0&&(_myoBandDone?(_getBands(lg.myo).length>0):_myoBWDone?true:lg.myo.w>0);
                     return actFilled?<div style={{marginTop:10}}>{mainBtn("EXERCISE DONE",function(){setLog(function(p){var n=Object.assign({},p);n[k]=Object.assign({},n[k],{done:true});return n;});if(!timerStart&&!editingSession)startTimer();try{sarahSay("nice_work");}catch(e){}})}</div>:null;
                   }
-                  var isBand=ex.name.indexOf("Band")>=0||ex.name.indexOf("Banded")>=0;var allFilled=true;for(var si=0;si<numSets;si++){var sd=(lg.sets&&lg.sets[si])||{};var hasWeight=sd.w||(isBand&&sd.band);if(!hasWeight||!sd.r)allFilled=false;}return allFilled?<div style={{marginTop:10}}>{mainBtn("EXERCISE DONE",function(){setLog(function(p){var n=Object.assign({},p);n[k]=Object.assign({},n[k],{done:true});return n;});if(!timerStart&&!editingSession)startTimer();try{sarahSay("nice_work");}catch(e){}})}</div>:null;
+                  var isBand=ex.name.indexOf("Band")>=0||ex.name.indexOf("Banded")>=0;var allFilled=true;for(var si=0;si<numSets;si++){var sd=(lg.sets&&lg.sets[si])||{};var hasWeight=sd.w||(isBand&&(_getBands(sd).length>0));if(!hasWeight||!sd.r)allFilled=false;}return allFilled?<div style={{marginTop:10}}>{mainBtn("EXERCISE DONE",function(){setLog(function(p){var n=Object.assign({},p);n[k]=Object.assign({},n[k],{done:true});return n;});if(!timerStart&&!editingSession)startTimer();try{sarahSay("nice_work");}catch(e){}})}</div>:null;
                 })()}
                 {/* REST TIMER QUICK BUTTONS (between sets) — C9 kit-aware */}
                 {!lg.done&&timerStart&&(function(){
