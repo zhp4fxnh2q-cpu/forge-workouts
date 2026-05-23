@@ -853,10 +853,32 @@ var BAND_COLORS=[
 // We warm it up on the first user interaction so timer beeps work even on silent mode.
 var _audioCtx=null;
 var _audioWarmedUp=false;
+var _audioKeepAlive=null;
+// iOS quietly suspends an AudioContext when nothing has played for a moment, and a
+// programmatic resume() WITHOUT a user gesture leaves it "running" but MUTED until
+// the next real tap. That's why beeps went silent mid-rest and only returned after
+// toggling apps (the tab-back tap re-unlocked audio). A silent looping buffer keeps
+// the context genuinely alive for the whole session so scheduled beeps stay audible.
+function startAudioKeepAlive(){
+  try{
+    if(!_audioCtx||_audioKeepAlive)return;
+    var buf=_audioCtx.createBuffer(1,1,_audioCtx.sampleRate);
+    var src=_audioCtx.createBufferSource();
+    src.buffer=buf;src.loop=true;
+    var g=_audioCtx.createGain();g.gain.value=0; // truly silent, just keeps the graph active
+    src.connect(g);g.connect(_audioCtx.destination);
+    src.start(0);
+    _audioKeepAlive=src;
+  }catch(e){}
+}
 function warmUpAudio(){
   try{
-    if(!_audioCtx)_audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-    if(_audioCtx.state==="suspended")_audioCtx.resume();
+    if(!_audioCtx){
+      _audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+      // Auto-recover if iOS flips the context out of "running" during a session.
+      try{_audioCtx.onstatechange=function(){try{if(_audioCtx&&_audioCtx.state!=="running"&&!document.hidden)_audioCtx.resume();}catch(e){}};}catch(e){}
+    }
+    if(_audioCtx.state==="suspended"||_audioCtx.state==="interrupted")_audioCtx.resume();
     if(!_audioWarmedUp){
       // Play a silent tone to unlock audio on iOS
       var osc=_audioCtx.createOscillator();
@@ -866,12 +888,21 @@ function warmUpAudio(){
       osc.start();osc.stop(_audioCtx.currentTime+0.01);
       _audioWarmedUp=true;
     }
+    startAudioKeepAlive();
   }catch(e){}
 }
 // Warm up on ANY user touch/click
 if(typeof document!=="undefined"){
   document.addEventListener("touchstart",warmUpAudio,{once:false,passive:true});
   document.addEventListener("click",warmUpAudio,{once:false,passive:true});
+  // Re-resume when the tab returns to the foreground (covers backgrounding) and
+  // whenever iOS flips the context to suspended/interrupted on its own.
+  document.addEventListener("visibilitychange",function(){
+    try{if(!document.hidden&&_audioCtx&&_audioCtx.state!=="running"){_audioCtx.resume();startAudioKeepAlive();}}catch(e){}
+  });
+  window.addEventListener("focus",function(){
+    try{if(_audioCtx&&_audioCtx.state!=="running"){_audioCtx.resume();}}catch(e){}
+  });
 }
 function _scheduleBeep(freq,dur,vol){
   try{
@@ -893,7 +924,7 @@ function _scheduleBeep(freq,dur,vol){
 function beep(freq,dur,vol){
   try{
     if(!_audioCtx)_audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-    if(_audioCtx.state==="suspended"){
+    if(_audioCtx.state==="suspended"||_audioCtx.state==="interrupted"){
       try{
         var rp=_audioCtx.resume();
         if(rp&&typeof rp.then==="function"){
@@ -1308,9 +1339,17 @@ var EX_MEDIA_MAPPINGS={
   "Band Deadlift":{gif:"https://www.nerdfitness.com/wp-content/uploads/2020/04/band-deadlift.gif"},
   // 1 entry that had a wrong mapping (was mapped to Face_Pull, which is not over-and-back)
   "Banded Over-and-Backs":{gif:"https://www.nerdfitness.com/wp-content/uploads/2020/04/band-over-back.gif"},
-  // Fix: Spanish Squats was mapped to Goblet Squat images; Burpees had 404 images
-  "Banded Spanish Squats":{gif:"https://www.nerdfitness.com/wp-content/uploads/2020/04/band-squat.gif"},
-  "Burpees":{gif:"https://homeworkouts.org/wp-content/uploads/anim-burpees.gif"}
+  // Burpees had 404 images
+  "Burpees":{gif:"https://homeworkouts.org/wp-content/uploads/anim-burpees.gif"},
+  // Bug fix (May 2026): "Banded Spanish Squats" override removed — it pointed at a
+  // generic band-squat gif, masking the CORRECT AthleanX "DB Spanish Squats" video
+  // (band-behind-knees TKE squat). Removing the override lets resolveMedia fall
+  // through to EX_MP4S["Banded Spanish Squats"], which is the real Spanish squat.
+  // Bug fix (May 2026): "DB Single Leg RDLs" was resolving to the AthleanX
+  // "Single DB RDL's" clip — a TWO-FOOT single-dumbbell hinge that reads as a squat,
+  // not a single-LEG RDL. Pin it to a true single-leg hip-hinge image (rear leg
+  // extended) so the visual matches the movement.
+  "DB Single Leg RDLs":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_One-Legged_Deadlift/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_One-Legged_Deadlift/1.jpg"]}
 };
 function resolveMedia(name){
   if(!name)return {mp4:null,imgs:null,gif:null};
@@ -2174,6 +2213,47 @@ var EX={
     {n:"Mountain Mules",t:"H",mv:"cardio",m:5,len:"N",pat:"cardio",fat:3,uni:0,ss:"none"},                     // Xero: burpee variation
   ],
 };
+
+// ═══ EXERCISE TYPE LOOKUP BY NAME (Bug fix May 2026) ═══
+// The `t` field ("C"/"I"/"B"/...) lives on the EX database entry, but it is only
+// stamped onto SOME program-exercise objects at build time (and old saved programs
+// predate the stamping). That made bodyweight detection (ex.t==="B") silently fail
+// for moves like Reverse Crunches, so the app demanded a weight it shouldn't.
+// This map lets any consumer recover the authoritative type from the exercise NAME
+// even when the program object is missing `t`.
+var EX_T_BY_NAME=(function(){
+  var m={};
+  for(var mg in EX){
+    if(!EX.hasOwnProperty(mg))continue;
+    var arr=EX[mg];if(!arr||!arr.length)continue;
+    for(var i=0;i<arr.length;i++){if(arr[i]&&arr[i].n)m[arr[i].n]=arr[i].t;}
+  }
+  return m;
+})();
+function exTypeByName(name){return name&&EX_T_BY_NAME[name]?EX_T_BY_NAME[name]:null;}
+// Resolve an exercise object's type, falling back to the name lookup.
+function exType(ex){
+  if(!ex)return null;
+  if(ex.t)return ex.t;
+  return exTypeByName(ex.name);
+}
+// True when the exercise is bodyweight-loaded (no external load to enter), unless
+// it's an explicitly weighted variant.
+function isBodyweightEx(ex){
+  if(!ex)return false;
+  var nm=ex.name||"";
+  if(/\(weighted\)/i.test(nm)||/^Weighted /.test(nm)||/^DB /.test(nm))return false;
+  if(ex.tech==="primer"||ex.tech==="corrective")return true;
+  return exType(ex)==="B";
+}
+// Conditioning moves where CARDIO limits the set before muscular failure — RIR is
+// meaningless here, so we suppress the RIR selector (Bug fix May 2026: Mountain
+// Climbers). Cardio-tier moves (Burpees etc.) are t:"H" and handled separately.
+var FORGE_NORIR_CONDITIONING={"Mountain Climbers":1,"Mountain Mules":1,"High Knees":1,"Jumping Jacks":1};
+function isConditioningNoRir(ex){
+  if(!ex||!ex.name)return false;
+  return !!FORGE_NORIR_CONDITIONING[ex.name];
+}
 
 // ═══ EQUIPMENT INFERENCE ═══
 // Returns "bw", "band", "db", or "tower" for a given exercise
@@ -4824,6 +4904,47 @@ function tryTrajectoryPrescription(e1rmCtx,lw,lo,numSets){
   };
 }
 
+// ═══ SET-TYPE NORMALIZATION (myo / rest-pause vs straight) — Bug fix May 2026 ═══
+// Myo-rep and rest-pause sessions are saved as ONE set whose `r` is the density
+// tally (activation reps + every mini-set rep, e.g. 15+5+4+3 = 27). That number is
+// NOT comparable to a straight-set rep count. Feeding it into the double-progression
+// / stall / e1RM math makes the engine believe the lifter blew past the top of the
+// rep range every single session — so it perpetually recommends a heavier weight
+// ("overshoot"), and it false-fires the stall tracker the moment the set scheme
+// differs. These helpers (1) classify each saved session's set type and (2) build a
+// type-consistent, comparable history for a given exercise: only sessions of the
+// same type are kept, and myo sessions are rewritten so each set's `r` is the
+// ACTIVATION rep count (with the original tally preserved under totalReps).
+function sessionSetType(sess){
+  if(!sess)return "straight";
+  if(sess.tech==="myo"||sess.tech==="restpause")return "myo";
+  if(sess.sets&&sess.sets.length>0&&sess.sets[0]&&(sess.sets[0].setType==="myo"||sess.sets[0].activationReps!==undefined))return "myo";
+  return "straight";
+}
+function normHistForType(hist,tech){
+  if(!hist||!hist.length)return hist||[];
+  var want=(tech==="myo"||tech==="restpause")?"myo":"straight";
+  var out=[];
+  for(var i=0;i<hist.length;i++){
+    var s=hist[i];
+    if(sessionSetType(s)!==want)continue;
+    if(want==="myo"){
+      var ns=[];
+      for(var j=0;j<(s.sets||[]).length;j++){
+        var st=s.sets[j];if(!st){ns.push(st);continue;}
+        var actR=(st.activationReps!==undefined&&st.activationReps!==null)?st.activationReps:st.r;
+        var c={};for(var kk in st){if(st.hasOwnProperty(kk))c[kk]=st[kk];}
+        c.totalReps=st.r;c.r=actR;
+        ns.push(c);
+      }
+      var cs={};for(var kk2 in s){if(s.hasOwnProperty(kk2))cs[kk2]=s[kk2];}cs.sets=ns;out.push(cs);
+    } else {
+      out.push(s);
+    }
+  }
+  return out;
+}
+
 // ═══ AUTOREGULATED DOUBLE PROGRESSION (Helms 3rd ed.) ═══
 // Standard double progression with an autoregulated volume branch:
 // 1. REPS: same weight, push toward the top of the rep range
@@ -5170,7 +5291,7 @@ var EXERCISE_FAMILIES={
 // }
 function detectStall(hist,fatigueCtx){
   if(!hist||hist.length<2)return 0;
-  function best(s){var b={w:0,r:0,v:0,rir:null};if(!s.sets)return b;for(var i=0;i<s.sets.length;i++){var v=s.sets[i].w*s.sets[i].r;if(v>b.v){b={w:s.sets[i].w,r:s.sets[i].r,v:v,rir:s.sets[i].rir!==undefined?s.sets[i].rir:null};}}return b;}
+  function best(s){var b={w:0,r:0,v:0,rir:null};if(!s.sets)return b;for(var i=0;i<s.sets.length;i++){var st=s.sets[i];var rr=(st.activationReps!==undefined&&st.activationReps!==null)?st.activationReps:st.r;var v=st.w*rr;if(v>b.v){b={w:st.w,r:rr,v:v,rir:st.rir!==undefined?st.rir:null};}}return b;}
   var l=best(hist[0]);var p=best(hist[1]);
   // FATIGUE CHECKPOINT: before any stall classification, check systemic fatigue
   if(fatigueCtx){
@@ -7308,8 +7429,10 @@ function Forge(props){
     // Compare best set from each session
     var lastBest = {w: 0, r: 0};
     var prevBest = {w: 0, r: 0};
-    last.sets.forEach(function(s) { if (s.w > lastBest.w || (s.w === lastBest.w && s.r > lastBest.r)) { lastBest = s; } });
-    prev.sets.forEach(function(s) { if (s.w > prevBest.w || (s.w === prevBest.w && s.r > prevBest.r)) { prevBest = s; } });
+    // myo/rest-pause sets compare on activation reps, not the summed density tally
+    function _cmpR(s){return (s.activationReps!==undefined&&s.activationReps!==null)?s.activationReps:s.r;}
+    last.sets.forEach(function(s) { var r=_cmpR(s); if (s.w > lastBest.w || (s.w === lastBest.w && r > lastBest.r)) { lastBest = {w:s.w,r:r}; } });
+    prev.sets.forEach(function(s) { var r=_cmpR(s); if (s.w > prevBest.w || (s.w === prevBest.w && r > prevBest.r)) { prevBest = {w:s.w,r:r}; } });
     // Stalled = same or less weight, same or fewer reps
     var stall1 = (lastBest.w <= prevBest.w && lastBest.r <= prevBest.r);
     if (!stall1) return 0;
@@ -7322,7 +7445,7 @@ function Forge(props){
       var prev2 = hist[2];
       if (prev2.sets && prev2.sets.length) {
         var prev2Best = {w: 0, r: 0};
-        prev2.sets.forEach(function(s) { if (s.w > prev2Best.w || (s.w === prev2Best.w && s.r > prev2Best.r)) { prev2Best = s; } });
+        prev2.sets.forEach(function(s) { var r=_cmpR(s); if (s.w > prev2Best.w || (s.w === prev2Best.w && r > prev2Best.r)) { prev2Best = {w:s.w,r:r}; } });
         if (prevBest.w <= prev2Best.w && prevBest.r <= prev2Best.r) {
           // Also check RIR between prev and prev2 — if RIR was same across
           // all 3, this is still on-plan, not a stall
@@ -7602,14 +7725,35 @@ function Forge(props){
       var entry = log[k];
       if (!entry || !entry.sets) return;
       var sets = [];
-      if((ex.tech==="myo"||ex.tech==="restpause")&&entry.myo&&entry.myo.activationReps>0&&entry.myo.w>0){
+      if((ex.tech==="myo"||ex.tech==="restpause")&&entry.myo&&entry.myo.activationReps>0&&(entry.myo.w>0||(entry.myo.bands&&entry.myo.bands.length>0))){
         var totalMiniReps=0;var miniArr=[];
         for(var _smi=0;_smi<(entry.myo.miniSets||[]).length;_smi++){var ms=entry.myo.miniSets[_smi];if(ms&&ms.r>0){totalMiniReps+=ms.r;miniArr.push({r:ms.r});}}
         var totalR=entry.myo.activationReps+totalMiniReps;
         var myoRir=(entry.myo.rir!==undefined&&entry.myo.rir!==null)?entry.myo.rir:null;
-        sets.push({w:entry.myo.w,r:totalR,activationReps:entry.myo.activationReps,miniSets:miniArr,rir:myoRir});
+        // setType:"myo" tags this entry so progression/stall/PR math treats it as a
+        // density set (compare by ACTIVATION reps, not the summed total) instead of a
+        // straight set of `totalR` reps.
+        var _myoSet={w:entry.myo.w||0,r:totalR,activationReps:entry.myo.activationReps,miniSets:miniArr,rir:myoRir,setType:"myo"};
+        if(entry.myo.bands&&entry.myo.bands.length>0){_myoSet.bands=entry.myo.bands.slice();_myoSet.band=entry.myo.band||entry.myo.bands[0];}
+        if(entry.myo.hook!==undefined&&entry.myo.hook!==null&&entry.myo.hook!=="")_myoSet.hook=entry.myo.hook;
+        if(entry.myo.distance!==undefined&&entry.myo.distance!==null&&entry.myo.distance!=="")_myoSet.distance=entry.myo.distance;
+        sets.push(_myoSet);
       } else {
-        entry.sets.forEach(function(s) { if (s && s.w && s.r) { var sd={w: s.w, r: s.r}; if(s.rir!==undefined&&s.rir!==null) sd.rir=s.rir; sets.push(sd); }});
+        entry.sets.forEach(function(s) {
+          if(!s)return;
+          var _bands=(s.bands&&s.bands.length>0)?s.bands.slice():null;var _hasBands=!!_bands;
+          // Accept band-only sets (no lb weight). Previously the `s.w && s.r` guard
+          // silently dropped every band-exercise set, so band lifts like Band Lat
+          // Pulldowns never reached history and read as "first time" forever.
+          if((s.w||_hasBands)&&s.r){
+            var sd={w:s.w||0,r:s.r};
+            if(s.rir!==undefined&&s.rir!==null)sd.rir=s.rir;
+            if(_hasBands){sd.bands=_bands;sd.band=s.band||_bands[0];}
+            if(s.hook!==undefined&&s.hook!==null&&s.hook!=="")sd.hook=s.hook;
+            if(s.distance!==undefined&&s.distance!==null&&s.distance!=="")sd.distance=s.distance;
+            sets.push(sd);
+          }
+        });
       }
       if (sets.length === 0) return;
 
@@ -7685,7 +7829,7 @@ function Forge(props){
       // Update exercise history (keep last 30 sessions — expanded from 5 to
       // give the e1RM trajectory model enough points to fit meaningfully)
       var h = (newHist[ex.name] || []).slice();
-      h.unshift({sets: sets, date: ds, targetRir: (ex.rir !== undefined && ex.rir !== null) ? ex.rir : null});
+      h.unshift({sets: sets, date: ds, targetRir: (ex.rir !== undefined && ex.rir !== null) ? ex.rir : null, tech: (ex.tech || "straight")});
       if (h.length > 30) h = h.slice(0, 30);
       newHist[ex.name] = h;
 
@@ -7694,7 +7838,11 @@ function Forge(props){
       var topR = 0;
       var totVol = 0;
       sets.forEach(function(s) {
-        if (s.w > topW || (s.w === topW && s.r > topR)) { topW = s.w; topR = s.r; }
+        // For myo/rest-pause sets, compare on ACTIVATION reps (a comparable working
+        // count), never the activation+mini summed total — otherwise a 27-rep myo
+        // tally fakes a 1RM/rep PR every session. Volume still uses real total work.
+        var _prR=(s.activationReps!==undefined&&s.activationReps!==null)?s.activationReps:s.r;
+        if (s.w > topW || (s.w === topW && _prR > topR)) { topW = s.w; topR = _prR; }
         totVol += s.w * s.r;
       });
       // Estimated 1RM via Epley formula: w * (1 + r/30)
@@ -7855,7 +8003,8 @@ function Forge(props){
           activationReps: ss.activationReps || ss.r || 0,
           miniSets: miniArr,
           rir: (ss.rir !== undefined && ss.rir !== null) ? ss.rir : null,
-          band: ss.band || null,
+          bands: (ss.bands && ss.bands.length > 0) ? ss.bands.slice() : (ss.band ? [ss.band] : []),
+          band: ss.band || (ss.bands && ss.bands.length > 0 ? ss.bands[0] : null),
           hook: ss.hook || null,
           distance: ss.distance || null
         };
@@ -7864,7 +8013,8 @@ function Forge(props){
           var s = saved.sets[ssi];
           var sd = { w: s.w || "", r: s.r || "" };
           if (s.rir !== undefined && s.rir !== null) sd.rir = s.rir;
-          if (s.band) { sd.band = s.band; if (s.hook) sd.hook = s.hook; if (s.distance) sd.distance = s.distance; }
+          if (s.bands && s.bands.length > 0) { sd.bands = s.bands.slice(); sd.band = s.band || s.bands[0]; } else if (s.band) { sd.band = s.band; }
+          if (s.hook) sd.hook = s.hook; if (s.distance) sd.distance = s.distance;
           entry.sets.push(sd);
         }
       }
@@ -7894,18 +8044,30 @@ function Forge(props){
       var entry = log[k];
       if (!entry) return;
       var sets = [];
-      if ((ex.tech === "myo" || ex.tech === "restpause") && entry.myo && entry.myo.activationReps > 0 && (entry.myo.w > 0 || entry.myo.band)) {
+      if ((ex.tech === "myo" || ex.tech === "restpause") && entry.myo && entry.myo.activationReps > 0 && (entry.myo.w > 0 || entry.myo.band || (entry.myo.bands && entry.myo.bands.length > 0))) {
         var totalMiniReps = 0; var miniArr = [];
         for (var _smi = 0; _smi < (entry.myo.miniSets || []).length; _smi++) {
           var ms = entry.myo.miniSets[_smi]; if (ms && ms.r > 0) { totalMiniReps += ms.r; miniArr.push({ r: ms.r }); }
         }
         var totalR = entry.myo.activationReps + totalMiniReps;
         var myoRir = (entry.myo.rir !== undefined && entry.myo.rir !== null) ? entry.myo.rir : null;
-        var myoSetData = { w: entry.myo.w, r: totalR, activationReps: entry.myo.activationReps, miniSets: miniArr, rir: myoRir };
-        if (entry.myo.band) { myoSetData.band = entry.myo.band; if (entry.myo.hook) myoSetData.hook = entry.myo.hook; if (entry.myo.distance) myoSetData.distance = entry.myo.distance; }
+        var myoSetData = { w: entry.myo.w || 0, r: totalR, activationReps: entry.myo.activationReps, miniSets: miniArr, rir: myoRir, setType: "myo" };
+        if (entry.myo.bands && entry.myo.bands.length > 0) { myoSetData.bands = entry.myo.bands.slice(); myoSetData.band = entry.myo.band || entry.myo.bands[0]; }
+        else if (entry.myo.band) { myoSetData.band = entry.myo.band; }
+        if (entry.myo.hook) myoSetData.hook = entry.myo.hook; if (entry.myo.distance) myoSetData.distance = entry.myo.distance;
         sets.push(myoSetData);
       } else if (entry.sets) {
-        entry.sets.forEach(function(s) { if (s && (s.w || s.band) && s.r) { var sd = { w: s.w, r: s.r }; if (s.rir !== undefined && s.rir !== null) sd.rir = s.rir; if (s.band) { sd.band = s.band; if (s.hook) sd.hook = s.hook; if (s.distance) sd.distance = s.distance; } sets.push(sd); } });
+        entry.sets.forEach(function(s) {
+          if (!s) return;
+          var _bands = (s.bands && s.bands.length > 0) ? s.bands.slice() : null; var _hasBands = !!(_bands || s.band);
+          if ((s.w || _hasBands) && s.r) {
+            var sd = { w: s.w || 0, r: s.r };
+            if (s.rir !== undefined && s.rir !== null) sd.rir = s.rir;
+            if (_bands) { sd.bands = _bands; sd.band = s.band || _bands[0]; } else if (s.band) { sd.band = s.band; }
+            if (s.hook) sd.hook = s.hook; if (s.distance) sd.distance = s.distance;
+            sets.push(sd);
+          }
+        });
       }
       if (sets.length === 0) return;
       exData.push({ name: ex.name, muscle: ex.muscle, tech: ex.tech, sets: sets });
@@ -7914,11 +8076,11 @@ function Forge(props){
       var h = (newHist[ex.name] || []).slice();
       var replaced = false;
       for (var hi = 0; hi < h.length; hi++) {
-        if (h[hi].date === ds) { h[hi] = { sets: sets, date: ds, targetRir: h[hi].targetRir }; replaced = true; break; }
+        if (h[hi].date === ds) { h[hi] = { sets: sets, date: ds, targetRir: h[hi].targetRir, tech: (ex.tech || "straight") }; replaced = true; break; }
       }
       if (!replaced) {
         // Entry did not exist (exercise not logged before), add it
-        h.unshift({ sets: sets, date: ds, targetRir: null });
+        h.unshift({ sets: sets, date: ds, targetRir: null, tech: (ex.tech || "straight") });
         if (h.length > 30) h = h.slice(0, 30);
       }
       newHist[ex.name] = h;
@@ -8688,11 +8850,28 @@ function Forge(props){
     }
     return null;
   }
+  // Resolve the current program exercise's set-type (tech) by name. Used to keep
+  // progression reasoning within one set-type (myo vs straight) — Bug fix May 2026.
+  function findExerciseTech(exName){
+    if(!program||!program.length)return null;
+    for(var di=0;di<program.length;di++){
+      var d=program[di];
+      if(!d||!d.exercises)continue;
+      for(var ei=0;ei<d.exercises.length;ei++){
+        if(d.exercises[ei]&&d.exercises[ei].name===exName)return d.exercises[ei].tech;
+      }
+    }
+    return null;
+  }
   // ═══ WIRE UP: getProgression for workout view ═══
   // C8: passes dbKit so progression respects the user's equipment.
   // Sprint 6 Item 3: branches into getStuckProgression when stuck mode is on.
   // Sprint 6 Item 4: builds e1rmCtx and passes it to both progression paths so
   // the trajectory model can override weight selection when the curve is confident.
+  // May 2026: history is normalized to the exercise's set-type first, so myo/rest-
+  // pause density tallies never contaminate straight-set recommendations (and vice
+  // versa). The weight/rep/stall LOGIC inside getProgression is unchanged — it just
+  // receives clean, comparable, type-consistent data.
   function getProgressionHint(exName,repRange,numSetsArg){
     // V2 #4: If transition wizard set a weight override and we're in week 1, use it
     if(weekNum===1&&weightOverrides&&weightOverrides[exName]){
@@ -8707,7 +8886,8 @@ function Forge(props){
         action:"mesoStart"
       };
     }
-    var hist=exHist[exName];
+    var exTech=findExerciseTech(exName);
+    var hist=normHistForType(exHist[exName],exTech);
     var exMuscle=findExerciseMuscle(exName);
     var ctx=buildE1rmCtxForExercise(exName,exMuscle,hist);
     if(stuckMode){
@@ -10952,7 +11132,14 @@ function Forge(props){
                   }
                   summary=ls0.w+"lb: "+ls0.activationReps+" activation"+(miniStr?" + "+miniStr+" mini":"")+" = "+ls0.r+" total";
                 } else {
-                  summary=last.sets.map(function(s){return s.w+"lb x "+s.r;}).join("  |  ");
+                  summary=last.sets.map(function(s){
+                    var _b=_getBands(s);
+                    var head=_b.length>0?_bandLabel(_b):(s.w?(s.w+"lb"):"BW");
+                    var meta="";
+                    if(s.hook!==undefined&&s.hook!==null&&s.hook!=="")meta+=" · hook "+s.hook;
+                    if(s.distance!==undefined&&s.distance!==null&&s.distance!=="")meta+=" · "+s.distance+"sq";
+                    return head+" x "+s.r+meta;
+                  }).join("  |  ");
                 }
                 return <div style={{background:C.bar,borderRadius:8,padding:"8px 12px",marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <div><div style={{fontSize:10,fontWeight:700,fontFamily:FD,letterSpacing:1,color:C.blu,marginBottom:2}}>LAST SESSION</div><div style={{fontSize:11,color:C.mid}}>{summary}</div></div>
@@ -11258,21 +11445,30 @@ function Forge(props){
                   var rPlaceholder=rec?(rec.r<12?String(rec.r+1):String(rec.r)):"reps";
                   // D-Apr2026 BW detection: explicit "(weighted)" override wins — "Dead Bugs (weighted)" uses a DB.
                   var _isWeightedVariant=/\(weighted\)/i.test(ex.name)||/^Weighted /.test(ex.name)||/^DB /.test(ex.name);
-                  var setRir=setData.rir;var isBandEx=ex.name.indexOf("Band")>=0||ex.name.indexOf("Banded")>=0;var isBW=!_isWeightedVariant&&(ex.t==="B"||ex.tech==="primer"||ex.tech==="corrective");
+                  var setRir=setData.rir;var isBandEx=ex.name.indexOf("Band")>=0||ex.name.indexOf("Banded")>=0;var isBW=isBodyweightEx(ex);
                   // D-Apr2026: Time-based loaded carries render a seconds input instead of reps.
                   var _isTB=isTimeBased(ex.name);
-                  var isPrimerOrCorr=ex.tech==="primer"||ex.tech==="corrective"||ex.tier==="primer"||ex.tier==="corrective";var hasWR=setData.w&&setData.r;var hasBandR=isBandEx&&setData.band&&setData.r;var hasBWR=isBW&&setData.r;var setComplete=hasWR||hasBandR||hasBWR;
+                  // Bug fix May 2026: conditioning moves (e.g. Mountain Climbers) suppress RIR like primers — cardio limits before muscular failure.
+                  var _isConditioning=isConditioningNoRir(ex);
+                  var isPrimerOrCorr=ex.tech==="primer"||ex.tech==="corrective"||ex.tier==="primer"||ex.tier==="corrective"||_isConditioning;var hasWR=setData.w&&setData.r;var hasBandR=isBandEx&&setData.band&&setData.r;var hasBWR=isBW&&setData.r;var setComplete=hasWR||hasBandR||hasBWR;
                   // C1 — Previous-session reference for THIS set number
                   var prevForSet=null;
                   if(rec&&rec.isExact){prevForSet={w:rec.w,r:rec.r};}
                   else {var _lh=getLastData(ex.name);if(_lh&&_lh.sets&&_lh.sets.length>0){var _s=_lh.sets[si]||_lh.sets[_lh.sets.length-1];if(_s)prevForSet={w:_s.w,r:_s.r};}}
-                  // C1 — one-tap fill + confirm. Uses recommended values; user can override via inputs.
+                  // C1 — one-tap fill + confirm. Fills ONLY the blank fields so a
+                  // value the user already typed is never reset to the recommendation
+                  // (Bug fix May 2026). Tapping the check then just confirms what's there.
                   function oneTapFill(){
                     if(isBandEx||isBW)return;
                     if(!rec)return;
-                    var tr=rec.r<12?rec.r+1:rec.r;
-                    logSet(aDay,i,si,rec.w,tr);
+                    var hasW=setData.w!==undefined&&setData.w!==null&&setData.w!=="";
+                    var hasR=setData.r!==undefined&&setData.r!==null&&setData.r!=="";
+                    var w=hasW?setData.w:rec.w;
+                    var r=hasR?setData.r:(rec.r<12?rec.r+1:rec.r);
+                    logSet(aDay,i,si,w,r);
                   }
+                  // Show the gold one-tap as long as the set isn't fully logged. Once
+                  // BOTH fields are filled, setComplete flips and the RIR row appears.
                   var canOneTap=!!(rec&&!setComplete&&!isBandEx&&!isBW);
                   return <div key={si}>
                     {prevForSet&&!isBandEx&&!isBW&&!setComplete&&<div style={{fontSize:9,fontFamily:FD,letterSpacing:1,color:C.dim,paddingLeft:48,marginTop:4}}>{"PREVIOUS: "+prevForSet.w+" × "+prevForSet.r}</div>}
@@ -11288,7 +11484,7 @@ function Forge(props){
                       {canOneTap&&<button onClick={oneTapFill} aria-label="Log set at previous" style={{width:48,height:48,borderRadius:12,background:C.acc+"20",color:C.acc,border:"1.5px solid "+C.acc+"55",fontSize:24,fontWeight:700,fontFamily:FB,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,flexShrink:0,lineHeight:1}}>{"\u2713"}</button>}
                     </div>
                     {setComplete&&isPrimerOrCorr&&<div style={{display:"flex",alignItems:"center",gap:6,padding:"6px 0 10px 48px",borderBottom:"1px solid "+C.bdr}}>
-                      <span onClick={function(){setInfoSheet("primer_no_rir");}} style={{fontSize:9,color:C.dim,fontFamily:FD,letterSpacing:2,cursor:"pointer",background:C.bar,border:"1px dashed "+C.bdr,padding:"3px 8px",borderRadius:6}}>NO RIR · PRIMER SET</span>
+                      <span onClick={function(){setInfoSheet("primer_no_rir");}} style={{fontSize:9,color:C.dim,fontFamily:FD,letterSpacing:2,cursor:"pointer",background:C.bar,border:"1px dashed "+C.bdr,padding:"3px 8px",borderRadius:6}}>{_isConditioning?"NO RIR · CONDITIONING (CARDIO-CAPPED)":"NO RIR · PRIMER SET"}</span>
                     </div>}
                     {setComplete&&!isPrimerOrCorr&&<div style={{display:"flex",alignItems:"center",gap:6,padding:"6px 0 10px 48px",borderBottom:"1px solid "+C.bdr}}>
                       <span style={{fontSize:10,color:C.dim,fontFamily:FD,width:28,letterSpacing:1}}>RIR</span>
