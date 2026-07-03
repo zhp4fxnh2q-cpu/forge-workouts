@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-2";
+  window.FORGE_BUILD="2026.07.03-3";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -6042,6 +6042,24 @@ function lastSetToFailure(nm){
   if(!nm)return true;
   return !/RDL|Romanian|Stiff.?Leg|Good ?Morning|Deadlift|Leg Press|Hack Squat|Sissy|Reverse Lunge|Bulgarian/i.test(nm);
 }
+// ═══ ORDER / FATIGUE CONTEXT (v4 suggestion engine) ═══ Re-scale a load suggestion for
+// WHERE a lift sits in the session: later position (Simao 2005 — same lift loses reps when
+// performed later) and a preceding exercise that already worked the same muscle. Deliberately
+// conservative for a LIVE starting suggestion (floor 0.85, only ever reduces); the logged-
+// performance learning loop refines from actual results. This is what makes a suggestion
+// re-scale when an exercise's order changes across programs.
+function orderFatigueMult(posIdx,sharesMuscle){
+  var m=1.0;
+  if(posIdx>=2)m*=Math.max(0.88,1-0.05*(posIdx-1)); // position penalty, tapering, capped
+  if(sharesMuscle)m*=0.93;                            // secondary-muscle pre-fatigue
+  return Math.max(0.85,m);                            // never cut a starting suggestion >15%
+}
+function orderFatigueReason(posIdx,sharesMuscle){
+  var parts=[];
+  if(posIdx>=2)parts.push((posIdx+1)+" of session");
+  if(sharesMuscle)parts.push("muscle pre-worked");
+  return parts.length?("↓ vs fresh: "+parts.join(", ")):"";
+}
 function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHistory,readMod,genCount,banned,equipFilter,specBdg,tempoPresetId){
   banned=banned||[];
   var tm=1-(methodObj.sv/100);var cl=goalObj.cd||0;var cm=cl>0?Math.min(10,cl*4):0;var lm=mins-cm;var sessions=[];
@@ -9108,7 +9126,7 @@ function Forge(props){
   // pause density tallies never contaminate straight-set recommendations (and vice
   // versa). The weight/rep/stall LOGIC inside getProgression is unchanged — it just
   // receives clean, comparable, type-consistent data.
-  function getProgressionHint(exName,repRange,numSetsArg){
+  function getProgressionHint(exName,repRange,numSetsArg,posIdx,precedingMuscles){
     // V2 #4: If transition wizard set a weight override and we're in week 1, use it
     if(weekNum===1&&weightOverrides&&weightOverrides[exName]){
       var woWeight=weightOverrides[exName];
@@ -9126,10 +9144,22 @@ function Forge(props){
     var hist=normHistForType(exHist[exName],exTech);
     var exMuscle=findExerciseMuscle(exName);
     var ctx=buildE1rmCtxForExercise(exName,exMuscle,hist);
-    if(stuckMode){
-      return getStuckProgression(exName,hist,repRange,numSetsArg,microplates,ctx);
+    var _prog=stuckMode?getStuckProgression(exName,hist,repRange,numSetsArg,microplates,ctx):getProgression(exName,hist,repRange,numSetsArg,null,dbKit,ctx);
+    // v4 order/fatigue re-scale: reduce the starting suggestion when this lift sits later in the
+    // session or after a same-muscle exercise. Only reduces, only on a clean numeric weight.
+    if(_prog&&typeof _prog.w==="number"&&_prog.w>0){
+      var _shares=!!(precedingMuscles&&exMuscle&&precedingMuscles.indexOf(exMuscle)>=0);
+      var _pi=posIdx||0;
+      if(_pi>=2||_shares){
+        var _ofm=orderFatigueMult(_pi,_shares);
+        if(_ofm<1){
+          _prog.w=Math.round(_prog.w*_ofm);
+          var _rsn=orderFatigueReason(_pi,_shares);
+          if(_rsn)_prog.note=(_prog.note?_prog.note+" · ":"")+_rsn;
+        }
+      }
     }
-    return getProgression(exName,hist,repRange,numSetsArg,null,dbKit,ctx);
+    return _prog;
   }
   // C9 — Rest helpers. Per-exercise overrides beat the calcRest heuristic.
   function getRestForEx(exercise,currentRIR,setNumber){
@@ -11470,7 +11500,7 @@ function Forge(props){
               })()}
               {/* ═══ PROGRESSION HINT (wired up from getProgression) ═══ */}
               {(function(){if(isCardio||ex.tier==="primer"||ex.tier==="grit"||ex.tier==="corrective")return null;
-                var prog=getProgressionHint(ex.name,ex.reps);if(!prog||!prog.note)return null;
+                var prog=getProgressionHint(ex.name,ex.reps,undefined,i,(program[aDay]?program[aDay].exercises.slice(0,i).map(function(pe){return pe.muscle;}):[]));if(!prog||!prog.note)return null;
                 // Color & label based on progression lever
                 var isStall=prog.lever==="stall";
                 var isTraj=prog.lever==="trajectory";
