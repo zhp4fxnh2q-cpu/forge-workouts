@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-4";
+  window.FORGE_BUILD="2026.07.03-7";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -8122,6 +8122,7 @@ function Forge(props){
     // ═══ REP RANGE RESPONSE TRACKING ═══
     // For each exercise, classify rep range and track progression rate per muscle
     var newRRT=Object.assign({},repRangeTrack);
+    var newRepLearn=getRepLearn(); // P1: preference-engine learning store
     day.exercises.forEach(function(ex,ei){
       var k2=aDay+"-"+ei;var entry=log[k2];
       if(!entry||!entry.sets||ex.muscle==="cardio"||ex.muscle==="grit"||ex.tier==="primer")return;
@@ -8130,21 +8131,35 @@ function Forge(props){
       if(cnt2===0)return;avgReps=Math.round(avgReps/cnt2);
       var bucket=avgReps<=6?"low":avgReps<=12?"mid":"high"; // low=1-6, mid=7-12, high=13+
       // Calculate progression rate vs last session
+      var _lrProg=0;
       var prevHist=exHist[ex.name];
       if(prevHist&&prevHist.length>0&&prevHist[0].sets){
         var prevVol=0;prevHist[0].sets.forEach(function(s){prevVol+=s.w*s.r;});
         var curVol=0;entry.sets.forEach(function(s){if(s&&s.w&&s.r)curVol+=s.w*s.r;});
         if(prevVol>0){
           var progRate=(curVol-prevVol)/prevVol; // % change
+          _lrProg=progRate;
           if(!newRRT[ex.muscle])newRRT[ex.muscle]={low:[],mid:[],high:[]};
           var arr=newRRT[ex.muscle][bucket];
           arr.push(progRate);
           if(arr.length>10)newRRT[ex.muscle][bucket]=arr.slice(-10); // keep last 10
         }
       }
+      // ── PREFERENCE-ENGINE LEARNING (P1) ── record a per-muscle rep observation so
+      // learnRepCenter/resolveRepRange can learn your rep sweet spot per muscle over time.
+      if(ex.muscle&&avgReps>=3&&avgReps<=40){
+        var _lrRir=0,_lrRc=0,_lrW=0,_lrWc=0;
+        entry.sets.forEach(function(s){if(s){if(s.rir!==undefined&&s.rir!==null){_lrRir+=s.rir;_lrRc++;}if(s.w){_lrW+=s.w;_lrWc++;}}});
+        var _lrTarget=(ex.rir!==undefined&&ex.rir!==null)?ex.rir:null;
+        var _lrHit=(_lrTarget!==null&&_lrRc>0&&Math.abs((_lrRir/_lrRc)-_lrTarget)<=1)?1:0;
+        if(!newRepLearn[ex.muscle])newRepLearn[ex.muscle]={obs:[],v:2};
+        newRepLearn[ex.muscle].obs.push({ts:Date.now(),ctr:avgReps,hit:_lrHit,prog:_lrProg,w:_lrWc>0?Math.round(_lrW/_lrWc):0});
+        if(newRepLearn[ex.muscle].obs.length>40)newRepLearn[ex.muscle].obs=newRepLearn[ex.muscle].obs.slice(-40);
+      }
     });
     setRepRangeTrack(newRRT);
     sSet("forge_rrt",newRRT);
+    saveRepLearn(newRepLearn); // P1: persist learned rep observations
 
     setExHist(newHist);
     setPRs(newPRsMap);
@@ -11400,6 +11415,7 @@ function Forge(props){
               <div style={{flex:1,minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span style={{fontSize:isAct?15:13,fontWeight:isAct?700:500,color:isDone?C.grn:C.txt}}>{ex.name}</span>{_exBadge&&<button className="t44" onClick={function(e){e.stopPropagation();setPopup({type:"e1rm_confidence",id:ex.name,badge:_exBadge,fit:_exFit||{dataPointCount:_bE1h?_bE1h.length:0,r2:0,confidenceTier:"cold",modelType:"recent",projectedE1rm:0},biasApplied:_exBias,warnings:[]});}} style={{padding:"1px 6px",fontSize:8,fontWeight:700,fontFamily:FD,letterSpacing:0.5,color:_exBadgeCol,background:_exBadgeCol+"15",border:"1px solid "+_exBadgeCol+"45",borderRadius:8,cursor:"pointer",lineHeight:"14px"}}>{_exBadge.badge==="personalized"?"PERSONALIZED":_exBadge.badge==="learning"?"LEARNING":"STARTING"}</button>}</div>
                 {!isAct&&!isDone&&<div style={{fontSize:10,color:C.dim}}>{(isCardio?"":numSets+"x "+ex.reps)+(techLabel?" / "+techLabel:"")}</div>}
                 {!isAct&&!isDone&&renderExHint(ex.name, ex.muscle)}
+                {ex.lastSetToFail&&!isCardio&&ex.tech!=="primer"&&ex.tech!=="corrective"&&!isDone&&<div style={{fontSize:9,color:C.acc,fontFamily:FD,letterSpacing:0.5,marginTop:2}}>★ LAST SET → FAILURE</div>}
               </div>
               <div style={{display:"flex",alignItems:"center",gap:3}}>
                 {techLabel&&!isDone&&<span style={{fontSize:9,color:techColor,fontFamily:FD,letterSpacing:1,background:techColor+"15",padding:"2px 8px",borderRadius:4}}>{techLabel}</span>}
@@ -11790,9 +11806,9 @@ function Forge(props){
                       {_sb.length>=4&&<span style={{fontSize:7,color:C.orn,marginLeft:2}}>MAX</span>}
                     </div>
                     {_hasBands&&<div style={{display:"flex",alignItems:"center",gap:3,padding:"2px 0 4px 48px",borderBottom:"1px solid "+C.bdr}}>
-                      <input type="number" value={setData.hook||""} onChange={function(e){logBandMeta(aDay,i,si,e.target.value||null,setData.distance);}} placeholder="hook" min="1" max="12" style={{width:40,padding:"4px",fontSize:11,fontFamily:FD,background:C.bar,color:C.txt,border:"1px solid "+C.bdr,borderRadius:6,outline:"none",textAlign:"center",boxSizing:"border-box"}}/>
+                      <input type="number" value={setData.hook||""} onChange={function(e){logBandMeta(aDay,i,si,e.target.value||null,setData.distance);}} placeholder={(function(){var _k=aDay+"-"+i;var _ls=(log[_k]&&log[_k].sets)||[];for(var _p=si-1;_p>=0;_p--){if(_ls[_p]&&_ls[_p].hook)return String(_ls[_p].hook);}return "hook";})()} min="1" max="12" style={{width:40,padding:"4px",fontSize:11,fontFamily:FD,background:C.bar,color:C.txt,border:"1px solid "+C.bdr,borderRadius:6,outline:"none",textAlign:"center",boxSizing:"border-box"}}/>
                       <span style={{fontSize:9,color:C.dim}}>hook#</span>
-                      <input type="number" value={setData.distance||""} onChange={function(e){logBandMeta(aDay,i,si,setData.hook,e.target.value||null);}} placeholder="sq" min="1" style={{width:40,padding:"4px",fontSize:11,fontFamily:FD,background:C.bar,color:C.txt,border:"1px solid "+C.bdr,borderRadius:6,outline:"none",textAlign:"center",boxSizing:"border-box"}}/>
+                      <input type="number" value={setData.distance||""} onChange={function(e){logBandMeta(aDay,i,si,setData.hook,e.target.value||null);}} placeholder={(function(){var _k=aDay+"-"+i;var _ls=(log[_k]&&log[_k].sets)||[];for(var _p=si-1;_p>=0;_p--){if(_ls[_p]&&_ls[_p].distance)return String(_ls[_p].distance);}return "sq";})()} min="1" style={{width:40,padding:"4px",fontSize:11,fontFamily:FD,background:C.bar,color:C.txt,border:"1px solid "+C.bdr,borderRadius:6,outline:"none",textAlign:"center",boxSizing:"border-box"}}/>
                       <span style={{fontSize:9,color:C.dim}}>mat sq</span>
                     </div>}</div>;})()}
                   </div>;})}
