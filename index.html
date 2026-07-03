@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-1";
+  window.FORGE_BUILD="2026.07.03-2";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -5232,7 +5232,12 @@ function getStuckProgression(exName,hist,repRange,numSets,microplates,e1rmCtx){
   // direction === "up". A trajectory-says-down reading is handled by the
   // density ladder (hold weight, let the rep/set/tempo levers work).
   var _stuckTraj=tryTrajectoryPrescription(e1rmCtx,lw,lo,numSets);
-  if(_stuckTraj&&_stuckTraj.direction==="up"){
+  // Guard the load bump: (1) bands progress by reps, never load — skip entirely;
+  // (2) only honor a trajectory bump when the lifter actually cleared the rep-range top
+  // (allTop). A staller under an undulating (dropping) rep target can otherwise read as
+  // "improvement" and run the weight away — the density ladder owns that case instead.
+  var _isBandStk=/band/i.test(exName||"");
+  if(!_isBandStk&&allTop&&_stuckTraj&&_stuckTraj.direction==="up"){
     return {
       action:"stuckTrajectoryUp",
       weight:_stuckTraj.weight,
@@ -5965,6 +5970,78 @@ function selectExercisesForMuscle(scored,numExercises,goalObj,muscle,rng,equipFi
   }
   return picked;
 }
+// ═══ PER-MUSCLE REP PREFERENCE ENGINE (explicit + learned, science-bounded) ═══
+// David-championed: prefer different rep ranges per muscle (legs lower, arms higher),
+// set explicitly AND learned from what actually works — clamped so it never leaves the
+// evidence-equivalent band. Science: rep ranges ~5-30 to near-failure grow equally when
+// effort matched (Schoenfeld 2017); adherence is the real driver; soleus is the one strong
+// fiber-type case. Mirrors the shipped time-learning subsystem (getTimeFactor) in shape.
+var REP_PRIOR={chest:[6,15],back:[6,15],lats:[6,15],shoulders:[10,20],delts:[10,20],rear_delts:[12,20],biceps:[8,15],triceps:[8,15],quads:[6,15],hamstrings:[8,15],hams:[8,15],glutes:[6,15],calves:[10,20],soleus:[15,30],core:[10,20],abs:[10,20],forearms:[12,20],traps:[8,15]};
+var REP_CLAMP=[4,30],REP_MAXDELTA=2,REP_K=6,REP_HALFLIFE=42,REP_MINOBS=3;
+function _repMid(r){if(!r)return 10;if(typeof r==="string"){var p=r.split("-");return (parseInt(p[0],10)+parseInt(p[1]||p[0],10))/2;}return (r[0]+r[1])/2;}
+function _repWidth(r){if(!r)return 6;if(typeof r==="string"){var p=r.split("-");return Math.max(2,parseInt(p[1]||p[0],10)-parseInt(p[0],10));}return Math.max(2,r[1]-r[0]);}
+function _clampAbs(x,cap){return x>cap?cap:(x<-cap?-cap:x);}
+function getRepLearn(){try{var d=localStorage.getItem(devKey("forge_repLearn"));return d?JSON.parse(d):{};}catch(e){return {};}}
+function saveRepLearn(data){try{sSet("forge_repLearn",data);}catch(e){try{localStorage.setItem(devKey("forge_repLearn"),JSON.stringify(data));}catch(e2){}}}
+function getRepPref(){try{var c=localStorage.getItem(devKey("forge_config"));c=c?JSON.parse(c):{};return c.repPref||{};}catch(e){return {};}}
+// Empirical-Bayes shrinkage of observed rep-center toward the prior; recency+quality weighted, >=3-obs gate.
+function learnRepCenter(muscle,priorCenter){
+  var learn=getRepLearn();var m=learn[muscle];
+  if(!m||!m.obs||m.obs.length<REP_MINOBS)return {active:false,center:priorCenter,confidence:0,nEff:0};
+  var now=Date.now();var rows=[];
+  for(var i=0;i<m.obs.length;i++){var o=m.obs[i];
+    if(!o||o.ctr<3||o.ctr>40)continue;
+    var qClean=o.hit?1.0:0.5;
+    var qProg=Math.max(0.25,Math.min(1.5,0.5+5*(o.prog||0)));
+    var ageDays=(now-(o.ts||now))/86400000;
+    var qRec=Math.pow(0.5,ageDays/REP_HALFLIFE);
+    rows.push({ctr:o.ctr,wq:qClean*qProg*qRec});
+  }
+  if(rows.length<REP_MINOBS)return {active:false,center:priorCenter,confidence:0,nEff:0};
+  rows.sort(function(a,b){return a.ctr-b.ctr;});
+  var cut=Math.floor(rows.length*0.10);
+  if(cut>0)rows=rows.slice(cut,rows.length-cut);
+  var sw=0,swc=0,sw2=0;
+  for(var j=0;j<rows.length;j++){sw+=rows[j].wq;swc+=rows[j].wq*rows[j].ctr;sw2+=rows[j].wq*rows[j].wq;}
+  if(sw<=0||rows.length<REP_MINOBS)return {active:false,center:priorCenter,confidence:0,nEff:0};
+  var ctrHat=swc/sw;var nEff=(sw*sw)/sw2;
+  var shrunk=(REP_K*priorCenter+nEff*ctrHat)/(REP_K+nEff);
+  return {active:true,center:shrunk,confidence:nEff/(nEff+REP_K),nEff:nEff};
+}
+// Resolve a muscle's rep range: RIR-derived prior -> explicit override -> bounded learned nudge -> hard clamp.
+function resolveRepRange(muscle,baseReps){
+  var pref=getRepPref();var exp=pref[muscle]||null;
+  var priorCenter=_repMid(baseReps);
+  var anchor=exp?_repMid(exp):priorCenter;
+  var width=exp?_repWidth(exp):_repWidth(baseReps);
+  var L=learnRepCenter(muscle,anchor);
+  var center=anchor;
+  if(L.active)center=anchor+_clampAbs((L.center-anchor)*L.confidence,REP_MAXDELTA);
+  var lo=Math.round(center-width/2),hi=Math.round(center+width/2);
+  if(lo<REP_CLAMP[0])lo=REP_CLAMP[0];if(hi>REP_CLAMP[1])hi=REP_CLAMP[1];if(hi<lo+2)hi=lo+2;
+  return lo+"-"+hi;
+}
+function getRepPrefMeta(muscle,baseReps){
+  var pref=getRepPref();var exp=pref[muscle]||null;
+  var L=learnRepCenter(muscle,exp?_repMid(exp):_repMid(baseReps));
+  return {range:resolveRepRange(muscle,baseReps),source:exp?"explicit":(L.active?"learned":"prior"),confidence:L.active?L.confidence:0,sessions:L.active?Math.round(L.nEff):0};
+}
+// Undulate a base range for muscles trained 2x+/week (heavy=shift down, moderate=hold, light=shift up).
+function undulateRange(base,profile){
+  var c=_repMid(base),w=_repWidth(base);
+  var shift=profile==="heavy"?-Math.round(w*0.4):(profile==="light"?Math.round(w*0.4):0);
+  var lo=Math.round(c+shift-w/2),hi=Math.round(c+shift+w/2);
+  if(lo<REP_CLAMP[0])lo=REP_CLAMP[0];if(hi>REP_CLAMP[1])hi=REP_CLAMP[1];if(hi<lo+2)hi=lo+2;
+  return lo+"-"+hi;
+}
+// ═══ EFFORT-TIERING ═══ Early sets leave 1-2 RIR; the LAST set goes to true failure —
+// EXCEPT high-fatigue / high-injury-cost lifts (RDL, leg press, hack/sissy squat, reverse
+// lunge, heavy hinges), which stay shy of failure even on the last set (Nippard/Arnold/RP
+// converge here). Returns true if this exercise's last set should be taken to failure.
+function lastSetToFailure(nm){
+  if(!nm)return true;
+  return !/RDL|Romanian|Stiff.?Leg|Good ?Morning|Deadlift|Leg Press|Hack Squat|Sissy|Reverse Lunge|Bulgarian/i.test(nm);
+}
 function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHistory,readMod,genCount,banned,equipFilter,specBdg,tempoPresetId){
   banned=banned||[];
   var tm=1-(methodObj.sv/100);var cl=goalObj.cd||0;var cm=cl>0?Math.min(10,cl*4):0;var lm=mins-cm;var sessions=[];
@@ -6050,7 +6127,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       if(equipFilter&&EQUIP_FILTERS[equipFilter]){pool=pool.filter(EQUIP_FILTERS[equipFilter]);}
       if(pool.length===0)return;
       // ── VOLUME: weekly target ÷ frequency = session target (FIX: divide AMONG exercises, not per-exercise) ──
-      var weeklyTarget=weeklyVols[muscle]||10;
+      var weeklyTarget=Math.min(weeklyVols[muscle]||10,(VOL_LM[muscle]&&VOL_LM[muscle].mrv)||99);
       var freq=Math.max(1,splitObj.layout.filter(function(d){return d.g.indexOf(muscle)>=0;}).length);
       var sessionTarget=Math.ceil(weeklyTarget/freq);
       var cap=VOL_LM[muscle]?VOL_LM[muscle].cap:10;
@@ -6068,6 +6145,11 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       if(muscleIdx===numGroups-1)myBudget=Math.max(myBudget,totalTime-used); // last group gets remainder if larger
       var avail=Math.max(5,Math.min(myBudget,totalTime-used));if(avail<5){muscleIdx++;return;}
       numExercises=Math.min(numExercises,Math.max(1,Math.floor(avail/5)));if(numExercises<1)numExercises=1;
+      // Weekly MRV guard: with ~3 sets/exercise across `freq` sessions, cap exercise count so
+      // weekly direct sets (numExercises*3*freq) can't round past MRV on high-frequency muscles.
+      var _mrvW=(VOL_LM[muscle]&&VOL_LM[muscle].mrv)||99;
+      var _maxExW=Math.max(1,Math.floor(_mrvW/Math.max(1,freq*3)));
+      numExercises=Math.min(numExercises,_maxExW);
       muscleIdx++;
       var groupUsed=0; // Primers are added post-loop, so groupUsed starts at 0
       var setsPerExercise=Math.max(2,Math.min(4,Math.ceil(sessionTarget/numExercises)));
@@ -6101,7 +6183,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       // Research: Rest <60s between iso and compound to maintain pre-exhaust effect.
       // Best for 1-2 lagging muscles per block. Reduces compound force output but
       // ensures target muscle is limiting factor (not synergists).
-      if(_dayMid==="preexh"){
+      if(_dayMid==="preexh"&&phase!=="deload"){
         var iso1=isos.length>0?isos[Math.floor(rng()*isos.length)]:(bw.length>0?bw[Math.floor(rng()*bw.length)]:null);
         var comp1=comps.length>0?comps[off%comps.length]:null;
         var pxTime=0;
@@ -6115,19 +6197,27 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       }
 
       // ── GIANT SETS: 4 exercises per muscle, circuit ──
-      if(_dayMid==="giant"){
+      if(_dayMid==="giant"&&phase!=="deload"){
         var giants=[];
         // Shuffle and pick 4 from the full scored pool for variety
         var giantPool=seededShuffle(scored.slice(0,Math.min(8,scored.length)),rng);
-        for(var gi=0;gi<Math.min(4,giantPool.length);gi++){
+        // Respect the weekly volume planner: each giant exercise = 3 sets, so cap the
+        // exercise count to sessionTarget/3 (floor 3 to remain a valid giant set, ceil 4)
+        // — prevents stacking past MRV on giant-set days.
+        var _giantN=Math.max(3,Math.min(4,Math.round(sessionTarget/3)));
+        // Giant sets are high-volume by nature (>=3 exercises). Drop to 2 sets/exercise
+        // when this muscle's frequency would push weekly giant volume past MRV.
+        var _mrvG=(VOL_LM[muscle]&&VOL_LM[muscle].mrv)||99;
+        var _giantSets=Math.max(2,Math.min(3,Math.floor(_mrvG/Math.max(1,freq*_giantN))));
+        for(var gi=0;gi<Math.min(_giantN,giantPool.length);gi++){
           var gx=giantPool[gi];
           if(gx)giants.push(gx);
         }
         if(giants.length>=3){
           giants.forEach(function(gx,gxi){
-            var gtTime=exTime(3,gx.t==="I"?13:9,gx.t==="C",false,"giant");
+            var gtTime=exTime(_giantSets,gx.t==="I"?13:9,gx.t==="C",false,"giant");
             if(groupUsed+gtTime>avail)return; // Budget guard: skip excess exercises
-            exs.push({name:gx.n,muscle:muscle,tech:"giant",sets:3,reps:gx.t==="I"?"12-15":"8-10",time:gtTime,mv:gx.mv,note:"Giant set "+(gxi+1)+"/"+giants.length+(gxi<giants.length-1?" - NO REST, go straight to next":"  - REST 2-3 min, repeat circuit")});
+            exs.push({name:gx.n,muscle:muscle,tech:"giant",sets:_giantSets,reps:gx.t==="I"?"12-15":"8-10",time:gtTime,mv:gx.mv,note:"Giant set "+(gxi+1)+"/"+giants.length+(gxi<giants.length-1?" - NO REST, go straight to next":"  - REST 2-3 min, repeat circuit")});
             used+=gtTime;groupUsed+=gtTime;
           });
           return;
@@ -6135,7 +6225,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       }
 
       // ── DENSITY/EDT: pair exercises in timed blocks ──
-      if(_dayMid==="density"){
+      if(_dayMid==="density"&&phase!=="deload"){
         var comp2=comps.length>0?comps[off%comps.length]:null;
         var densityTime=Math.min(15,avail-groupUsed); // Cap at group budget
         if(comp2&&densityTime>=5){
@@ -6146,7 +6236,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       }
 
       // ── MECHANICAL DROP SETS: hardest angle first, same weight ──
-      if(_dayMid==="mech"){
+      if(_dayMid==="mech"&&phase!=="deload"){
         var mechOrder=comps.filter(function(e){return e.drop;}).slice(0,3);
         if(mechOrder.length>=2){
           mechOrder.forEach(function(mx,mxi){
@@ -6163,7 +6253,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       // Research: Best for isolations/machines. Avoid heavy compounds (squats, deads).
       // Activation: 12-30 reps near failure. Mini-sets: 3-5 reps × 4-5 sets, 5-10s rest.
       // Progression: all mini-sets completed → +1 rep to activation next session.
-      if(_dayMid==="myo"){
+      if(_dayMid==="myo"&&phase!=="deload"){
         var picked=[];var myUsed={};
         // Prefer isolations for myo-reps (research: compounds unsuitable due to setup/safety)
         var myoPreferred=seededShuffle(isos.concat(bw),rng);var myoComps=seededShuffle(comps,rng);
@@ -6190,7 +6280,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
 
       // ── DC REST-PAUSE (Dante Trudel): 1 exercise per muscle, rest-pause + extreme stretch ──
       // Research: DC uses 3-way exercise rotation (A/B/C), 1 RP set per muscle, widowmaker for quads
-      if(_dayMid==="dc"){
+      if(_dayMid==="dc"&&phase!=="deload"){
         var dcPool=comps.length>0?comps:isos;
         // Rotate through 3 exercises across sessions (DC A/B/C rotation)
         var dcIdx=(off+Math.floor(genCount/3))%Math.max(1,dcPool.length);
@@ -6292,7 +6382,8 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       var _mOcc=_muscleOccurrence[muscle]||0;
       var _repProfiles=["heavy","moderate","light"];
       var _repProfile=_repProfiles[_mOcc%Math.min(_mFreq,3)];
-      var _undulatedReps=_dayRepRange?_dayRepRange:(_mFreq>=2?(_repProfile==="heavy"?"6-10":_repProfile==="moderate"?"8-12":"12-15"):baseReps);
+      var _prefBase=_dayRepRange?_dayRepRange:resolveRepRange(muscle,baseReps);
+      var _undulatedReps=_dayRepRange?_dayRepRange:(_mFreq>=2?undulateRange(_prefBase,_repProfile):_prefBase);
       // Volume weighting: compounds get 60% of sets, isolations 40% (research: higher neuromuscular demand)
       var compCount=picked.filter(function(e){return e.t==="C";}).length;
       var isoCount=picked.length-compCount;
@@ -6318,10 +6409,12 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
           } else { return; }
         }
         var _exRir=(_dayRir?_dayRir[0]:rir);
+        var _lastFail=phase!=="deload"&&lastSetToFailure(ex.n); // last set to failure unless high-fatigue lift
+        var _lastRir=_lastFail?0:_exRir;
         // V2: Per-exercise method assignment
         var _exMethod=assignExerciseMethod(ex,muscle,_dayMid,splitObj.dayMethodRules,day.n);
         var note=phase==="deload"?"DELOAD: 50% weight, easy reps. Should feel refreshing.":(_dayRule?day.n.toUpperCase()+": "+reps+" @ "+_exRir+" RIR":"W"+wk+" / "+rir+" RIR / "+phase);
-        exs.push({name:ex.n,muscle:muscle,tech:tech,sets:sets,reps:reps,time:eTime,mv:ex.mv,note:note,rir:_exRir,exMethod:_exMethod.method,exMethodSource:_exMethod.source,exClass:getExerciseClass(ex,muscle),t:ex.t});
+        exs.push({name:ex.n,muscle:muscle,tech:tech,sets:sets,reps:reps,time:eTime,mv:ex.mv,note:note,rir:_exRir,lastSetToFail:_lastFail,lastSetRir:_lastRir,exMethod:_exMethod.method,exMethodSource:_exMethod.source,exClass:getExerciseClass(ex,muscle),t:ex.t});
         _groupExAdded++;
         if(isComp)firstComp=false;used+=eTime;groupUsed+=eTime;
       });
@@ -6737,6 +6830,34 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
     var correctedEst=Math.round(tot*tf);
     sessions.push({label:day.n,exercises:exs,est:estClean,correctedEst:correctedEst,timeFactor:tf,timeFactorSessions:tfMeta.sessions,timeFactorSource:tfMeta.source,dayMethodRule:_dayRule||null,dayMethod:_dayMid});
   });
+  // ── FINAL MRV SAFETY NET ── No muscle's weekly DIRECT working sets may exceed its MRV.
+  // Trim surplus sets from the highest-set working exercises (floor 2/exercise so a session
+  // never empties). General catch-all across every method — last line of defense on volume.
+  (function(){
+    var _wk={};
+    for(var _si=0;_si<sessions.length;_si++){
+      var _exs=sessions[_si].exercises||[];
+      for(var _ei=0;_ei<_exs.length;_ei++){
+        var _e=_exs[_ei];
+        if(!_e||!_e.muscle||!_e.sets)continue;
+        if(_e.tech==="primer"||_e.tier==="primer"||_e.tech==="corrective")continue;
+        if(!_wk[_e.muscle])_wk[_e.muscle]=[];
+        _wk[_e.muscle].push(_e);
+      }
+    }
+    for(var _m in _wk){
+      if(!_wk.hasOwnProperty(_m))continue;
+      var _mrv=(VOL_LM[_m]&&VOL_LM[_m].mrv)||99;
+      var _tot=0;for(var _k=0;_k<_wk[_m].length;_k++)_tot+=(_wk[_m][_k].sets||0);
+      var _g=0;
+      while(_tot>_mrv&&_g<60){
+        var _top=null;
+        for(var _j=0;_j<_wk[_m].length;_j++){var _c=_wk[_m][_j];if((_c.sets||0)>2&&(!_top||_c.sets>_top.sets))_top=_c;}
+        if(!_top)break;
+        _top.sets-=1;_tot-=1;_g++;
+      }
+    }
+  })();
   return sessions;
 }
 
