@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-3";
+  window.FORGE_BUILD="2026.07.03-4";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -7447,6 +7447,7 @@ function Forge(props){
   // ═══ REP RANGE RESPONSE TRACKING ═══
   // Tracks progression rate per muscle per rep range to learn optimal ranges for the user
   var _rrt=useState({}),repRangeTrack=_rrt[0],setRepRangeTrack=_rrt[1]; // {muscle: {low:[progRates], mid:[progRates], high:[progRates]}}
+  var _prefTickS=useState(0),prefTick=_prefTickS[0],setPrefTick=_prefTickS[1]; // re-render trigger for rep-preference settings
 
 
   // ═══ EXERCISE BAN SYSTEM ═══
@@ -10498,6 +10499,30 @@ function Forge(props){
               </button>;
             })}
           </div>
+        </div>)}
+
+        {/* v4 — Rep Range Preference by Muscle (explicit; engine also learns) */}
+        {cd(<div>
+          {hd("REP RANGE BY MUSCLE")}
+          <div style={{fontSize:11,color:C.dim,marginBottom:12,lineHeight:1.55}}>Any range from 5–30 reps grows muscle equally when you train hard — so lean each muscle how you like: heavier low reps on legs, higher reps on arms, whatever suits you. FORGE also learns your sweet spot from what you log. Leave on Default to let FORGE decide.</div>
+          {[["chest","Chest"],["back","Back"],["shoulders","Shoulders"],["biceps","Biceps"],["triceps","Triceps"],["quads","Quads"],["hamstrings","Hams"],["glutes","Glutes"],["calves","Calves"],["core","Core"]].map(function(mm){
+            var mk=mm[0];
+            var cur=(function(){try{var c=JSON.parse(localStorage.getItem(devKey("forge_config"))||"{}");return (c.repPref&&c.repPref[mk])||null;}catch(e){return null;}})();
+            var curKey=cur?(cur[0]+"-"+cur[1]):"def";
+            var opts=[["Default","def",null],["Low 6-10","6-10",[6,10]],["Mid 8-15","8-15",[8,15]],["High 12-20","12-20",[12,20]]];
+            return <div key={mk} style={{marginBottom:10}}>
+              <div style={{fontSize:11,fontFamily:FD,letterSpacing:1,color:C.mid,marginBottom:5}}>{mm[1].toUpperCase()}</div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {opts.map(function(o){
+                  var sel=o[1]===curKey;
+                  return <button key={o[1]} onClick={function(){
+                    try{var c=JSON.parse(localStorage.getItem(devKey("forge_config"))||"{}");c.repPref=c.repPref||{};if(o[2]){c.repPref[mk]=o[2];}else{delete c.repPref[mk];}sSet("forge_config",c);}catch(e){}
+                    setPrefTick(prefTick+1);
+                  }} style={{padding:"7px 11px",fontSize:11,fontFamily:FD,letterSpacing:0.5,background:sel?C.acc+"22":C.bar,color:sel?C.acc:C.dim,border:"1px solid "+(sel?C.acc+"60":C.bdr),borderRadius:8,cursor:"pointer"}}>{o[0]}</button>;
+                })}
+              </div>
+            </div>;
+          })}
         </div>)}
 
         {/* Program Info */}
