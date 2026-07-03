@@ -480,6 +480,23 @@
     max-width: 440px;
     margin: 0 auto;
   }
+
+  /* 44pt tap-target hit expansion (Apple HIG): keeps the visual compact but expands the
+     real hit region via an invisible centered ::after overlay. For intentionally small
+     controls (band color dots, +/- steppers, icon chips). */
+  .view-slide button:not(.t44) { min-height: 44px; min-width: 44px; }
+  .t44 { position: relative; }
+  .t44::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 44px;
+    height: 44px;
+    min-width: 100%;
+    min-height: 100%;
+  }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -606,7 +623,6 @@ var EX_IMAGES={
   "Banded Stretch Curls":["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Alternate_Bicep_Curl/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Alternate_Bicep_Curl/1.jpg"],
   "Banded Skull Crushers":["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Lying_Triceps_Press/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Lying_Triceps_Press/1.jpg"],
   "Banded Drag Pushdowns":["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Triceps_Pushdown/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Triceps_Pushdown/1.jpg"],
-  "Banded Spanish Squats":["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Goblet_Squat/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Goblet_Squat/1.jpg"],
   "Banded Good Mornings":["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Band_Good_Morning_Pull_Through/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Band_Good_Morning_Pull_Through/1.jpg"],
   "Banded Pushups":["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Pushups/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Pushups/1.jpg"],
   // ── NEW: Xero bodyweight exercises ──
@@ -815,6 +831,58 @@ var EX_MP4S={
 };
 
 </script>
+<script>
+/* ===== FORGE delivery & version integrity (Phase 1) ===== */
+(function(){
+  window.FORGE_BUILD="2026.07.03-1";
+  try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
+  function nukeAndReload(){
+    var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
+    try{
+      var tasks=[];
+      if(window.caches&&caches.keys){tasks.push(caches.keys().then(function(keys){return Promise.all(keys.map(function(k){return caches.delete(k);}));}));}
+      if("serviceWorker" in navigator&&navigator.serviceWorker.getRegistrations){tasks.push(navigator.serviceWorker.getRegistrations().then(function(rs){return Promise.all(rs.map(function(r){return r.unregister();}));}));}
+      if(tasks.length){Promise.all(tasks).then(done).catch(done);}else{done();}
+    }catch(e){done();}
+  }
+  function showUpdateBanner(){
+    if(document.getElementById("forge-update-banner"))return;
+    if(!document.body){window.addEventListener("load",showUpdateBanner);return;}
+    var b=document.createElement("div");
+    b.id="forge-update-banner";
+    b.setAttribute("style","position:fixed;left:0;right:0;top:0;z-index:99999;background:#FF6B35;color:#0A0A0F;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:15px;text-align:center;padding:11px 14px;padding-top:calc(11px + env(safe-area-inset-top));cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,0.4)");
+    b.innerHTML="NEW VERSION AVAILABLE — TAP TO UPDATE";
+    b.onclick=function(){b.innerHTML="UPDATING…";nukeAndReload();};
+    document.body.appendChild(b);
+  }
+  window.FORGE_showUpdate=showUpdateBanner;
+  if("serviceWorker" in navigator){
+    window.addEventListener("load",function(){
+      try{
+        navigator.serviceWorker.register("sw.js").then(function(reg){
+          try{
+            reg.addEventListener("updatefound",function(){
+              var nw=reg.installing;if(!nw)return;
+              nw.addEventListener("statechange",function(){
+                if(nw.state==="installed"&&navigator.serviceWorker.controller){showUpdateBanner();}
+              });
+            });
+          }catch(e){}
+        }).catch(function(e){});
+      }catch(e){}
+    });
+  }
+  function checkVersion(){
+    try{
+      fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.json();}).then(function(j){
+        if(j&&j.build&&j.build!==window.FORGE_BUILD){showUpdateBanner();}
+      }).catch(function(e){});
+    }catch(e){}
+  }
+  window.addEventListener("load",checkVersion);
+  document.addEventListener("visibilitychange",function(){if(!document.hidden)checkVersion();});
+})();
+</script>
 <script type="text/babel">
 var useState = React.useState;
 var useMemo = React.useMemo;
@@ -854,6 +922,7 @@ var BAND_COLORS=[
 var _audioCtx=null;
 var _audioWarmedUp=false;
 var _audioKeepAlive=null;
+var _audioWatchdog=null;
 // iOS quietly suspends an AudioContext when nothing has played for a moment, and a
 // programmatic resume() WITHOUT a user gesture leaves it "running" but MUTED until
 // the next real tap. That's why beeps went silent mid-rest and only returned after
@@ -862,13 +931,13 @@ var _audioKeepAlive=null;
 function startAudioKeepAlive(){
   try{
     if(!_audioCtx||_audioKeepAlive)return;
-    var buf=_audioCtx.createBuffer(1,1,_audioCtx.sampleRate);
-    var src=_audioCtx.createBufferSource();
-    src.buffer=buf;src.loop=true;
-    var g=_audioCtx.createGain();g.gain.value=0; // truly silent, just keeps the graph active
-    src.connect(g);g.connect(_audioCtx.destination);
-    src.start(0);
-    _audioKeepAlive=src;
+    var osc=_audioCtx.createOscillator();
+    var g=_audioCtx.createGain();g.gain.value=0.0008; // inaudible but NONZERO - gain 0 lets iOS suspend the context mid-set
+    osc.frequency.value=20;
+    osc.connect(g);g.connect(_audioCtx.destination);
+    try{osc.onended=function(){_audioKeepAlive=null;};}catch(eo){}
+    osc.start(0);
+    _audioKeepAlive={osc:osc,gain:g};
   }catch(e){}
 }
 function warmUpAudio(){
@@ -889,6 +958,7 @@ function warmUpAudio(){
       _audioWarmedUp=true;
     }
     startAudioKeepAlive();
+    if(!_audioWatchdog){_audioWatchdog=setInterval(function(){try{if(_audioCtx&&!document.hidden){if(_audioCtx.state!=="running"){_audioKeepAlive=null;_audioCtx.resume();}startAudioKeepAlive();}}catch(ew){}},4000);}
   }catch(e){}
 }
 // Warm up on ANY user touch/click
@@ -898,7 +968,7 @@ if(typeof document!=="undefined"){
   // Re-resume when the tab returns to the foreground (covers backgrounding) and
   // whenever iOS flips the context to suspended/interrupted on its own.
   document.addEventListener("visibilitychange",function(){
-    try{if(!document.hidden&&_audioCtx&&_audioCtx.state!=="running"){_audioCtx.resume();startAudioKeepAlive();}}catch(e){}
+    try{if(!document.hidden&&_audioCtx){if(_audioCtx.state!=="running"){_audioKeepAlive=null;_audioCtx.resume();}startAudioKeepAlive();}}catch(e){}
   });
   window.addEventListener("focus",function(){
     try{if(_audioCtx&&_audioCtx.state!=="running"){_audioCtx.resume();}}catch(e){}
@@ -2317,7 +2387,7 @@ var SPLITS=[
   {id:"phul4",n:"PHUL",d:4,methodPolicy:"locked",desc:"Power Hypertrophy Upper Lower. Heavy compounds on power days, pump work on hypertrophy days. 4 days.",dayMethodRules:{"Power Upper":{method:"straight",repRange:[3,5],rir:[1,2],restSec:240,compoundOverride:"straight"},"Power Lower":{method:"straight",repRange:[3,5],rir:[1,2],restSec:300,compoundOverride:"straight"},"Hypertrophy Upper":{method:"userChoice",repRange:[8,12],rir:[2,3],restSec:90,compoundOverride:"straight"},"Hypertrophy Lower":{method:"userChoice",repRange:[8,12],rir:[2,3],restSec:90,compoundOverride:"straight"}},lockedInfo:{title:"PHUL uses its own periodization",body:"This split alternates Power and Hypertrophy days with different goals:\n\nPower Days \u2014 Heavy compounds, 3-5 reps, straight sets only, long rest (3-5 min). Goal: build strength that feeds hypertrophy days.\n\nHypertrophy Days \u2014 Moderate loads, 8-12 reps, shorter rest. You can choose an intensity technique (myo-reps, drop sets, etc.) for isolation exercises. Compounds still use straight sets."},layout:[{n:"Power Upper",g:["chest","back","shoulders","triceps"]},{n:"Power Lower",g:["quads","hams","core"]},{n:"Hypertrophy Upper",g:["chest","back","shoulders","biceps","triceps"]},{n:"Hypertrophy Lower",g:["quads","hams","core","biceps"]}]},
   {id:"smart5",n:"Smart Bro Split (AX)",d:5,methodPolicy:"agnostic",desc:"AthleanX: no synergist conflicts between days. Compounds create hidden 2-3x frequency.",layout:[{n:"Chest+Biceps",g:["chest","biceps"]},{n:"Legs",g:["quads","hams","core"]},{n:"Back+Triceps",g:["back","triceps"]},{n:"Shoulders",g:["shoulders","back"]},{n:"Arms",g:["biceps","triceps"]}]},
   {id:"nip5",n:"UL/PPL Hybrid (Nippard)",d:5,methodPolicy:"agnostic",desc:"Upper/Lower + Push/Pull/Legs merged. Every muscle 2x/wk with varied stimuli.",layout:[{n:"Upper",g:["chest","back","shoulders","biceps","triceps"]},{n:"Lower",g:["quads","hams","core"]},{n:"Pull",g:["back","biceps","shoulders"]},{n:"Push",g:["chest","shoulders","triceps"]},{n:"Legs",g:["quads","hams","core"]}]},
-  {id:"phat5",n:"PHAT (Norton)",d:5,methodPolicy:"locked",desc:"Power + hypertrophy days combined. Heavy compounds AND high-rep pump work.",dayMethodRules:{"Upper Power":{method:"straight",repRange:[3,5],rir:[1,2],restSec:240,compoundOverride:"straight"},"Lower Power":{method:"straight",repRange:[3,5],rir:[1,2],restSec:300,compoundOverride:"straight"},"Back+Shoulders Hyp":{method:"userChoice",repRange:[8,12],rir:[2,3],restSec:90,compoundOverride:"straight"},"Lower Hyp":{method:"userChoice",repRange:[8,12],rir:[2,3],restSec:90,compoundOverride:"straight"},"Chest+Arms Hyp":{method:"userChoice",repRange:[8,12],rir:[2,3],restSec:90,compoundOverride:"straight"}},lockedInfo:{title:"PHAT uses its own periodization",body:"PHAT alternates Power and Hypertrophy days:\n\nPower Days \u2014 Heavy compounds, 3-5 reps, straight sets, long rest (3-5 min). Strength foundation.\n\nHypertrophy Days \u2014 8-12 reps, shorter rest. Isolation exercises use your chosen intensity technique. Compounds stay with straight sets for safety at these loads."},layout:[{n:"Upper Power",g:["chest","back","shoulders"]},{n:"Lower Power",g:["quads","hams"]},{n:"Back+Shoulders Hyp",g:["back","shoulders","biceps"]},{n:"Lower Hyp",g:["quads","hams","core"]},{n:"Chest+Arms Hyp",g:["chest","biceps","triceps"]}]},
+  {id:"phat5",n:"PHAT (Norton)",d:5,methodPolicy:"locked",desc:"Power + hypertrophy days combined. Heavy compounds AND high-rep pump work.",dayMethodRules:{"Upper Power":{method:"straight",repRange:[3,5],rir:[1,2],restSec:240,compoundOverride:"straight"},"Lower Power":{method:"straight",repRange:[3,5],rir:[1,2],restSec:300,compoundOverride:"straight"},"Back+Shoulders Hyp":{method:"userChoice",repRange:[8,12],rir:[2,3],restSec:90,compoundOverride:"straight"},"Lower Hyp":{method:"userChoice",repRange:[8,12],rir:[2,3],restSec:90,compoundOverride:"straight"},"Chest+Arms Hyp":{method:"userChoice",repRange:[8,12],rir:[2,3],restSec:90,compoundOverride:"straight"}},lockedInfo:{title:"PHAT uses its own periodization",body:"PHAT alternates Power and Hypertrophy days:\n\nPower Days \u2014 Heavy compounds, 3-5 reps, straight sets, long rest (3-5 min). Strength foundation.\n\nHypertrophy Days \u2014 8-12 reps, shorter rest. Isolation exercises use your chosen intensity technique. Compounds stay with straight sets for safety at these loads.\n\nFailure management (Norton): FORGE keeps you far from failure early in the mesocycle (RIR 4 on compounds in week 1) and only lets you approach failure on the last sets late in the block, then auto-deloads when fatigue accumulates - so you never grind to failure for weeks on end."},layout:[{n:"Upper Power",g:["chest","back","shoulders"]},{n:"Lower Power",g:["quads","hams"]},{n:"Back+Shoulders Hyp",g:["back","shoulders","biceps"]},{n:"Lower Hyp",g:["quads","hams","core"]},{n:"Chest+Arms Hyp",g:["chest","biceps","triceps"]}]},
   {id:"bro5",n:"Classic Bro Split",d:5,methodPolicy:"agnostic",desc:"One muscle per day. Max per-session volume. The old-school approach.",layout:[{n:"Chest",g:["chest"]},{n:"Back",g:["back"]},{n:"Shoulders",g:["shoulders"]},{n:"Legs",g:["quads","hams","core"]},{n:"Arms",g:["biceps","triceps"]}]},
   {id:"ppl6",n:"PPL x2",d:6,methodPolicy:"agnostic",desc:"Push/Pull/Legs twice per week. High frequency + high volume for advanced.",layout:[{n:"Push A",g:["chest","shoulders","triceps"]},{n:"Pull A",g:["back","biceps"]},{n:"Legs A",g:["quads","hams","core"]},{n:"Push B",g:["shoulders","chest","triceps"]},{n:"Pull B",g:["back","biceps"]},{n:"Legs B",g:["hams","quads","core"]}]},
   {id:"arn6",n:"Arnold Split",d:6,methodPolicy:"agnostic",desc:"Chest+Back supersets, Shoulders+Arms, Legs. Classic high-volume. Needs caloric surplus.",layout:[{n:"Chest+Back A",g:["chest","back"]},{n:"Shoulders+Arms A",g:["shoulders","biceps","triceps"]},{n:"Legs A",g:["quads","hams","core"]},{n:"Chest+Back B",g:["back","chest"]},{n:"Shoulders+Arms B",g:["triceps","biceps","shoulders"]},{n:"Legs B",g:["hams","quads","core"]}]},
@@ -2903,7 +2973,7 @@ var EX_FAMILY={
   "press_shoulder":["DB OHP","DB Arnold Press","DB Seated Press","DB Z-Press","Banded OHP","Pike Pushups","Handstand Pushup Progression"],
   "row":["DB Rows","DB Seal Rows","DB Chest-Supported Rows","DB Rear Delt Rows","Banded Rows","Banded Facepulls","Inverted Rows"],
   "fly":["DB Floor Flys","DB Incline Flys","DB Pullover (chest)","Banded Crossovers","Banded Cavaliere Crossovers","Banded Upper Chest Pullovers"],
-  "pulldown":["Weighted Pull-ups","Chin-ups","Banded Lat Pulldowns","DB Pullover (back)","Human Pullovers"],
+  "pulldown":["Weighted Pull-ups","Chin-ups","Band Lat Pulldowns","DB Pullover (back)","Human Pullovers"],
   "extension":["DB Overhead Extensions","DB Floor Tricep Extensions","DB Kickbacks","Banded Skull Crushers","Banded Pushdowns","Diamond Pushups","Dips (upright)"],
   "squat":["DB Bulgarian Split Squats","DB Goblet Squats","DB Reverse Lunges","DB Step Ups","Bodyweight Squats","Jump Squats","Cossack Squats","Pistol Squat Progression","Banded Squats"],
   "hinge":["DB RDLs","DB Single Leg RDLs","DB Reach-Across SL RDLs","Banded Good Mornings","Band Pull-Throughs","Banded Hip Thrusts (light)","DB Hip Thrusts","Single Leg Hip Thrusts","Slick Floor Bridge Curls"],
@@ -3742,6 +3812,7 @@ function countFractionalVolume(programDays, completedSessions, targetWeek) {
       var ex = day.exercises[e];
       if (!ex || !ex.muscle || ex.muscle === "cardio" || ex.muscle === "grit") continue;
       if (ex.tier === "primer" || ex.tier === "corrective" || ex.tier === "carry") continue;
+      if (ex.speedBridge || ex.tech === "speed") continue;
       var sets = ex.sets || 3;
       var primaryMuscle = ex.muscle;
       var exType = ex.t || "C";  // fallback to compound
@@ -6630,6 +6701,31 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
         }
       }
     }
+    // PHAT/PHUL SPEED-WORK BRIDGE (Layne Norton dynamic effort)
+    // On PHAT/PHUL hypertrophy days, open with explosive speed work on the day's
+    // primary compound: 6x3 fast reps at ~65-70% of the heavy top set. Strength/power
+    // tool that raises hypertrophy-day loads; direct hypertrophy evidence is modest.
+    if((splitObj.id==="phat5"||splitObj.id==="phul4")&&_dayRule&&_dayRule.method==="userChoice"){
+      var _sbPick=null;
+      for(var _sbi=0;_sbi<exs.length;_sbi++){
+        var _sbe=exs[_sbi];
+        if(_sbe.tier==="primer"||_sbe.tier==="corrective"||_sbe.tier==="carry"||_sbe.tier==="grit"||_sbe.muscle==="cardio")continue;
+        if(_sbe.t==="C"||_sbe.tech==="strength"){_sbPick=_sbe;break;}
+      }
+      if(!_sbPick){
+        for(var _sbk=0;_sbk<exs.length;_sbk++){
+          var _sbe2=exs[_sbk];
+          if(_sbe2.tier==="primer"||_sbe2.tier==="corrective"||_sbe2.tier==="carry"||_sbe2.tier==="grit"||_sbe2.muscle==="cardio")continue;
+          _sbPick=_sbe2;break;
+        }
+      }
+      var _hasBridge=false;
+      for(var _sbh=0;_sbh<exs.length;_sbh++){if(exs[_sbh].speedBridge){_hasBridge=true;break;}}
+      if(_sbPick&&!_hasBridge){
+        exs.unshift({name:_sbPick.name+" (Speed)",muscle:_sbPick.muscle,tech:"speed",sets:6,reps:"3 explosive",time:5,mv:_sbPick.mv,t:_sbPick.t,exMethod:"straight",exMethodSource:"phat_bridge",speedBridge:true,rir:null,note:"SPEED WORK - PHAT bridge. 6 sets of 3 EXPLOSIVE reps at ~65-70% of your heavy top set on this lift. Drive it up as FAST as possible. If it slows down, the weight is too heavy - lighten it. Rest 60-90s between sets. Builds force and rate of force development so you can use heavier loads on your hypertrophy work. (Strength/power tool - direct hypertrophy evidence is modest.)"});
+        tot=exs.reduce(function(a,e){return a+e.time;},0);
+      }
+    }
     // Apply learned time correction factor
     // D-Apr2026: per-day-label correction with global fallback. Meta is stamped on
     // the session so the UI can render the "based on N sessions" hint without
@@ -6652,6 +6748,7 @@ function validateProgram(sessions,goalObj){
     var muscleSets={};
     for(var ei=0;ei<sessions[si].exercises.length;ei++){
       var e=sessions[si].exercises[ei];
+      if(e.speedBridge||e.tech==="speed")continue;
       if(e.pat)result.patterns[e.pat]=true;
       if(e.muscle&&e.len){
         if(!result.lenCoverage[e.muscle])result.lenCoverage[e.muscle]={L:0,M:0,S:0};
@@ -6706,7 +6803,7 @@ function ForgeAuth(){
     <div className="skeleton" style={{height:72,marginBottom:10}}></div>
     <div className="skeleton" style={{height:72,marginBottom:10}}></div>
   </div>;
-  if(!authUser) return <div style={{minHeight:"100vh",background:C.bg,display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{textAlign:"center",padding:32,display:"flex",flexDirection:"column",alignItems:"center"}}><img src={FORGE_LOGO_FULL} alt="FORGE" style={{width:64,height:64,objectFit:"contain",marginBottom:10}}/><div style={{fontSize:34,fontWeight:900,fontFamily:FD,letterSpacing:8,color:C.acc}}>FORGE</div><div style={{fontSize:12,color:C.dim,marginTop:8,marginBottom:32,fontFamily:"Arial, sans-serif",letterSpacing:3,textTransform:"uppercase"}}>Hypertrophy Training Intelligence</div><button onClick={fbSignIn} style={{width:"100%",padding:"14px 40px",fontSize:17,fontWeight:700,fontFamily:FD,letterSpacing:5,background:C.acc,border:"none",borderRadius:8,color:"#FAFAFA",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}><svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59a14.5 14.5 0 010-9.18l-7.98-6.19a24.0 24.0 0 000 21.56l7.98-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>SIGN IN WITH GOOGLE</button><div style={{fontSize:11,color:C.dim,marginTop:16}}>Your workouts sync to the cloud per account</div><button onClick={function(){_devMode=true;setAuthUser({uid:"dev_test",email:"dev@forge.local",displayName:"Dev Mode",photoURL:null});}} style={{marginTop:32,padding:"8px 20px",fontSize:11,fontFamily:FD,letterSpacing:2,background:"transparent",border:"1px solid "+C.bdr,borderRadius:8,color:C.dim,cursor:"pointer"}}>DEV MODE</button></div></div>;
+  if(!authUser) return <div style={{minHeight:"100vh",background:C.bg,display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{textAlign:"center",padding:32,display:"flex",flexDirection:"column",alignItems:"center"}}><img src={FORGE_LOGO_FULL} alt="FORGE" style={{width:64,height:64,objectFit:"contain",marginBottom:10}}/><div style={{fontSize:34,fontWeight:900,fontFamily:FD,letterSpacing:8,color:C.acc}}>FORGE</div><div style={{fontSize:12,color:C.dim,marginTop:8,marginBottom:32,fontFamily:"Arial, sans-serif",letterSpacing:3,textTransform:"uppercase"}}>Hypertrophy Training Intelligence</div><button onClick={fbSignIn} style={{width:"100%",padding:"14px 40px",fontSize:17,fontWeight:700,fontFamily:FD,letterSpacing:5,background:C.acc,border:"none",borderRadius:8,color:"#FAFAFA",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}><svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59a14.5 14.5 0 010-9.18l-7.98-6.19a24.0 24.0 0 000 21.56l7.98-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>SIGN IN WITH GOOGLE</button><div style={{fontSize:11,color:C.dim,marginTop:16}}>Your workouts sync to the cloud per account</div><button onClick={function(){_devMode=true;setAuthUser({uid:"dev_test",email:"dev@forge.local",displayName:"Dev Mode",photoURL:null});}} style={{marginTop:32,minHeight:44,minWidth:44,padding:"8px 20px",fontSize:11,fontFamily:FD,letterSpacing:2,background:"transparent",border:"1px solid "+C.bdr,borderRadius:8,color:C.dim,cursor:"pointer"}}>DEV MODE</button></div></div>;
   return <Forge authUser={authUser}/>;
 }
 
@@ -7339,6 +7436,24 @@ function Forge(props){
       // Load persisted program and config
       sGet("forge_program", []).then(function(prog) {
         if (prog && prog.length > 0) {
+          // MIGRATION (schema v2): stamp missing t/mv/ss on stored exercises so bodyweight
+          // detection works on programs built before those fields existed. Additive only.
+          try{
+            var _mchg=false;
+            for(var _md=0;_md<prog.length;_md++){
+              var _mexs=prog[_md]&&prog[_md].exercises;if(!_mexs)continue;
+              for(var _me=0;_me<_mexs.length;_me++){
+                var _mx=_mexs[_me];
+                if(_mx&&(_mx.t===undefined||_mx.t===null)&&_mx.muscle&&EX[_mx.muscle]){
+                  var _mpool=EX[_mx.muscle];
+                  for(var _mp=0;_mp<_mpool.length;_mp++){
+                    if(_mpool[_mp].n===_mx.name){_mx.t=_mpool[_mp].t;if(_mx.mv===undefined)_mx.mv=_mpool[_mp].mv;if(_mx.ss===undefined)_mx.ss=_mpool[_mp].ss;_mchg=true;break;}
+                  }
+                }
+              }
+            }
+            if(_mchg)sSet("forge_program",prog);
+          }catch(_me2){}
           setProgram(prog);
           setScreen("dashboard");
         } else {
@@ -9790,7 +9905,7 @@ function Forge(props){
           </div>
           {screen!=="setup"&&program.length>0&&<span style={{fontSize:10,color:C.dim,fontFamily:FD}}>{sessIdx.length+" sessions"}</span>}
           {screen==="setup"&&<button onClick={function(){if(setupMode==="custom"&&step>0){setStep(step-1);}else if(setupMode==="custom"&&step===0){setSetupMode("choose");}else if(setupMode==="preset"&&presetPick){setPresetPick(null);setGoal(null);setSplit(null);setMethod(null);}else if(setupMode==="preset"&&!presetPick){setSetupMode("choose");}else if(setupMode==="choose"&&program.length>0){setScreen("dashboard");}else if(program.length>0){setScreen("dashboard");}}} style={{padding:"5px 14px",fontSize:12,fontFamily:FD,background:"transparent",border:"1px solid "+C.bdr,borderRadius:8,color:C.dim,cursor:"pointer",letterSpacing:1}}>{setupMode==="choose"&&program.length>0?"DASHBOARD":"BACK"}</button>}
-          {screen==="workout"&&<button onClick={function(){if(editingSession&&view==="workout"){setEditingSession(null);setScreen("dashboard");setView("preview");}else if(view==="readiness")setScreen("dashboard");else if(view==="workout")setView("readiness");else if(view==="edit")setView("preview");else if(view==="preview"){setScreen("dashboard");}else if(view==="summary")setView("workout");else if(view==="rest")setView("summary");setEditDay(null);setEditPick(null);}} style={{padding:"5px 14px",fontSize:12,fontFamily:FD,background:"transparent",border:"1px solid "+C.bdr,borderRadius:8,color:C.dim,cursor:"pointer",letterSpacing:1}}>BACK</button>}
+          {screen==="workout"&&<button onClick={function(){if(editingSession&&view==="workout"){setEditingSession(null);setScreen("dashboard");setView("preview");}else if(view==="readiness")setScreen("dashboard");else if(view==="workout")setView("readiness");else if(view==="edit")setView("preview");else if(view==="preview"){setScreen("dashboard");}else if(view==="summary")setView("workout");else if(view==="rest")setView("summary");setEditDay(null);setEditPick(null);}} style={{minHeight:44,minWidth:44,padding:"5px 14px",fontSize:12,fontFamily:FD,background:"transparent",border:"1px solid "+C.bdr,borderRadius:8,color:C.dim,cursor:"pointer",letterSpacing:1}}>BACK</button>}
         </div>
       </div>
 
@@ -10472,9 +10587,9 @@ function Forge(props){
                 <div style={{fontSize:10,color:C.dim,marginTop:2}}>{p.d(rounds)}</div>
               </div>
               <div style={{display:"flex",alignItems:"center",gap:4}}>
-                <button onClick={function(){adjProtoRounds(p.id,-1);}} style={{width:28,height:28,background:C.sf2,border:"1px solid "+C.bdr,borderRadius:6,color:C.mid,fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>-</button>
+                <button className="t44" onClick={function(){adjProtoRounds(p.id,-1);}} style={{width:28,height:28,background:C.sf2,border:"1px solid "+C.bdr,borderRadius:6,color:C.mid,fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>-</button>
                 <div style={{minWidth:28,textAlign:"center",fontSize:14,fontWeight:700,color:C.txt,fontFamily:FD}}>{rounds}</div>
-                <button onClick={function(){adjProtoRounds(p.id,1);}} style={{width:28,height:28,background:C.sf2,border:"1px solid "+C.bdr,borderRadius:6,color:C.mid,fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
+                <button className="t44" onClick={function(){adjProtoRounds(p.id,1);}} style={{width:28,height:28,background:C.sf2,border:"1px solid "+C.bdr,borderRadius:6,color:C.mid,fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
               </div>
               <button onClick={function(){startCardioTimer(p);}} style={{padding:"8px 14px",background:C.grn+"18",border:"1px solid "+C.grn+"40",borderRadius:8,cursor:"pointer",fontSize:11,fontWeight:700,color:C.grn,fontFamily:FD,letterSpacing:1}}>START</button>
             </div>;})}
@@ -10592,7 +10707,7 @@ function Forge(props){
             <button onClick={function(){setMesoSwaps({});sSet("forge_swaps",{});}} style={{marginTop:6,width:"100%",padding:"8px 0",background:"transparent",color:C.dim,border:"1px solid "+C.bdr,borderRadius:8,fontSize:10,fontFamily:FD,cursor:"pointer"}}>CLEAR ALL SWAPS</button>
           </div>}
         </div>)}
-        <div style={{textAlign:"center",padding:"16px 0 4px"}}><span style={{fontSize:9,fontFamily:FD,letterSpacing:1,color:C.bdr}}>{"FORGE v"+FORGE_VERSION}</span></div>
+        <div style={{textAlign:"center",padding:"16px 0 4px"}}><span style={{fontSize:9,fontFamily:FD,letterSpacing:1,color:C.bdr}}>{"FORGE v"+FORGE_VERSION+(typeof window!=="undefined"&&window.FORGE_BUILD?(" \u00b7 "+window.FORGE_BUILD):"")}</span></div>
         <div style={{height:80}}/>
       </div>)}
 
@@ -10743,7 +10858,7 @@ function Forge(props){
           return cd(<div>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
               {hd("E1RM TRAJECTORY")}
-              <button onClick={function(e){e.stopPropagation();setPopup({type:"e1rm_confidence",id:sel,badge:badge,fit:fit,biasApplied:rb,warnings:[]});}} style={{padding:"3px 9px",fontSize:9,fontWeight:700,fontFamily:FD,letterSpacing:1,color:badgeCol,background:badgeCol+"18",border:"1px solid "+badgeCol+"50",borderRadius:10,cursor:"pointer"}}>{badge.badge==="personalized"?"PERSONALIZED":badge.badge==="learning"?"LEARNING":"STARTING"}</button>
+              <button className="t44" onClick={function(e){e.stopPropagation();setPopup({type:"e1rm_confidence",id:sel,badge:badge,fit:fit,biasApplied:rb,warnings:[]});}} style={{padding:"3px 9px",fontSize:9,fontWeight:700,fontFamily:FD,letterSpacing:1,color:badgeCol,background:badgeCol+"18",border:"1px solid "+badgeCol+"50",borderRadius:10,cursor:"pointer"}}>{badge.badge==="personalized"?"PERSONALIZED":badge.badge==="learning"?"LEARNING":"STARTING"}</button>
             </div>
             <div style={{fontSize:10,color:C.dim,marginBottom:8,lineHeight:1.5}}>{"Your back-calculated 1-rep max on "+sel+", fit to a recency-weighted curve."}</div>
             {/* Exercise picker — horizontal pills */}
@@ -10995,7 +11110,7 @@ function Forge(props){
           <div><div style={{fontSize:11,fontFamily:FD,letterSpacing:1.5,color:C.blu,fontWeight:700}}>EDITING PAST SESSION</div><div style={{fontSize:10,color:C.dim,marginTop:2}}>{editingSession.date+" — W"+editingSession.weekNum+" D"+(editingSession.dayIdx+1)}</div></div>
           <div style={{display:"flex",gap:6}}><button onClick={function(){saveEditedSession();}} style={{padding:"8px 16px",fontSize:11,fontFamily:FD,fontWeight:700,letterSpacing:1,background:C.grn+"20",color:C.grn,border:"1px solid "+C.grn+"50",borderRadius:8,cursor:"pointer"}}>SAVE</button><button onClick={function(){setEditingSession(null);setScreen("dashboard");setView("preview");}} style={{padding:"8px 12px",fontSize:11,fontFamily:FD,fontWeight:700,letterSpacing:1,background:C.bar,color:C.dim,border:"1px solid "+C.bdr,borderRadius:8,cursor:"pointer"}}>CANCEL</button></div>
         </div>}
-        <div style={{padding:"14px 0 10px"}}><div style={{fontSize:12,color:C.dim,fontFamily:FD,letterSpacing:2}}>{"W"+weekNum+" / DAY "+(aDay+1)+" / "+getRIR(weekNum,mesoLen,null,expLevel)+" RIR / ~"+Math.round(program[aDay].correctedEst||program[aDay].est||0)+"min"}</div><div style={{fontSize:22,fontFamily:FD,letterSpacing:2,marginTop:2}}>{program[aDay].label.toUpperCase()}</div><div style={{display:"flex",gap:6,marginTop:4,alignItems:"center"}}><span onClick={function(e){e.stopPropagation();var _pl=getPhaseLabel(weekNum,mesoLen);var _k=_pl==="Build"?"phase_build":_pl==="Push"?"phase_push":_pl==="Overreach"?"phase_overreach":_pl==="Recover"?"phase_recover":"phase_build";setInfoSheet(_k);}} style={{fontSize:9,color:C.pur,fontFamily:FD,background:C.pur+"15",padding:"2px 8px",borderRadius:4,cursor:"pointer"}}>{getPhaseLabel(weekNum,mesoLen).toUpperCase()}</span><span onClick={function(e){e.stopPropagation();setInfoSheet("rir");}} style={{fontSize:9,color:C.blu,fontFamily:FD,background:C.blu+"15",padding:"2px 8px",borderRadius:4,cursor:"pointer"}}>{getRIR(weekNum,mesoLen,null,expLevel)+" RIR"}</span><button onClick={function(e){e.stopPropagation();setPopup({type:"system_info"});}} style={{fontSize:9,color:C.blu,fontFamily:FD,background:C.blu+"15",padding:"2px 8px",borderRadius:4,border:"1px solid "+C.blu+"30",cursor:"pointer"}}>INFO</button></div>{readMod<0.85&&<div style={{fontSize:10,color:C.orn,marginTop:4}}>{"Readiness "+Math.round(readMod*100)+"% - volume adjusted"}</div>}{program[aDay].timeFactorSource&&program[aDay].timeFactorSource!=="default"&&program[aDay].timeFactorSessions>=3&&<div style={{fontSize:9,color:C.blu,marginTop:3,fontFamily:FD,letterSpacing:0.5}}>{"\u2022 PREDICTED FROM "+program[aDay].timeFactorSessions+" "+(program[aDay].timeFactorSource==="day"?(program[aDay].label+" SESSION"+(program[aDay].timeFactorSessions===1?"":"S")):"PAST SESSION"+(program[aDay].timeFactorSessions===1?"":"S"))}</div>}</div>
+        <div style={{padding:"14px 0 10px"}}><div style={{fontSize:12,color:C.dim,fontFamily:FD,letterSpacing:2}}>{"W"+weekNum+" / DAY "+(aDay+1)+" / "+getRIR(weekNum,mesoLen,null,expLevel)+" RIR / ~"+Math.round(program[aDay].correctedEst||program[aDay].est||0)+"min"}</div><div style={{fontSize:22,fontFamily:FD,letterSpacing:2,marginTop:2}}>{program[aDay].label.toUpperCase()}</div><div style={{display:"flex",gap:6,marginTop:4,alignItems:"center"}}><span onClick={function(e){e.stopPropagation();var _pl=getPhaseLabel(weekNum,mesoLen);var _k=_pl==="Build"?"phase_build":_pl==="Push"?"phase_push":_pl==="Overreach"?"phase_overreach":_pl==="Recover"?"phase_recover":"phase_build";setInfoSheet(_k);}} style={{fontSize:9,color:C.pur,fontFamily:FD,background:C.pur+"15",padding:"2px 8px",borderRadius:4,cursor:"pointer"}}>{getPhaseLabel(weekNum,mesoLen).toUpperCase()}</span><span onClick={function(e){e.stopPropagation();setInfoSheet("rir");}} style={{fontSize:9,color:C.blu,fontFamily:FD,background:C.blu+"15",padding:"2px 8px",borderRadius:4,cursor:"pointer"}}>{getRIR(weekNum,mesoLen,null,expLevel)+" RIR"}</span><button className="t44" onClick={function(e){e.stopPropagation();setPopup({type:"system_info"});}} style={{fontSize:9,color:C.blu,fontFamily:FD,background:C.blu+"15",padding:"2px 8px",borderRadius:4,border:"1px solid "+C.blu+"30",cursor:"pointer"}}>INFO</button></div>{readMod<0.85&&<div style={{fontSize:10,color:C.orn,marginTop:4}}>{"Readiness "+Math.round(readMod*100)+"% - volume adjusted"}</div>}{program[aDay].timeFactorSource&&program[aDay].timeFactorSource!=="default"&&program[aDay].timeFactorSessions>=3&&<div style={{fontSize:9,color:C.blu,marginTop:3,fontFamily:FD,letterSpacing:0.5}}>{"\u2022 PREDICTED FROM "+program[aDay].timeFactorSessions+" "+(program[aDay].timeFactorSource==="day"?(program[aDay].label+" SESSION"+(program[aDay].timeFactorSessions===1?"":"S")):"PAST SESSION"+(program[aDay].timeFactorSessions===1?"":"S"))}</div>}</div>
 
         {/* ═══ WORKOUT TIMER BAR ═══ */}
         {(function(){
@@ -11106,7 +11221,7 @@ function Forge(props){
           return <div key={i} className="card-stagger" onClick={function(){if(!isAct)setAEx(i);}} style={{"--i":Math.min(i,5),background:isAct?C.sf:"transparent",border:"1px solid "+(stall>=2&&isAct?(C.red+"50"):isAct?C.bdr:"transparent"),borderRadius:14,padding:isAct?16:"10px 16px",marginBottom:isAct?14:2,cursor:"pointer",borderLeft:isDone?("3px solid "+C.grn):stall>=2?("3px solid "+C.red):isAct?("3px solid "+C.acc):"3px solid transparent"}}>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
               {isAct&&<div onClick={function(e){e.stopPropagation();setAdjustPopup({dayIdx:aDay,exIdx:i});setAdjustPending(null);setAdjustSwapMode(false);}} style={{cursor:"pointer",position:"relative"}}><ExSVG name={ex.name} mv={ex.mv} size={48}/><div style={{position:"absolute",bottom:-2,right:-2,width:18,height:18,borderRadius:"50%",background:C.acc,color:"#000",fontSize:10,fontWeight:700,fontFamily:FD,display:"flex",alignItems:"center",justifyContent:"center",border:"2px solid "+C.bg}}>±</div></div>}
-              <div style={{flex:1,minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span style={{fontSize:isAct?15:13,fontWeight:isAct?700:500,color:isDone?C.grn:C.txt}}>{ex.name}</span>{_exBadge&&<button onClick={function(e){e.stopPropagation();setPopup({type:"e1rm_confidence",id:ex.name,badge:_exBadge,fit:_exFit||{dataPointCount:_bE1h?_bE1h.length:0,r2:0,confidenceTier:"cold",modelType:"recent",projectedE1rm:0},biasApplied:_exBias,warnings:[]});}} style={{padding:"1px 6px",fontSize:8,fontWeight:700,fontFamily:FD,letterSpacing:0.5,color:_exBadgeCol,background:_exBadgeCol+"15",border:"1px solid "+_exBadgeCol+"45",borderRadius:8,cursor:"pointer",lineHeight:"14px"}}>{_exBadge.badge==="personalized"?"PERSONALIZED":_exBadge.badge==="learning"?"LEARNING":"STARTING"}</button>}</div>
+              <div style={{flex:1,minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span style={{fontSize:isAct?15:13,fontWeight:isAct?700:500,color:isDone?C.grn:C.txt}}>{ex.name}</span>{_exBadge&&<button className="t44" onClick={function(e){e.stopPropagation();setPopup({type:"e1rm_confidence",id:ex.name,badge:_exBadge,fit:_exFit||{dataPointCount:_bE1h?_bE1h.length:0,r2:0,confidenceTier:"cold",modelType:"recent",projectedE1rm:0},biasApplied:_exBias,warnings:[]});}} style={{padding:"1px 6px",fontSize:8,fontWeight:700,fontFamily:FD,letterSpacing:0.5,color:_exBadgeCol,background:_exBadgeCol+"15",border:"1px solid "+_exBadgeCol+"45",borderRadius:8,cursor:"pointer",lineHeight:"14px"}}>{_exBadge.badge==="personalized"?"PERSONALIZED":_exBadge.badge==="learning"?"LEARNING":"STARTING"}</button>}</div>
                 {!isAct&&!isDone&&<div style={{fontSize:10,color:C.dim}}>{(isCardio?"":numSets+"x "+ex.reps)+(techLabel?" / "+techLabel:"")}</div>}
                 {!isAct&&!isDone&&renderExHint(ex.name, ex.muscle)}
               </div>
@@ -11271,7 +11386,7 @@ function Forge(props){
                 <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
                   <span style={{fontSize:14,color:pCol}}>{pIcon}</span>
                   <span style={{fontSize:10,fontWeight:700,fontFamily:FD,letterSpacing:1,color:pCol,flex:1,minWidth:0}}>{pLabel}</span>
-                  {badge&&<button onClick={function(e){e.stopPropagation();setPopup({type:"e1rm_confidence",id:ex.name,badge:badge,fit:fit,biasApplied:biasVal,warnings:prog.warnings||[]});}} style={{padding:"2px 7px",fontSize:9,fontWeight:700,fontFamily:FD,letterSpacing:1,color:badgeCol,background:badgeCol+"18",border:"1px solid "+badgeCol+"50",borderRadius:10,cursor:"pointer"}}>{badge.badge==="personalized"?"PERSONALIZED":badge.badge==="learning"?"LEARNING":"STARTING"}</button>}
+                  {badge&&<button className="t44" onClick={function(e){e.stopPropagation();setPopup({type:"e1rm_confidence",id:ex.name,badge:badge,fit:fit,biasApplied:biasVal,warnings:prog.warnings||[]});}} style={{padding:"2px 7px",fontSize:9,fontWeight:700,fontFamily:FD,letterSpacing:1,color:badgeCol,background:badgeCol+"18",border:"1px solid "+badgeCol+"50",borderRadius:10,cursor:"pointer"}}>{badge.badge==="personalized"?"PERSONALIZED":badge.badge==="learning"?"LEARNING":"STARTING"}</button>}
                   {infoBtn(_progKey)}
                 </div>
                 <div style={{fontSize:11,color:isStall?pCol:C.mid,marginTop:3,fontWeight:isStall?600:400}}>{prog.note}</div>
@@ -11319,9 +11434,9 @@ function Forge(props){
                         <div style={{fontSize:9,color:C.dim}}>{p.d(rounds)}</div>
                       </div>
                       <div style={{display:"flex",alignItems:"center",gap:3}}>
-                        <button onClick={function(){adjProtoRounds(p.id,-1);}} style={{width:24,height:24,background:C.sf2,border:"1px solid "+C.bdr,borderRadius:4,color:C.mid,fontSize:14,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>-</button>
+                        <button className="t44" onClick={function(){adjProtoRounds(p.id,-1);}} style={{width:24,height:24,background:C.sf2,border:"1px solid "+C.bdr,borderRadius:4,color:C.mid,fontSize:14,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>-</button>
                         <div style={{minWidth:22,textAlign:"center",fontSize:12,fontWeight:700,color:C.txt,fontFamily:FD}}>{rounds}</div>
-                        <button onClick={function(){adjProtoRounds(p.id,1);}} style={{width:24,height:24,background:C.sf2,border:"1px solid "+C.bdr,borderRadius:4,color:C.mid,fontSize:14,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
+                        <button className="t44" onClick={function(){adjProtoRounds(p.id,1);}} style={{width:24,height:24,background:C.sf2,border:"1px solid "+C.bdr,borderRadius:4,color:C.mid,fontSize:14,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
                       </div>
                       <button onClick={function(){startCardioTimer(p);}} style={{padding:"6px 12px",background:C.grn+"18",border:"1px solid "+C.grn+"40",borderRadius:6,cursor:"pointer",fontSize:10,fontWeight:700,color:C.grn,fontFamily:FD,letterSpacing:1}}>START</button>
                     </div>;})}
@@ -11403,7 +11518,7 @@ function Forge(props){
                       </div>
                       {_myoBand&&<div style={{display:"flex",alignItems:"center",gap:3,padding:"8px 0 2px 0"}}>
                         <span style={{fontSize:9,color:C.dim,fontFamily:FD,width:24}}>BAND</span>
-                        {BAND_COLORS.map(function(bc){var sel=_myoBands.indexOf(bc.id)>=0;return <button key={bc.id} onClick={function(){logMyoBand(aDay,i,bc.id);}} style={{width:20,height:20,borderRadius:"50%",background:bc.c,border:"2px solid "+(sel?C.txt:C.bdr),cursor:"pointer",opacity:sel?1:0.6,transition:"all 0.2s"}} title={bc.n+" ("+bc.lbs+")"}/>;}) }
+                        {BAND_COLORS.map(function(bc){var sel=_myoBands.indexOf(bc.id)>=0;return <button className="t44" key={bc.id} onClick={function(){logMyoBand(aDay,i,bc.id);}} style={{width:20,height:20,borderRadius:"50%",background:bc.c,border:"2px solid "+(sel?C.txt:C.bdr),cursor:"pointer",opacity:sel?1:0.6,transition:"all 0.2s"}} title={bc.n+" ("+bc.lbs+")"}/>;}) }
                         {_myoBands.length>0&&<span style={{fontSize:8,color:C.dim,marginLeft:2}}>{_bandLabel(_myoBands)}</span>}
                         {_myoBands.length>=4&&<span style={{fontSize:7,color:C.orn,marginLeft:2}}>MAX</span>}
                       </div>}
@@ -11418,8 +11533,8 @@ function Forge(props){
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                         <div style={{fontSize:10,fontWeight:700,fontFamily:FD,letterSpacing:1,color:C.mid}}>MINI-SETS</div>
                         <div style={{display:"flex",gap:6}}>
-                          <button onClick={function(){addMyoMini(aDay,i);}} style={{padding:"4px 10px",fontSize:10,fontFamily:FD,fontWeight:700,background:C.blu+"15",color:C.blu,border:"1px solid "+C.blu+"40",borderRadius:6,cursor:"pointer"}}>+ ADD</button>
-                          {miniSets.length>0&&<button onClick={function(){removeMyoMini(aDay,i);}} style={{padding:"4px 10px",fontSize:10,fontFamily:FD,fontWeight:700,background:C.red+"15",color:C.red,border:"1px solid "+C.red+"40",borderRadius:6,cursor:"pointer"}}>- REMOVE</button>}
+                          <button className="t44" onClick={function(){addMyoMini(aDay,i);}} style={{padding:"4px 10px",fontSize:10,fontFamily:FD,fontWeight:700,background:C.blu+"15",color:C.blu,border:"1px solid "+C.blu+"40",borderRadius:6,cursor:"pointer"}}>+ ADD</button>
+                          {miniSets.length>0&&<button className="t44" onClick={function(){removeMyoMini(aDay,i);}} style={{padding:"4px 10px",fontSize:10,fontFamily:FD,fontWeight:700,background:C.red+"15",color:C.red,border:"1px solid "+C.red+"40",borderRadius:6,cursor:"pointer"}}>- REMOVE</button>}
                         </div>
                       </div>
                       {miniSets.map(function(ms,mi){return <div key={mi} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0",borderBottom:mi<miniSets.length-1?"1px solid "+C.bdr:"none"}}>
@@ -11450,7 +11565,7 @@ function Forge(props){
                   var _isTB=isTimeBased(ex.name);
                   // Bug fix May 2026: conditioning moves (e.g. Mountain Climbers) suppress RIR like primers — cardio limits before muscular failure.
                   var _isConditioning=isConditioningNoRir(ex);
-                  var isPrimerOrCorr=ex.tech==="primer"||ex.tech==="corrective"||ex.tier==="primer"||ex.tier==="corrective"||_isConditioning;var hasWR=setData.w&&setData.r;var hasBandR=isBandEx&&setData.band&&setData.r;var hasBWR=isBW&&setData.r;var setComplete=hasWR||hasBandR||hasBWR;
+                  var isPrimerOrCorr=ex.tech==="primer"||ex.tech==="corrective"||ex.tier==="primer"||ex.tier==="corrective"||_isConditioning||ex.tech==="speed";var hasWR=setData.w&&setData.r;var hasBandR=isBandEx&&setData.band&&setData.r;var hasBWR=isBW&&setData.r;var setComplete=hasWR||hasBandR||hasBWR;
                   // C1 — Previous-session reference for THIS set number
                   var prevForSet=null;
                   if(rec&&rec.isExact){prevForSet={w:rec.w,r:rec.r};}
@@ -11484,7 +11599,7 @@ function Forge(props){
                       {canOneTap&&<button onClick={oneTapFill} aria-label="Log set at previous" style={{width:48,height:48,borderRadius:12,background:C.acc+"20",color:C.acc,border:"1.5px solid "+C.acc+"55",fontSize:24,fontWeight:700,fontFamily:FB,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,flexShrink:0,lineHeight:1}}>{"\u2713"}</button>}
                     </div>
                     {setComplete&&isPrimerOrCorr&&<div style={{display:"flex",alignItems:"center",gap:6,padding:"6px 0 10px 48px",borderBottom:"1px solid "+C.bdr}}>
-                      <span onClick={function(){setInfoSheet("primer_no_rir");}} style={{fontSize:9,color:C.dim,fontFamily:FD,letterSpacing:2,cursor:"pointer",background:C.bar,border:"1px dashed "+C.bdr,padding:"3px 8px",borderRadius:6}}>{_isConditioning?"NO RIR · CONDITIONING (CARDIO-CAPPED)":"NO RIR · PRIMER SET"}</span>
+                      <span onClick={function(){setInfoSheet("primer_no_rir");}} style={{fontSize:9,color:C.dim,fontFamily:FD,letterSpacing:2,cursor:"pointer",background:C.bar,border:"1px dashed "+C.bdr,padding:"3px 8px",borderRadius:6}}>{ex.tech==="speed"?"NO RIR · SPEED (EXPLOSIVE)":_isConditioning?"NO RIR · CONDITIONING (CARDIO-CAPPED)":"NO RIR · PRIMER SET"}</span>
                     </div>}
                     {setComplete&&!isPrimerOrCorr&&<div style={{display:"flex",alignItems:"center",gap:6,padding:"6px 0 10px 48px",borderBottom:"1px solid "+C.bdr}}>
                       <span style={{fontSize:10,color:C.dim,fontFamily:FD,width:28,letterSpacing:1}}>RIR</span>
@@ -11494,7 +11609,7 @@ function Forge(props){
                     </div>}
                     {(ex.name.indexOf("Band")>=0||ex.name.indexOf("Banded")>=0)&&(function(){var _sb=_getBands(setData);var _hasBands=_sb.length>0;return <div><div style={{display:"flex",alignItems:"center",gap:3,padding:"4px 0 2px 48px",borderBottom:_hasBands?"none":"1px solid "+C.bdr}}>
                       <span style={{fontSize:9,color:C.dim,fontFamily:FD,width:24}}>BAND</span>
-                      {BAND_COLORS.map(function(bc){var sel=_sb.indexOf(bc.id)>=0;return <button key={bc.id} onClick={function(){logBand(aDay,i,si,bc.id);}} style={{width:20,height:20,borderRadius:"50%",background:bc.c,border:"2px solid "+(sel?C.txt:C.bdr),cursor:"pointer",opacity:sel?1:0.6,transition:"all 0.2s"}} title={bc.n+" ("+bc.lbs+")"}/>;}) }
+                      {BAND_COLORS.map(function(bc){var sel=_sb.indexOf(bc.id)>=0;return <button className="t44" key={bc.id} onClick={function(){logBand(aDay,i,si,bc.id);}} style={{width:20,height:20,borderRadius:"50%",background:bc.c,border:"2px solid "+(sel?C.txt:C.bdr),cursor:"pointer",opacity:sel?1:0.6,transition:"all 0.2s"}} title={bc.n+" ("+bc.lbs+")"}/>;}) }
                       {_hasBands&&<span style={{fontSize:8,color:C.dim,marginLeft:2}}>{_bandLabel(_sb)}</span>}
                       {_sb.length>=4&&<span style={{fontSize:7,color:C.orn,marginLeft:2}}>MAX</span>}
                     </div>
