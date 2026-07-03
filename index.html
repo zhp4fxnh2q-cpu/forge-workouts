@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-7";
+  window.FORGE_BUILD="2026.07.03-8";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -6048,16 +6048,18 @@ function lastSetToFailure(nm){
 // conservative for a LIVE starting suggestion (floor 0.85, only ever reduces); the logged-
 // performance learning loop refines from actual results. This is what makes a suggestion
 // re-scale when an exercise's order changes across programs.
-function orderFatigueMult(posIdx,sharesMuscle){
+function orderFatigueMult(posIdx,sharesMuscle,method){
   var m=1.0;
   if(posIdx>=2)m*=Math.max(0.88,1-0.05*(posIdx-1)); // position penalty, tapering, capped
   if(sharesMuscle)m*=0.93;                            // secondary-muscle pre-fatigue
-  return Math.max(0.85,m);                            // never cut a starting suggestion >15%
+  if(method==="preexhaust"||method==="superset"||method==="giant")m*=0.92; // pre-fatigued pairing (~15-20% acute)
+  return Math.max(0.83,m);                            // never cut a starting suggestion >17%
 }
-function orderFatigueReason(posIdx,sharesMuscle){
+function orderFatigueReason(posIdx,sharesMuscle,method){
   var parts=[];
   if(posIdx>=2)parts.push((posIdx+1)+" of session");
   if(sharesMuscle)parts.push("muscle pre-worked");
+  if(method==="preexhaust"||method==="superset"||method==="giant")parts.push("pre-fatigued pairing");
   return parts.length?("↓ vs fresh: "+parts.join(", ")):"";
 }
 function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHistory,readMod,genCount,banned,equipFilter,specBdg,tempoPresetId){
@@ -9142,7 +9144,7 @@ function Forge(props){
   // pause density tallies never contaminate straight-set recommendations (and vice
   // versa). The weight/rep/stall LOGIC inside getProgression is unchanged — it just
   // receives clean, comparable, type-consistent data.
-  function getProgressionHint(exName,repRange,numSetsArg,posIdx,precedingMuscles){
+  function getProgressionHint(exName,repRange,numSetsArg,posIdx,precedingMuscles,method){
     // V2 #4: If transition wizard set a weight override and we're in week 1, use it
     if(weekNum===1&&weightOverrides&&weightOverrides[exName]){
       var woWeight=weightOverrides[exName];
@@ -9166,11 +9168,13 @@ function Forge(props){
     if(_prog&&typeof _prog.w==="number"&&_prog.w>0){
       var _shares=!!(precedingMuscles&&exMuscle&&precedingMuscles.indexOf(exMuscle)>=0);
       var _pi=posIdx||0;
-      if(_pi>=2||_shares){
-        var _ofm=orderFatigueMult(_pi,_shares);
+      var _pm=method||null;
+      var _isPair=(_pm==="preexhaust"||_pm==="superset"||_pm==="giant");
+      if(_pi>=2||_shares||_isPair){
+        var _ofm=orderFatigueMult(_pi,_shares,_pm);
         if(_ofm<1){
           _prog.w=Math.round(_prog.w*_ofm);
-          var _rsn=orderFatigueReason(_pi,_shares);
+          var _rsn=orderFatigueReason(_pi,_shares,_pm);
           if(_rsn)_prog.note=(_prog.note?_prog.note+" · ":"")+_rsn;
         }
       }
@@ -11541,7 +11545,7 @@ function Forge(props){
               })()}
               {/* ═══ PROGRESSION HINT (wired up from getProgression) ═══ */}
               {(function(){if(isCardio||ex.tier==="primer"||ex.tier==="grit"||ex.tier==="corrective")return null;
-                var prog=getProgressionHint(ex.name,ex.reps,undefined,i,(program[aDay]?program[aDay].exercises.slice(0,i).map(function(pe){return pe.muscle;}):[]));if(!prog||!prog.note)return null;
+                var prog=getProgressionHint(ex.name,ex.reps,undefined,i,(program[aDay]?program[aDay].exercises.slice(0,i).map(function(pe){return pe.muscle;}):[]),ex.tech);if(!prog||!prog.note)return null;
                 // Color & label based on progression lever
                 var isStall=prog.lever==="stall";
                 var isTraj=prog.lever==="trajectory";
