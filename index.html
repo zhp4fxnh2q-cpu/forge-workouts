@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-9";
+  window.FORGE_BUILD="2026.07.03-10";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -5983,6 +5983,8 @@ function _repWidth(r){if(!r)return 6;if(typeof r==="string"){var p=r.split("-");
 function _clampAbs(x,cap){return x>cap?cap:(x<-cap?-cap:x);}
 function getRepLearn(){try{var d=localStorage.getItem(devKey("forge_repLearn"));return d?JSON.parse(d):{};}catch(e){return {};}}
 function saveRepLearn(data){try{sSet("forge_repLearn",data);}catch(e){try{localStorage.setItem(devKey("forge_repLearn"),JSON.stringify(data));}catch(e2){}}}
+function getRecovery(){try{var d=localStorage.getItem(devKey("forge_recovery"));return d?JSON.parse(d):{};}catch(e){return {};}} // P3b: per-muscle underperformance miss-counter
+function saveRecovery(data){try{sSet("forge_recovery",data);}catch(e){try{localStorage.setItem(devKey("forge_recovery"),JSON.stringify(data));}catch(e2){}}}
 function getRepPref(){try{var c=localStorage.getItem(devKey("forge_config"));c=c?JSON.parse(c):{};return c.repPref||{};}catch(e){return {};}}
 // Empirical-Bayes shrinkage of observed rep-center toward the prior; recency+quality weighted, >=3-obs gate.
 function learnRepCenter(muscle,priorCenter){
@@ -6158,6 +6160,9 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       // Apply readiness modifier to session volume
       sessionTarget=Math.max(2,Math.round(sessionTarget*rm));
       if(phase==="deload")sessionTarget=Math.max(2,Math.ceil(sessionTarget*0.5));
+      // P3b: single-muscle recovery — 2+ underperforming sessions running → halve this muscle's
+      // per-session volume so it can recover (self-clears once it performs well again).
+      var _recV=getRecovery();if(_recV&&_recV[muscle]>=2)sessionTarget=Math.max(2,Math.ceil(sessionTarget*0.5));
       // cnt = number of EXERCISES for this muscle (sessionTarget sets divided among them)
       var numExercises=Math.max(1,Math.min(3,Math.ceil(sessionTarget/3))); // ~3 sets each
       // Time guard: volume-proportional budget per muscle group
@@ -8125,6 +8130,7 @@ function Forge(props){
     // For each exercise, classify rep range and track progression rate per muscle
     var newRRT=Object.assign({},repRangeTrack);
     var newRepLearn=getRepLearn(); // P1: preference-engine learning store
+    var _musclePerf={}; // P3b: aggregate per-muscle performance this session
     day.exercises.forEach(function(ex,ei){
       var k2=aDay+"-"+ei;var entry=log[k2];
       if(!entry||!entry.sets||ex.muscle==="cardio"||ex.muscle==="grit"||ex.tier==="primer")return;
@@ -8141,6 +8147,8 @@ function Forge(props){
         if(prevVol>0){
           var progRate=(curVol-prevVol)/prevVol; // % change
           _lrProg=progRate;
+          if(!_musclePerf[ex.muscle])_musclePerf[ex.muscle]={sum:0,n:0}; // P3b
+          _musclePerf[ex.muscle].sum+=progRate;_musclePerf[ex.muscle].n++;
           if(!newRRT[ex.muscle])newRRT[ex.muscle]={low:[],mid:[],high:[]};
           var arr=newRRT[ex.muscle][bucket];
           arr.push(progRate);
@@ -8162,6 +8170,11 @@ function Forge(props){
     setRepRangeTrack(newRRT);
     sSet("forge_rrt",newRRT);
     saveRepLearn(newRepLearn); // P1: persist learned rep observations
+    // P3b: update per-muscle recovery counter — 2+ underperforming sessions running flags the muscle
+    // for halved volume next block; a good session resets it to 0.
+    var _recU=getRecovery();
+    for(var _mpk in _musclePerf){if(!_musclePerf.hasOwnProperty(_mpk))continue;var _mpv=_musclePerf[_mpk];var _mavg=_mpv.n>0?_mpv.sum/_mpv.n:0;if(_mavg<-0.02)_recU[_mpk]=(_recU[_mpk]||0)+1;else _recU[_mpk]=0;}
+    saveRecovery(_recU);
 
     setExHist(newHist);
     setPRs(newPRsMap);
