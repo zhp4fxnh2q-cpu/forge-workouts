@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-12";
+  window.FORGE_BUILD="2026.07.03-13";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -6979,6 +6979,7 @@ function Forge(props){
   var _ae=useState(0),aEx=_ae[0],setAEx=_ae[1];
   var _lg=useState({}),log=_lg[0],setLog=_lg[1];
   var _rd=useState(null),readiness=_rd[0],setReadiness=_rd[1];
+  var _rdyAll=useState(false),showAllRdy=_rdyAll[0],setShowAllRdy=_rdyAll[1];
   var _rmod=useState(1.0),readMod=_rmod[0],setReadMod=_rmod[1];
   var _fp=useState(1),fPerf=_fp[0],setFP=_fp[1];
   // fSore removed - replaced by fRecovery above
@@ -11292,7 +11293,10 @@ function Forge(props){
           <button onClick={function(){var pre={};if(garminData.sleep!==undefined)pre.sleep=garminData.sleep;if(garminData.stress!==undefined)pre.stress=garminData.stress;if(garminData.energy!==undefined)pre.energy=garminData.energy;setReadiness(pre);}} style={{width:"100%",padding:"10px 0",background:C.blu+"20",color:C.blu,border:"1px solid "+C.blu+"40",borderRadius:10,fontSize:13,fontWeight:700,fontFamily:FD,cursor:"pointer"}}>AUTO-FILL FROM GARMIN</button>
           <div style={{fontSize:10,color:C.dim,marginTop:4}}>You can still adjust any score after auto-filling.</div>
         </div>}
-        {READINESS.map(function(q){var val=readiness?readiness[q.id]:null;return cd(<div key={q.id}><div style={{fontSize:12,color:C.mid,marginBottom:8}}>{q.q}</div><div style={{display:"flex",flexWrap:"wrap",gap:5}}>{q.opts.map(function(o,oi){var isLow=q.w[oi]<0.85;var isHigh=q.w[oi]>1.0;return pill(o,val===oi,isLow?C.red:isHigh?C.grn:C.mid,function(){setReadiness(function(prev){var n=Object.assign({},prev||{});n[q.id]=oi;return n;});},q.id+oi);})}</div></div>);})}
+        <div style={{fontSize:10,color:C.dim,marginBottom:6,textAlign:"center",letterSpacing:1}}>{showAllRdy?"FULL 4-SIGNAL CHECK":"QUICK CHECK · the two signals that drive autoregulation"}</div>
+        {READINESS.filter(function(q){return showAllRdy||q.id==="soreness"||q.id==="energy";}).map(function(q){var val=readiness?readiness[q.id]:null;return cd(<div key={q.id}><div style={{fontSize:12,color:C.mid,marginBottom:8}}>{q.q}</div><div style={{display:"flex",flexWrap:"wrap",gap:5}}>{q.opts.map(function(o,oi){var isLow=q.w[oi]<0.85;var isHigh=q.w[oi]>1.0;return pill(o,val===oi,isLow?C.red:isHigh?C.grn:C.mid,function(){setReadiness(function(prev){var n=Object.assign({},prev||{});n[q.id]=oi;return n;});},q.id+oi);})}</div></div>);})}
+        {!showAllRdy&&<div style={{marginTop:2}}>{secBtn("+ ADD SLEEP & MOTIVATION (OPTIONAL)",function(){setShowAllRdy(true);})}</div>}
+        {showAllRdy&&<div style={{marginTop:2}}>{secBtn("BACK TO QUICK CHECK",function(){setShowAllRdy(false);})}</div>}
         {(function(){if(!readiness)return null;var totalW=0;var sumW=0;var count=0;READINESS.forEach(function(q){if(readiness[q.id]!==undefined&&readiness[q.id]!==null){var importance=q.id==="sleep"?1.5:q.id==="energy"?1.2:1.0;totalW+=q.w[readiness[q.id]]*importance;sumW+=importance;count++;}});if(count===0)return null;var rawScore=totalW/sumW;
           // BUG-07: Apply rest-day adjustment (back-to-back penalty, recovery boost, detraining penalty)
           var _restDays=getDaysSinceLastSession(completedDays);
