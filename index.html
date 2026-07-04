@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-10";
+  window.FORGE_BUILD="2026.07.03-11";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -5326,8 +5326,8 @@ function getStuckProgression(exName,hist,repRange,numSets,microplates,e1rmCtx){
     var fr7=Math.max(lo,Math.round(hi*(1-s7*0.07)));
     sugSets.push({w:lw,r:fr7});
   }
-  return{action:"stuckMaxed",weight:lw,targetReps:hi,lever:"hold",stuck:true,stuckStep:6,
-    note:"All density steps maxed at "+lw+"lb. Enable microplates in Settings or take the natural rack jump.",sugSets:sugSets};
+  return{action:"stuckFrequency",weight:lw,targetReps:hi,lever:"frequency",stuck:true,stuckStep:6,
+    note:"Density maxed at "+lw+"lb and the next dumbbell is a big jump. Best move: progress by FREQUENCY — add one more weekly session of this lift at the same weight/reps before forcing the jump (proven answer for fixed-increment dumbbells). Or enable microplates in Settings.",sugSets:sugSets};
 }
 
 // ═══ EXERCISE FAMILIES v2 (rotation by movement pattern, not by name) ═══
