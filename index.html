@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-13";
+  window.FORGE_BUILD="2026.07.03-14";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -6068,6 +6068,47 @@ function orderFatigueReason(posIdx,sharesMuscle,method){
   if(method==="preexhaust"||method==="superset"||method==="giant")parts.push("pre-fatigued pairing");
   return parts.length?("↓ vs fresh: "+parts.join(", ")):"";
 }
+// ═══ P8 · ASSIGNMENT INTEGRITY GUARD (defensive, non-blocking) ═══
+// Slot role from the tags an exercise was given — an EXACT mirror of the simulation
+// harness's placedRole() (tools/sim/twin.mjs). "working" = a progression-bearing lifting
+// slot; warmup/mobility/power/conditioning are non-working roles.
+function _placedRole(e){
+  if(!e)return "working";
+  var tech=e.tech,tier=e.tier,muscle=e.muscle;
+  if(tech==="primer"||tier==="primer")return "warmup";
+  if(tech==="corrective"||tier==="corrective"||muscle==="corrective")return "mobility";
+  if((tech==="speed"||e.speedBridge)&&e.t!=="C"&&e.t!=="I")return "power";
+  if(tier==="grit"||muscle==="grit")return "conditioning";
+  if(tech==="carry"||muscle==="carry")return "conditioning";
+  if(muscle==="cardio")return "conditioning";
+  return "working";
+}
+// Validate a generated program in-app on EVERY real build (runtime coverage of the exact
+// configs David generates, beyond the offline 324-case sim). CONSERVATIVE — only flags
+// unambiguous contradictions, so it can never false-flag a valid program — and NON-BLOCKING:
+// it logs to console and returns the list; it never mutates or rejects the program. This is
+// David's "no warmup-type exercise in a lifting slot" concern, enforced live.
+function assertProgramValid(sessions){
+  var v=[];
+  if(sessions&&sessions.length){
+    for(var s=0;s<sessions.length;s++){
+      var day=sessions[s];if(!day)continue;
+      var exs=day.exercises||day.exs||[];
+      for(var i=0;i<exs.length;i++){
+        var e=exs[i];if(!e)continue;
+        var role=_placedRole(e);
+        var lbl=(day.label||("D"+(s+1)))+" · "+(e.name||"?");
+        if(e.sets===undefined||e.sets===null||!(e.sets>0))v.push(lbl+" — no sets count");
+        if(role==="working"){
+          if(!e.muscle||e.muscle==="cardio"||e.muscle==="corrective"||e.muscle==="grit"||e.muscle==="carry")v.push(lbl+" — working slot targets non-muscle '"+(e.muscle||"none")+"'");
+          if(e.reps===undefined||e.reps===null||e.reps==="")v.push(lbl+" — working slot has no reps");
+        }
+      }
+    }
+  }
+  if(v.length){try{console.warn("[FORGE integrity] "+v.length+" assignment issue(s) in generated program:\n • "+v.join("\n • "));}catch(_e){}}
+  return v;
+}
 function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHistory,readMod,genCount,banned,equipFilter,specBdg,tempoPresetId){
   banned=banned||[];
   var tm=1-(methodObj.sv/100);var cl=goalObj.cd||0;var cm=cl>0?Math.min(10,cl*4):0;var lm=mins-cm;var sessions=[];
@@ -6887,6 +6928,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       }
     }
   })();
+  assertProgramValid(sessions);
   return sessions;
 }
 
