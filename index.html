@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-8";
+  window.FORGE_BUILD="2026.07.03-9";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -9548,6 +9548,22 @@ function Forge(props){
     if(!popup)return null;
     var title="";var body="";var extra=null;
     if(popup.type==="tech"){var t=TECH_INFO[popup.id];if(t){title=t.n;body=t.d;}else{title=popup.id;body="No description available.";}}
+    else if(popup.type==="pain"){
+      title="Tweak or pain? — "+popup.id;
+      body="Most gym pain isn't injury. Run this before you stop.";
+      extra=<div style={{marginTop:10}}>
+        <div style={{fontSize:11,fontWeight:700,fontFamily:FD,letterSpacing:1,color:C.acc,marginBottom:6}}>IS IT A REAL INJURY?</div>
+        <div style={{fontSize:11,color:C.dim,lineHeight:1.6,marginBottom:12}}>Stop only if ALL THREE are true: (1) the pain is small and specific — a joint or tendon, not the whole muscle; (2) it came on suddenly, like a pop or click; and (3) it gets WORSE with each rep. A deep stretch or burn is the stimulus, not damage — keep training.</div>
+        <div style={{fontSize:11,fontWeight:700,fontFamily:FD,letterSpacing:1,color:C.acc,marginBottom:6}}>WORK BACK IN — each step pain-free before the next</div>
+        {[["1","Full range, very light (leave 5+ reps in reserve)"],["2","Add reps, still light"],["3","Add sets at the same light weight"],["4","Slowly add load and slow the lowering"],["5","Reintroduce the movement, extra control"],["6","Back to normal training"]].map(function(p){
+          return <div key={p[0]} style={{display:"flex",gap:10,padding:"6px 0",borderBottom:"1px solid "+C.bdr}}>
+            <div style={{width:20,height:20,borderRadius:"50%",background:C.bar,color:C.acc,fontSize:10,fontWeight:700,fontFamily:FD,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{p[0]}</div>
+            <div style={{flex:1,fontSize:11,color:C.txt}}>{p[1]}</div>
+          </div>;
+        })}
+        <div style={{fontSize:10,color:C.dim,marginTop:10,lineHeight:1.5}}>Minor tweak? Compress these into one session (warm-up sets = step 1, a moderate set = step 3). A real injury takes days to weeks. If pain persists across most movements, see a professional.</div>
+      </div>;
+    }
     else if(popup.type==="stall"){
       title="STALLED: "+popup.id;
       body="Same weight and reps for 2+ sessions. Time to change stimulus.";
@@ -11420,6 +11436,7 @@ function Forge(props){
                 {!isAct&&!isDone&&<div style={{fontSize:10,color:C.dim}}>{(isCardio?"":numSets+"x "+ex.reps)+(techLabel?" / "+techLabel:"")}</div>}
                 {!isAct&&!isDone&&renderExHint(ex.name, ex.muscle)}
                 {ex.lastSetToFail&&!isCardio&&ex.tech!=="primer"&&ex.tech!=="corrective"&&!isDone&&<div style={{fontSize:9,color:C.acc,fontFamily:FD,letterSpacing:0.5,marginTop:2}}>★ LAST SET → FAILURE</div>}
+                {!isCardio&&!isDone&&<div onClick={function(e){e.stopPropagation();setPopup({type:"pain",id:ex.name,muscle:ex.muscle});}} style={{fontSize:9,color:C.dim,fontFamily:FD,letterSpacing:0.5,marginTop:3,cursor:"pointer",display:"inline-block",borderBottom:"1px dotted "+C.bdr}}>⚠ tweak or pain?</div>}
               </div>
               <div style={{display:"flex",alignItems:"center",gap:3}}>
                 {techLabel&&!isDone&&<span style={{fontSize:9,color:techColor,fontFamily:FD,letterSpacing:1,background:techColor+"15",padding:"2px 8px",borderRadius:4}}>{techLabel}</span>}
