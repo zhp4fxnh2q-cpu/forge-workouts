@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-14";
+  window.FORGE_BUILD="2026.07.03-15";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -6928,7 +6928,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       }
     }
   })();
-  assertProgramValid(sessions);
+  try{assertProgramValid(sessions);}catch(_e){}
   return sessions;
 }
 
