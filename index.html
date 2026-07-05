@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-21";
+  window.FORGE_BUILD="2026.07.03-22";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -5569,6 +5569,13 @@ function isBandExercise(ex){
   return ex.n.toLowerCase().includes("band") || ex.n.toLowerCase().includes("banded");
 }
 
+// ═══ DESIGN ENGINE — active profile (neutral | athleanx | nippard) ═══
+// Set via _setDesignProfile() when a program/blueprint is selected; read by scoreEx +
+// buildProgram hooks so AthleanX and Nippard programs are GENERATED with different logic
+// (core divergence, not flare). Defaults to "neutral" → identical to today's behavior.
+var _FORGE_DESIGN_PROFILE="neutral";
+function _setDesignProfile(p){_FORGE_DESIGN_PROFILE=(p==="athleanx"||p==="nippard")?p:"neutral";return _FORGE_DESIGN_PROFILE;}
+function getDesignProfile(){return _FORGE_DESIGN_PROFILE;}
 function scoreEx(ex,mid,hist,goalId,slotType,equipFilter,muscle,priorityMuscle,weekNum,mesoLen){
   // slotType: "compound","isolation","any" — helps contextualize scoring
   // equipFilter: "band","bw","db",null — from preset selection
@@ -5588,6 +5595,11 @@ function scoreEx(ex,mid,hist,goalId,slotType,equipFilter,muscle,priorityMuscle,w
     if(priorityMuscle)stretchPts=Math.round(stretchPts*1.5);
     s+=stretchPts;
   }
+  // ── DESIGN-ENGINE selection divergence (dormant unless a profile is active) ──
+  // Nippard: amplify lengthened-position / stimulus-to-fatigue picks (verified design DNA).
+  // AthleanX: bias unilateral + rear-delt/pull "athletic + joint-health" picks.
+  if(_FORGE_DESIGN_PROFILE==="nippard"){if(ex.len==="L")s+=12;if(ex.t==="I"&&ex.len==="L")s+=4;}
+  else if(_FORGE_DESIGN_PROFILE==="athleanx"){if(ex.uni)s+=7;if(ex.mv==="pull")s+=4;}
   // Compound priority (v2: demoted from +10 to a tiebreaker. Compounds win when
   // close-scored, but aren't allowed to outweigh stretch-bias + method fit.)
   if(ex.t==="C")s+=(slotType==="compound"?7:5);
