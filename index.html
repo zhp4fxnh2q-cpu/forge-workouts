@@ -3227,6 +3227,16 @@ var PRESETS=[
       {phase:1,n:"Strength Base",method:"straight",goal:"balanced",split:"fb3",desc:"Straight sets, double progression, moderate effort. 5-7 exercises/session."},
       {phase:2,n:"Modified Strength Base",method:"straight",goal:"balanced",split:"fb3",desc:"Same structure, effort steps up with a partial exercise swap. No deload."},
     ]},
+  {id:"women_foundation",n:"Women's Foundation",desc:"Andrea's beginner base. Two four-week waves, effort ramping RPE 6 to 9. Lower body trained twice a week, upper twice — quality movement first, load second.",icon:"WF",cat:"size",days:4,mesoLen:4,cd:0,designProfile:"neutral",series:"women",
+    phases:[
+      {phase:1,n:"Base Wave",method:"straight",goal:"balanced",split:"ul4",desc:"Straight sets, learn the patterns, RPE builds 6 to 8. Full lower and upper each twice weekly."},
+      {phase:2,n:"Build Wave",method:"straight",goal:"balanced",split:"ul4",desc:"Second wave, effort steps to RPE 9, same movements with progressive overload."}
+    ]},
+  {id:"women_specialization",n:"Women's Specialization",desc:"Andrea's intermediate glute and lower focus. High lower-body frequency, upper twice weekly, a deload opening the second block. Posterior chain and shoulders emphasized.",icon:"WS",cat:"size",days:5,mesoLen:4,cd:0,designProfile:"neutral",series:"women",
+    phases:[
+      {phase:1,n:"Specialize Block 1",method:"straight",goal:"posterior",split:"nip5",desc:"Glute and posterior-chain emphasis. Primary lifts progressed on load, accessories on effort."},
+      {phase:2,n:"Specialize Block 2",method:"straight",goal:"posterior",split:"nip5",desc:"Opens lighter to recover, then climbs again. Same lower-focused structure, more volume."}
+    ]},
 ];
 
 // ═══ PROGRAM PHILOSOPHY / STYLE GUIDE (Fix 5) ═══
@@ -7164,7 +7174,7 @@ function Forge(props){
   var authUser=props.authUser;
   var imgViewer=useImgViewer();
   var _v=useState("setup"),view=_v[0],setView=_v[1];
-  var _sm=useState("choose"),setupMode=_sm[0],setSetupMode=_sm[1]; // "choose","preset","custom"
+  var _sm=useState("preset"),setupMode=_sm[0],setSetupMode=_sm[1]; // "choose","preset","custom"
   var _pres=useState(null),presetPick=_pres[0],setPresetPick=_pres[1];
   var _de=useState(null),designEngine=_de[0],setDesignEngine=_de[1];
   // DESIGN ENGINE activation: an explicit custom pick (designEngine) wins; otherwise the
@@ -10328,7 +10338,7 @@ function Forge(props){
             {screen==="setup"&&setupMode==="choose"&&<span style={{fontSize:10,color:C.dim,fontFamily:FD}}>Setup</span>}
           </div>
           {screen!=="setup"&&program.length>0&&<span style={{fontSize:10,color:C.dim,fontFamily:FD}}>{sessIdx.length+" sessions"}</span>}
-          {screen==="setup"&&<button onClick={function(){if(setupMode==="custom"&&step>0){setStep(step-1);}else if(setupMode==="custom"&&step===0){setSetupMode("choose");}else if(setupMode==="preset"&&presetPick){setPresetPick(null);setGoal(null);setSplit(null);setMethod(null);}else if(setupMode==="preset"&&!presetPick){setSetupMode("choose");}else if(setupMode==="choose"&&program.length>0){setScreen("dashboard");}else if(program.length>0){setScreen("dashboard");}}} style={{padding:"5px 14px",fontSize:12,fontFamily:FD,background:"transparent",border:"1px solid "+C.bdr,borderRadius:8,color:C.dim,cursor:"pointer",letterSpacing:1}}>{setupMode==="choose"&&program.length>0?"DASHBOARD":"BACK"}</button>}
+          {screen==="setup"&&<button onClick={function(){if(setupMode==="custom"&&step>0){setStep(step-1);}else if(setupMode==="custom"&&step===0){setScreen("dashboard");}else if(setupMode==="preset"&&presetPick){setPresetPick(null);setGoal(null);setSplit(null);setMethod(null);}else if(setupMode==="preset"&&!presetPick){setScreen("dashboard");}else if(setupMode==="choose"&&program.length>0){setScreen("dashboard");}else if(program.length>0){setScreen("dashboard");}}} style={{padding:"5px 14px",fontSize:12,fontFamily:FD,background:"transparent",border:"1px solid "+C.bdr,borderRadius:8,color:C.dim,cursor:"pointer",letterSpacing:1}}>{setupMode==="choose"&&program.length>0?"DASHBOARD":"BACK"}</button>}
           {screen==="workout"&&<button onClick={function(){if(editingSession&&view==="workout"){setEditingSession(null);setScreen("dashboard");setView("preview");}else if(view==="readiness")setScreen("dashboard");else if(view==="workout")setView("readiness");else if(view==="edit")setView("preview");else if(view==="preview"){setScreen("dashboard");}else if(view==="summary")setView("workout");else if(view==="rest")setView("summary");setEditDay(null);setEditPick(null);}} style={{minHeight:44,minWidth:44,padding:"5px 14px",fontSize:12,fontFamily:FD,background:"transparent",border:"1px solid "+C.bdr,borderRadius:8,color:C.dim,cursor:"pointer",letterSpacing:1}}>BACK</button>}
         </div>
       </div>
@@ -10346,6 +10356,7 @@ function Forge(props){
 
       {/* ═══ SETUP ═══ */}
       {screen==="setup"&&(<div className="view-slide">
+        {!(setupMode==="preset"&&presetPick)&&(<div style={{display:"flex",gap:6,margin:"16px 0 6px",justifyContent:"center",flexWrap:"wrap"}}>{[{id:"athleanx",n:"AthleanX"},{id:"nippard",n:"Nippard"},{id:"women",n:"Women"},{id:"custom",n:"Custom"}].map(function(t){var on=(t.id==="custom")?(setupMode==="custom"):(setupMode==="preset"&&presetTab===t.id);return <button key={t.id} onClick={function(){if(t.id==="custom"){setSetupMode("custom");setStep(0);setPresetPick(null);}else{setSetupMode("preset");setPresetTab(t.id);setPresetPick(null);}}} style={{padding:"9px 20px",fontSize:13,fontFamily:FD,fontWeight:700,letterSpacing:1,background:on?(C.acc+"20"):"transparent",color:on?C.acc:C.dim,border:"1px solid "+(on?(C.acc+"60"):C.bdr),borderRadius:20,cursor:"pointer"}}>{t.n}</button>;})}</div>)}
         {/* ═══ CHOOSE MODE: Preset or Custom ═══ */}
         {setupMode==="choose"&&(<div>
           <div style={{textAlign:"center",padding:"24px 0 16px"}}><div style={{fontSize:30,fontFamily:FD,letterSpacing:3}}>BUILD YOUR PROGRAM</div><div style={{fontSize:12,color:C.dim,marginTop:4}}>Choose a path</div></div>
@@ -10363,11 +10374,10 @@ function Forge(props){
 
         {/* ═══ PRESET PROGRAMS ═══ */}
         {setupMode==="preset"&&(<div>
-          <div style={{textAlign:"center",padding:"24px 0 16px"}}><div style={{fontSize:30,fontFamily:FD,letterSpacing:3}}>{presetTab==="nippard"?"NIPPARD":"ATHLEANX"}</div><div style={{fontSize:12,color:C.dim,marginTop:4}}>Select a program and phase</div></div>
+          <div style={{textAlign:"center",padding:"24px 0 16px"}}><div style={{fontSize:30,fontFamily:FD,letterSpacing:3}}>{presetTab==="nippard"?"NIPPARD":(presetTab==="women"?"WOMEN":"ATHLEANX")}</div><div style={{fontSize:12,color:C.dim,marginTop:4}}>{presetTab==="women"?"Andrea's programs — select a program and phase":"Select a program and phase"}</div></div>
           {!presetPick&&(<div>
-            <div style={{display:"flex",gap:8,marginBottom:16,justifyContent:"center"}}>{[{id:"athleanx",n:"AthleanX"},{id:"nippard",n:"Nippard"}].map(function(t){var on=presetTab===t.id;return <button key={t.id} onClick={function(){setPresetTab(t.id);}} style={{padding:"9px 22px",fontSize:14,fontFamily:FD,fontWeight:700,letterSpacing:1,background:on?(C.acc+"20"):"transparent",color:on?C.acc:C.dim,border:"1px solid "+(on?(C.acc+"60"):C.bdr),borderRadius:20,cursor:"pointer"}}>{t.n}</button>;})}</div>
             {(function(){var cats=[{id:"size",n:"MUSCLE SIZE",c:C.acc},{id:"athletic",n:"ATHLETIC",c:C.blu},{id:"cut",n:"FAT LOSS",c:C.red},{id:"health",n:"LONGEVITY",c:C.grn}];
-              return cats.map(function(cat){var progs=PRESETS.filter(function(p){var trad=(p.designProfile==="nippard")?"nippard":"athleanx";return p.cat===cat.id&&trad===presetTab;});if(progs.length===0)return null;
+              return cats.map(function(cat){var progs=PRESETS.filter(function(p){var trad=(p.series==="women")?"women":((p.designProfile==="nippard")?"nippard":"athleanx");return p.cat===cat.id&&trad===presetTab;});if(progs.length===0)return null;
                 return <div key={cat.id} style={{marginBottom:16}}>
                   <div style={{fontSize:12,fontWeight:700,fontFamily:FD,letterSpacing:2,color:cat.c,marginBottom:8}}>{cat.n}</div>
                   {progs.map(function(p){return <button key={p.id} onClick={function(){setPresetPick(p.id);setPresetPhase(0);setGoal(null);setMethod(null);setSplit(null);}} style={{width:"100%",textAlign:"left",padding:"14px 16px",marginBottom:8,background:C.bar,border:"1px solid "+C.bdr,borderRadius:12,cursor:"pointer",display:"flex",alignItems:"center",gap:12}}>
@@ -10375,7 +10385,7 @@ function Forge(props){
                     <div style={{flex:1}}><div style={{fontSize:15,fontWeight:700,color:C.txt,fontFamily:FD}}>{p.n}</div><div style={{fontSize:11,color:C.dim,marginTop:2,lineHeight:1.4}}>{p.desc}</div><div style={{fontSize:10,color:C.mid,marginTop:3}}>{p.days+" days/wk • "+p.phases.length+" phases • "+p.mesoLen+" wk mesos"}</div></div>
                   </button>;})}
                 </div>;});})()}
-            <div style={{marginTop:4}}>{secBtn("BACK",function(){setSetupMode("choose");})}</div>
+            <div style={{marginTop:4}}>{secBtn("BACK",function(){setScreen("dashboard");})}</div>
           </div>)}
           {presetPick&&(function(){var p=PRESETS.find(function(x){return x.id===presetPick;});if(!p)return null;var catC=p.cat==="size"?C.acc:p.cat==="athletic"?C.blu:p.cat==="cut"?C.red:C.grn;
             return <div>
@@ -10489,7 +10499,7 @@ function Forge(props){
         </div>)}
 
         <div style={{display:"flex",gap:10,marginTop:4}}>
-          {step===0?secBtn("BACK",function(){setSetupMode("choose");}):secBtn("BACK",function(){setStep(step-1);})}
+          {step===0?secBtn("BACK",function(){setScreen("dashboard");}):secBtn("BACK",function(){setStep(step-1);})}
           {step<3?mainBtn("NEXT",function(){
             // When advancing from step 1 with a fully-locked split (no userChoice days),
             // auto-set method and skip step 2 entirely
