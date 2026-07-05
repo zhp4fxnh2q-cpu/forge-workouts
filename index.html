@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-29";
+  window.FORGE_BUILD="2026.07.03-30";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -5582,6 +5582,8 @@ function isBandExercise(ex){
 var _FORGE_DESIGN_PROFILE="neutral";
 function _setDesignProfile(p){_FORGE_DESIGN_PROFILE=(p==="athleanx"||p==="nippard")?p:"neutral";return _FORGE_DESIGN_PROFILE;}
 function getDesignProfile(){return _FORGE_DESIGN_PROFILE;}
+// Per-engine coaching cue appended to working-exercise notes — reflects each philosophy in original words.
+function _engineNote(n){var b=n||"";if(_FORGE_DESIGN_PROFILE==="athleanx")return (b?b+"  ":"")+"AthleanX: control the eccentric, full range, protect the joint.";if(_FORGE_DESIGN_PROFILE==="nippard")return (b?b+"  ":"")+"Nippard: chase the stretch, log every set, aim to beat last session.";return b;}
 function scoreEx(ex,mid,hist,goalId,slotType,equipFilter,muscle,priorityMuscle,weekNum,mesoLen){
   // slotType: "compound","isolation","any" — helps contextualize scoring
   // equipFilter: "band","bw","db",null — from preset selection
@@ -6580,7 +6582,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
         // V2: Per-exercise method assignment
         var _exMethod=assignExerciseMethod(ex,muscle,_dayMid,splitObj.dayMethodRules,day.n);
         var note=phase==="deload"?"DELOAD: 50% weight, easy reps. Should feel refreshing.":(_dayRule?day.n.toUpperCase()+": "+reps+" @ "+_exRir+" RIR":"W"+wk+" / "+rir+" RIR / "+phase);
-        exs.push({name:ex.n,muscle:muscle,tech:tech,sets:sets,reps:reps,time:eTime,mv:ex.mv,note:note,rir:_exRir,lastSetToFail:_lastFail,lastSetRir:_lastRir,exMethod:_exMethod.method,exMethodSource:_exMethod.source,exClass:getExerciseClass(ex,muscle),t:ex.t});
+        exs.push({name:ex.n,muscle:muscle,tech:tech,sets:sets,reps:reps,time:eTime,mv:ex.mv,note:_engineNote(note),rir:_exRir,lastSetToFail:_lastFail,lastSetRir:_lastRir,exMethod:_exMethod.method,exMethodSource:_exMethod.source,exClass:getExerciseClass(ex,muscle),t:ex.t});
         _groupExAdded++;
         if(isComp)firstComp=false;used+=eTime;groupUsed+=eTime;
       });
