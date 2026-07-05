@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-18";
+  window.FORGE_BUILD="2026.07.03-19";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -2414,6 +2414,62 @@ var SPLITS=[
 ];
 // Wire calves into every leg day (any day training quads or hams) so the calf library actually gets programmed.
 (function(){for(var si=0;si<SPLITS.length;si++){var lay=SPLITS[si].layout||[];for(var di=0;di<lay.length;di++){var g=lay[di].g||[];var legDay=(g.indexOf("quads")>=0||g.indexOf("hams")>=0);if(legDay){if(g.indexOf("calves")<0)g.push("calves");if(g.indexOf("glutes")<0)g.push("glutes");}}}})();
+// ── Missing-exercise gap fill (31 DB/band/bodyweight movements) — pushed into their EX groups at load ──
+(function(){
+  var ADD={
+    hams:[
+      {n:"Nordic Curl (anchored, negatives)",t:"B",mv:"curl",m:6,myo:0,drop:0,len:"L",pat:"iso",fat:2,uni:0,ss:"siso"},
+      {n:"Band-Assisted Nordic Curl",t:"I",mv:"curl",m:5,myo:0,drop:0,len:"L",pat:"iso",fat:2,uni:0,ss:"siso"},
+      {n:"DB Deficit RDL",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"L",pat:"hi",fat:3,uni:0,ss:"hd"},
+      {n:"DB Stiff-Leg Deadlift",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"L",pat:"hi",fat:2,uni:0,ss:"hd"},
+      {n:"Slider Hamstring Curl (bent-knee)",t:"B",mv:"curl",m:5,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"}
+    ],
+    glutes:[
+      {n:"Band Fire Hydrant",t:"I",mv:"squat",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:1,ss:"siso"},
+      {n:"Band Lateral Monster Walk",t:"I",mv:"squat",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},
+      {n:"DB Single-Leg Glute Bridge",t:"I",mv:"squat",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:1,ss:"siso"},
+      {n:"DB Kickstand RDL",t:"C",mv:"squat",m:5,myo:0,drop:0,len:"L",pat:"hi",fat:2,uni:1,ss:"hd"},
+      {n:"Band Standing Glute Kickback",t:"I",mv:"squat",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:1,ss:"siso"}
+    ],
+    calves:[
+      {n:"DB Standing Single-Leg Calf Raise",t:"I",mv:"squat",m:4,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:1,ss:"siso"},
+      {n:"Band Seated Calf Raise",t:"I",mv:"squat",m:3,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},
+      {n:"Bodyweight Wall Calf Raise",t:"B",mv:"squat",m:4,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},
+      {n:"DB Donkey Calf Raise",t:"I",mv:"squat",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"}
+    ],
+    biceps:[
+      {n:"DB Zottman Curl",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},
+      {n:"DB Reverse Curl",t:"I",mv:"curl",m:4,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},
+      {n:"DB Preacher-Style Curl",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"}
+    ],
+    triceps:[
+      {n:"DB Half-Kneeling Overhead Extension",t:"I",mv:"press",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:1,ss:"siso"},
+      {n:"Band Triceps Kickback",t:"I",mv:"press",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:1,ss:"siso"}
+    ],
+    shoulders:[
+      {n:"DB Leaning Rear Delt Fly",t:"I",mv:"pull",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:1,ss:"siso"},
+      {n:"DB Cuban Press",t:"C",mv:"press",m:5,myo:0,drop:0,len:"M",pat:"vp",fat:2,uni:0,ss:"push"}
+    ],
+    chest:[
+      {n:"DB Decline Floor Press",t:"C",mv:"press",m:5,myo:0,drop:1,len:"M",pat:"hp",fat:2,uni:0,ss:"push"},
+      {n:"DB Svend Press",t:"I",mv:"press",m:4,myo:1,drop:1,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"}
+    ],
+    back:[
+      {n:"DB Seal Row",t:"C",mv:"pull",m:6,myo:0,drop:1,len:"M",pat:"hpl",fat:2,uni:0,ss:"pull"},
+      {n:"Band Straight-Arm Pulldown",t:"I",mv:"pull",m:4,myo:1,drop:0,len:"L",pat:"vpl",fat:1,uni:0,ss:"siso"}
+    ],
+    quads:[
+      {n:"DB Sissy Squat",t:"B",mv:"squat",m:5,myo:1,drop:0,len:"L",pat:"sq",fat:2,uni:0,ss:"qd"},
+      {n:"DB Walking Lunges",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"L",pat:"sq",fat:3,uni:1,ss:"qd"}
+    ],
+    core:[
+      {n:"Side Plank Hold",t:"B",mv:"press",m:4,myo:0,drop:0,len:"S",pat:"cor",fat:1,uni:1,ss:"none"},
+      {n:"Side Plank Hip Dip",t:"I",mv:"press",m:4,myo:1,drop:0,len:"M",pat:"cor",fat:1,uni:1,ss:"none"},
+      {n:"DB Side Bend",t:"I",mv:"curl",m:4,myo:1,drop:1,len:"L",pat:"cor",fat:1,uni:1,ss:"none"}
+    ]
+  };
+  for(var mk in ADD){if(EX[mk]){for(var i=0;i<ADD[mk].length;i++){EX[mk].push(ADD[mk][i]);}}}
+})();
 // Helper: check if a split is method-locked
 function isSplitLocked(splitId){var s=SPLITS.find(function(x){return x.id===splitId;});return s&&s.methodPolicy==="locked";}
 function getSplitLockedInfo(splitId){var s=SPLITS.find(function(x){return x.id===splitId;});return (s&&s.lockedInfo)||null;}
