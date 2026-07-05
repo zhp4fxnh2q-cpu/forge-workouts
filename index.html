@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-25";
+  window.FORGE_BUILD="2026.07.03-26";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -6731,7 +6731,8 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
 
       // ── PRIORITY 2: FIRST PRIMER (pick the compound one — most bang for buck) ──
       // Choose the primer for the PRIMARY muscle on this day (first compound-heavy muscle)
-      if(_extFree>=2){
+      // DESIGN ENGINE — AthleanX always opens with an activation primer (its tier-1 signature).
+      if(_extFree>=2||_FORGE_DESIGN_PROFILE==="athleanx"){
         // Rank muscles: prefer compound-heavy (quads>hams>back>chest>shoulders) over small
         var _primerOrder=["quads","hams","back","chest","shoulders","core","biceps","triceps"];
         var _primerMuscle=null;
@@ -6749,7 +6750,8 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       }
 
       // ── PRIORITY 3: CORRECTIVE (joint health) ──
-      if(_extFree>=2){
+      // DESIGN ENGINE — AthleanX guarantees joint-health work every session (its core DNA).
+      if(_extFree>=2||_FORGE_DESIGN_PROFILE==="athleanx"){
         var dayType="push";
         var hasPull=day.g.indexOf("back")>=0||day.g.indexOf("biceps")>=0;
         var hasLegs=day.g.indexOf("quads")>=0||day.g.indexOf("hams")>=0;
