@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-16";
+  window.FORGE_BUILD="2026.07.03-17";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -2412,6 +2412,8 @@ var SPLITS=[
   {id:"ppl6",n:"PPL x2",d:6,methodPolicy:"agnostic",desc:"Push/Pull/Legs twice per week. High frequency + high volume for advanced.",layout:[{n:"Push A",g:["chest","shoulders","triceps"]},{n:"Pull A",g:["back","biceps"]},{n:"Legs A",g:["quads","hams","core"]},{n:"Push B",g:["shoulders","chest","triceps"]},{n:"Pull B",g:["back","biceps"]},{n:"Legs B",g:["hams","quads","core"]}]},
   {id:"arn6",n:"Arnold Split",d:6,methodPolicy:"agnostic",desc:"Chest+Back supersets, Shoulders+Arms, Legs. Classic high-volume. Needs caloric surplus.",layout:[{n:"Chest+Back A",g:["chest","back"]},{n:"Shoulders+Arms A",g:["shoulders","biceps","triceps"]},{n:"Legs A",g:["quads","hams","core"]},{n:"Chest+Back B",g:["back","chest"]},{n:"Shoulders+Arms B",g:["triceps","biceps","shoulders"]},{n:"Legs B",g:["hams","quads","core"]}]},
 ];
+// Wire calves into every leg day (any day training quads or hams) so the calf library actually gets programmed.
+(function(){for(var si=0;si<SPLITS.length;si++){var lay=SPLITS[si].layout||[];for(var di=0;di<lay.length;di++){var g=lay[di].g||[];if((g.indexOf("quads")>=0||g.indexOf("hams")>=0)&&g.indexOf("calves")<0)g.push("calves");}}})();
 // Helper: check if a split is method-locked
 function isSplitLocked(splitId){var s=SPLITS.find(function(x){return x.id===splitId;});return s&&s.methodPolicy==="locked";}
 function getSplitLockedInfo(splitId){var s=SPLITS.find(function(x){return x.id===splitId;});return (s&&s.lockedInfo)||null;}
@@ -3738,7 +3740,8 @@ var VOL_LM={
   triceps:  {mev:6, mav:12, mrv:18, cap:6, evidence:'DIRECT'},
   quads:    {mev:8, mav:14, mrv:20, cap:6, evidence:'DIRECT'},
   hams:     {mev:6, mav:12, mrv:18, cap:6, evidence:'EXTRAPOLATED'},
-  core:     {mev:4, mav:10, mrv:16, cap:6, evidence:'EXTRAPOLATED'}
+  core:     {mev:4, mav:10, mrv:16, cap:6, evidence:'EXTRAPOLATED'},
+  calves:   {mev:6, mav:12, mrv:16, cap:6, evidence:'EXTRAPOLATED'}
 };
 // ═══ INDIRECT VOLUME OVERLAP v2 ═══
 // Compound movements transfer fractional credit to their secondary muscles. Numbers
