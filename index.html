@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-20";
+  window.FORGE_BUILD="2026.07.03-21";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -9114,7 +9114,8 @@ function Forge(props){
       if(mg==="cardio")return;
       var pool=EX[mg]||[];
       pool.forEach(function(ex){
-        var st=detectStall(exHist[ex.n]||[]);
+        var _ciH=exHist[ex.n]||[];var _ciT=(typeof findExerciseTech==="function")?findExerciseTech(ex.n):null;if(_ciH.length)_ciH=normHistForType(_ciH,_ciT||"straight");
+        var st=detectStall(_ciH);
         if(st>=2){if(!stallCount[mg])stallCount[mg]=0;stallCount[mg]++;}
       });
     });
@@ -9444,6 +9445,9 @@ function Forge(props){
   // ═══ WIRE UP: shouldSwap in edit/workout view ═══
   function checkSwap(exName){
     var hist=exHist[exName];
+    // STALL FIX: same-method comparison only (see getStallLevel) — don't suggest a swap from cross-method noise.
+    var _swTech=(typeof findExerciseTech==="function")?findExerciseTech(exName):null;
+    if(hist&&hist.length)hist=normHistForType(hist,_swTech||"straight");
     var fb={perf:fPerf,recovery:fRecovery,disruption:fDisrupt,joint:fJoint};
     return shouldSwap(hist,fb);
   }
