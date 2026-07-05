@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-24";
+  window.FORGE_BUILD="2026.07.03-25";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -4137,7 +4137,10 @@ function calcWeekVol(muscle,wk,ml,goalMul,fbAdj,primarySetsMap,specBdg){
   var denom=Math.max(1,ml-1);
   var progress=Math.sqrt(Math.max(0,wk-1)/denom);
   if(progress>1)progress=1;
-  var base=lm.mev+Math.round((lm.mav-lm.mev)*progress);
+  // DESIGN ENGINE — Nippard accumulates volume harder toward MRV across the block (block-
+  // periodization signature); neutral + AthleanX ramp to MAV as before.
+  var _volTop=(_FORGE_DESIGN_PROFILE==="nippard")?Math.round((lm.mav+lm.mrv)/2):lm.mav;
+  var base=lm.mev+Math.round((_volTop-lm.mev)*progress);
   // V2 #6: Apply specialization multiplier if budget has points for this muscle
   var specMul = specBdg ? getSpecMultiplier(muscle, specBdg) : 1.0;
   base=Math.round(base*(goalMul||1)*specMul);
