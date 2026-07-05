@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-15";
+  window.FORGE_BUILD="2026.07.03-16";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -2277,6 +2277,22 @@ var EX={
     {n:"V-Ups",t:"B",mv:"pull",m:4,myo:0,drop:0,len:"M",pat:"cor",fat:1,uni:0,ss:"none"},                   // Xero/Built
     {n:"Reverse Crunches",t:"B",mv:"pull",m:4,myo:0,drop:0,len:"S",pat:"cor",fat:1,uni:0,ss:"none"},        // Built: lower ab focused
     {n:"Dead Bugs (weighted)",t:"I",mv:"press",m:4,myo:0,drop:0,len:"M",pat:"cor",fat:1,uni:0,ss:"none"},   // Built Longevity: DB held
+  ],
+  calves:[
+    // Calves were a phantom muscle (in LEG_MUSCLES + rep tables but zero exercises). DB/band/bodyweight, lengthened-bias where possible.
+    {n:"DB Standing Calf Raise",t:"I",mv:"squat",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"},
+    {n:"DB Single-Leg Calf Raise",t:"I",mv:"squat",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:1,ss:"siso"},
+    {n:"Deficit Bodyweight Calf Raise",t:"B",mv:"squat",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"},   // stair-edge deep stretch — highest-confidence lengthened translation
+    {n:"DB Seated Calf Raise",t:"I",mv:"squat",m:4,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},           // soleus bias (bent knee)
+    {n:"Band Calf Raise",t:"I",mv:"squat",m:3,myo:1,drop:0,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"},
+  ],
+  glutes:[
+    // Glutes were folded into hams/quads with no dedicated pool. DB/band/bodyweight glute-biased.
+    {n:"DB Glute Bridge",t:"I",mv:"squat",m:5,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},
+    {n:"DB B-Stance Hip Thrust",t:"I",mv:"squat",m:5,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:1,ss:"siso"},
+    {n:"DB Frog Pump",t:"I",mv:"squat",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},
+    {n:"Band Hip Abduction",t:"I",mv:"squat",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},
+    {n:"DB Curtsy Lunge",t:"C",mv:"squat",m:5,myo:0,drop:0,len:"L",pat:"squat",fat:2,uni:1,ss:"none"},
   ],
   cardio:[
     {n:"Assault Bike Tabata (4 min)",t:"H",mv:"cardio",m:5,len:"N",pat:"cardio",fat:3,uni:0,ss:"none"},
