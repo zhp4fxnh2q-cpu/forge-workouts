@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-23";
+  window.FORGE_BUILD="2026.07.03-24";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -7094,9 +7094,11 @@ function Forge(props){
   var _v=useState("setup"),view=_v[0],setView=_v[1];
   var _sm=useState("choose"),setupMode=_sm[0],setSetupMode=_sm[1]; // "choose","preset","custom"
   var _pres=useState(null),presetPick=_pres[0],setPresetPick=_pres[1];
-  // DESIGN ENGINE activation: the AthleanX-inspired presets run the "athleanx" engine;
-  // My Choice / custom (no preset) runs "neutral". Kept in sync so it can never get stuck.
-  useEffect(function(){ if(typeof _setDesignProfile==="function") _setDesignProfile(presetPick?"athleanx":"neutral"); },[presetPick]);
+  var _de=useState(null),designEngine=_de[0],setDesignEngine=_de[1];
+  // DESIGN ENGINE activation: an explicit custom pick (designEngine) wins; otherwise the
+  // AthleanX-inspired presets run the "athleanx" engine and My Choice runs "neutral".
+  // Kept in sync so it can never get stuck.
+  useEffect(function(){ if(typeof _setDesignProfile==="function") _setDesignProfile(designEngine || (presetPick?"athleanx":"neutral")); },[presetPick,designEngine]);
   var _pcd=useState(null),presetCd=_pcd[0],setPresetCd=_pcd[1];
   var _st=useState(0),step=_st[0],setStep=_st[1];
   var _gl=useState(null),goal=_gl[0],setGoal=_gl[1];
@@ -10335,6 +10337,10 @@ function Forge(props){
               <div style={{fontSize:11,color:C.mid,marginTop:3,lineHeight:1.4}}>{g.desc}</div>
               {g.cd>0&&<div style={{fontSize:9,color:C.red,marginTop:3,fontFamily:FD}}>+CARDIO</div>}
             </button>;})}</div>
+          <div style={{marginTop:16,borderTop:"1px solid "+C.bdr,paddingTop:14}}>{hd("DESIGN ENGINE")}
+          <div style={{fontSize:11,color:C.dim,marginBottom:8,lineHeight:1.5}}>How the program is BUILT. Neutral = pure science. AthleanX = athletic + joint-health bias (unilateral, rear-delt/pull). Nippard = lengthened-partial / stimulus-to-fatigue bias.</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:5}}>{pill("Neutral",!designEngine||designEngine==="neutral",C.mid,function(){setDesignEngine("neutral");},"de-n")}{pill("AthleanX",designEngine==="athleanx",C.acc,function(){setDesignEngine("athleanx");},"de-a")}{pill("Nippard",designEngine==="nippard",C.blu,function(){setDesignEngine("nippard");},"de-p")}</div>
+          </div>
         </div>)}
 
         {step===1&&cd(<div>{hd("HOW MANY DAYS/WEEK?")}
