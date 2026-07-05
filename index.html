@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-35";
+  window.FORGE_BUILD="2026.07.03-36";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -7221,7 +7221,7 @@ function Forge(props){
   var authUser=props.authUser;
   var imgViewer=useImgViewer();
   var _v=useState("setup"),view=_v[0],setView=_v[1];
-  var _sm=useState("preset"),setupMode=_sm[0],setSetupMode=_sm[1]; // "choose","preset","custom"
+  var _sm=useState("choose"),setupMode=_sm[0],setSetupMode=_sm[1]; // "choose","preset","custom"
   var _pres=useState(null),presetPick=_pres[0],setPresetPick=_pres[1];
   var _de=useState(null),designEngine=_de[0],setDesignEngine=_de[1];
   // DESIGN ENGINE activation: an explicit custom pick (designEngine) wins; otherwise the
@@ -10385,8 +10385,8 @@ function Forge(props){
             {screen==="setup"&&setupMode==="choose"&&<span style={{fontSize:10,color:C.dim,fontFamily:FD}}>Setup</span>}
           </div>
           {screen!=="setup"&&program.length>0&&<span style={{fontSize:10,color:C.dim,fontFamily:FD}}>{sessIdx.length+" sessions"}</span>}
-          {screen==="setup"&&<button onClick={function(){if(setupMode==="custom"&&step>0){setStep(step-1);}else if(setupMode==="custom"&&step===0){setScreen("dashboard");}else if(setupMode==="preset"&&presetPick){setPresetPick(null);setGoal(null);setSplit(null);setMethod(null);}else if(setupMode==="preset"&&!presetPick){setScreen("dashboard");}else if(setupMode==="choose"&&program.length>0){setScreen("dashboard");}else if(program.length>0){setScreen("dashboard");}}} style={{padding:"5px 14px",fontSize:12,fontFamily:FD,background:"transparent",border:"1px solid "+C.bdr,borderRadius:8,color:C.dim,cursor:"pointer",letterSpacing:1}}>{setupMode==="choose"&&program.length>0?"DASHBOARD":"BACK"}</button>}
-          {screen==="workout"&&<button onClick={function(){if(editingSession&&view==="workout"){setEditingSession(null);setScreen("dashboard");setView("preview");}else if(view==="readiness")setScreen("dashboard");else if(view==="workout")setView("readiness");else if(view==="edit")setView("preview");else if(view==="preview"){setScreen("dashboard");}else if(view==="summary")setView("workout");else if(view==="rest")setView("summary");setEditDay(null);setEditPick(null);}} style={{minHeight:44,minWidth:44,padding:"5px 14px",fontSize:12,fontFamily:FD,background:"transparent",border:"1px solid "+C.bdr,borderRadius:8,color:C.dim,cursor:"pointer",letterSpacing:1}}>BACK</button>}
+          {screen==="setup"&&<button onClick={function(){if(setupMode==="custom"&&step>0){setStep(step-1);}else if(setupMode==="custom"&&step===0){setSetupMode("choose");}else if(setupMode==="preset"&&presetPick){setPresetPick(null);setGoal(null);setSplit(null);setMethod(null);}else if(setupMode==="preset"&&!presetPick){setSetupMode("choose");}else if(setupMode==="choose"&&program.length>0){setScreen("dashboard");}else if(program.length>0){setScreen("dashboard");}}} style={{padding:"5px 14px",fontSize:12,fontFamily:FD,background:"transparent",border:"1px solid "+C.bdr,borderRadius:8,color:C.dim,cursor:"pointer",letterSpacing:1}}>{setupMode==="choose"&&program.length>0?"DASHBOARD":"BACK"}</button>}
+          {screen==="workout"&&<button onClick={function(){if(editingSession&&view==="workout"){setEditingSession(null);setScreen("dashboard");setView("preview");}else if(view==="readiness")setScreen("dashboard");else if(view==="workout")setView("readiness");else if(view==="edit"){if(reviewMode){setReviewMode(false);setScreen("setup");setView("setup");}else{setView("preview");}}else if(view==="preview"){setScreen("dashboard");}else if(view==="summary")setView("workout");else if(view==="rest")setView("summary");setEditDay(null);setEditPick(null);}} style={{minHeight:44,minWidth:44,padding:"5px 14px",fontSize:12,fontFamily:FD,background:"transparent",border:"1px solid "+C.bdr,borderRadius:8,color:C.dim,cursor:"pointer",letterSpacing:1}}>BACK</button>}
         </div>
       </div>
 
@@ -10403,19 +10403,19 @@ function Forge(props){
 
       {/* ═══ SETUP ═══ */}
       {screen==="setup"&&(<div className="view-slide">
-        {!(setupMode==="preset"&&presetPick)&&(<div style={{display:"flex",gap:6,margin:"16px 0 6px",justifyContent:"center",flexWrap:"wrap"}}>{[{id:"athleanx",n:"AthleanX"},{id:"nippard",n:"Nippard"},{id:"women",n:"Women"},{id:"custom",n:"Custom"}].map(function(t){var on=(t.id==="custom")?(setupMode==="custom"):(setupMode==="preset"&&presetTab===t.id);return <button key={t.id} onClick={function(){if(t.id==="custom"){setSetupMode("custom");setStep(0);setPresetPick(null);}else{setSetupMode("preset");setPresetTab(t.id);setPresetPick(null);}}} style={{padding:"9px 20px",fontSize:13,fontFamily:FD,fontWeight:700,letterSpacing:1,background:on?(C.acc+"20"):"transparent",color:on?C.acc:C.dim,border:"1px solid "+(on?(C.acc+"60"):C.bdr),borderRadius:20,cursor:"pointer"}}>{t.n}</button>;})}</div>)}
+        {setupMode!=="choose"&&!(setupMode==="preset"&&presetPick)&&(<div style={{display:"flex",gap:6,margin:"16px 0 6px",justifyContent:"center",flexWrap:"wrap"}}>{[{id:"athleanx",n:"AthleanX"},{id:"nippard",n:"Nippard"},{id:"women",n:"Women"},{id:"custom",n:"Custom"}].map(function(t){var on=(t.id==="custom")?(setupMode==="custom"):(setupMode==="preset"&&presetTab===t.id);return <button key={t.id} onClick={function(){if(t.id==="custom"){setSetupMode("custom");setStep(0);setPresetPick(null);}else{setSetupMode("preset");setPresetTab(t.id);setPresetPick(null);}}} style={{padding:"9px 20px",fontSize:13,fontFamily:FD,fontWeight:700,letterSpacing:1,background:on?(C.acc+"20"):"transparent",color:on?C.acc:C.dim,border:"1px solid "+(on?(C.acc+"60"):C.bdr),borderRadius:20,cursor:"pointer"}}>{t.n}</button>;})}</div>)}
         {/* ═══ CHOOSE MODE: Preset or Custom ═══ */}
         {setupMode==="choose"&&(<div>
-          <div style={{textAlign:"center",padding:"24px 0 16px"}}><div style={{fontSize:30,fontFamily:FD,letterSpacing:3}}>BUILD YOUR PROGRAM</div><div style={{fontSize:12,color:C.dim,marginTop:4}}>Choose a path</div></div>
-          <div style={{display:"flex",gap:10,marginBottom:20}}>
-            <button onClick={function(){setSetupMode("preset");}} style={{flex:1,padding:"20px 16px",background:C.acc+"12",border:"2px solid "+C.acc+"50",borderRadius:16,cursor:"pointer",textAlign:"center"}}>
-              <div style={{fontSize:20,fontFamily:FD,letterSpacing:2,color:C.acc}}>AX PROGRAMS</div>
-              <div style={{fontSize:11,color:C.mid,marginTop:6,lineHeight:1.5}}>AthleanX-inspired presets. Pick a program, choose your phase, adjust time.</div>
-            </button>
-            <button onClick={function(){setSetupMode("custom");setStep(0);setPresetCd(null);setPresetPick(null);}} style={{flex:1,padding:"20px 16px",background:C.blu+"12",border:"2px solid "+C.blu+"50",borderRadius:16,cursor:"pointer",textAlign:"center"}}>
-              <div style={{fontSize:20,fontFamily:FD,letterSpacing:2,color:C.blu}}>CUSTOM BUILD</div>
-              <div style={{fontSize:11,color:C.mid,marginTop:6,lineHeight:1.5}}>Pick your goal, split, method, and session length from scratch.</div>
-            </button>
+          <div style={{textAlign:"center",padding:"24px 0 16px"}}><div style={{fontSize:30,fontFamily:FD,letterSpacing:3}}>BUILD YOUR PROGRAM</div><div style={{fontSize:12,color:C.dim,marginTop:4}}>Four ways to train — pick one to explore</div></div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:10,marginBottom:20}}>
+            {[{id:"athleanx",mode:"preset",c:C.acc,t:"ATHLEANX",d:"Athletic, joint-friendly sessions built in tiers with a metabolic finisher and corrective work every day. Jacked, Max Shred, All American Muscle and more."},
+              {id:"nippard",mode:"preset",c:C.grn,t:"NIPPARD",d:"Evidence-based and periodized — weekly volume ramps to a ceiling, effort managed by RIR, blocks build toward a peak. Pure Bodybuilding, Powerbuilding."},
+              {id:"women",mode:"preset",c:C.red,t:"WOMEN",d:"Andrea's programs — glute and lower-body focus, high lower frequency, wave-loaded effort. Foundation and Specialization."},
+              {id:"custom",mode:"custom",c:C.blu,t:"CUSTOM",d:"Build your own from scratch — choose goal, split, training method, and session length. Neutral engine, every call is yours."}
+            ].map(function(o){return <button key={o.id} onClick={function(){if(o.mode==="custom"){setSetupMode("custom");setStep(0);setPresetCd(null);setPresetPick(null);}else{setSetupMode("preset");setPresetTab(o.id);setPresetPick(null);}}} style={{flex:"1 1 44%",minWidth:220,padding:"18px 16px",background:o.c+"12",border:"2px solid "+o.c+"50",borderRadius:16,cursor:"pointer",textAlign:"left"}}>
+              <div style={{fontSize:19,fontFamily:FD,letterSpacing:2,color:o.c}}>{o.t}</div>
+              <div style={{fontSize:11,color:C.mid,marginTop:6,lineHeight:1.5}}>{o.d}</div>
+            </button>;})}
           </div>
         </div>)}
 
@@ -10432,7 +10432,7 @@ function Forge(props){
                     <div style={{flex:1}}><div style={{fontSize:15,fontWeight:700,color:C.txt,fontFamily:FD}}>{p.n}</div><div style={{fontSize:11,color:C.dim,marginTop:2,lineHeight:1.4}}>{p.desc}</div><div style={{fontSize:10,color:C.mid,marginTop:3}}>{p.days+" days/wk • "+p.phases.length+" phases • "+p.mesoLen+" wk mesos"}</div></div>
                   </button>;})}
                 </div>;});})()}
-            <div style={{marginTop:4}}>{secBtn("BACK",function(){setScreen("dashboard");})}</div>
+            <div style={{marginTop:4}}>{secBtn("BACK",function(){setSetupMode("choose");})}</div>
           </div>)}
           {presetPick&&(function(){var p=PRESETS.find(function(x){return x.id===presetPick;});if(!p)return null;var catC=p.cat==="size"?C.acc:p.cat==="athletic"?C.blu:p.cat==="cut"?C.red:C.grn;
             return <div>
@@ -10546,7 +10546,7 @@ function Forge(props){
         </div>)}
 
         <div style={{display:"flex",gap:10,marginTop:4}}>
-          {step===0?secBtn("BACK",function(){setScreen("dashboard");}):secBtn("BACK",function(){setStep(step-1);})}
+          {step===0?secBtn("BACK",function(){setSetupMode("choose");}):secBtn("BACK",function(){setStep(step-1);})}
           {step<3?mainBtn("NEXT",function(){
             // When advancing from step 1 with a fully-locked split (no userChoice days),
             // auto-set method and skip step 2 entirely
@@ -11185,7 +11185,7 @@ function Forge(props){
         {/* Program Management */}
         {cd(<div>
           {hd("PROGRAM")}
-          <button onClick={function(){if(!confirm("Start a new program? Your history and PRs will be kept, but your current meso progress will reset."))return;setWeekNum(1);setADay(0);setCompletedDays([]);setRestDaysChecked([]);sSet("forge_completedDays",[]);sSet("forge_restdays",[]);setMesoSwaps({});sSet("forge_swaps",{});setScreen("setup");setView("setup");setStep(0);}} style={{width:"100%",padding:"12px 0",background:C.blu+"15",color:C.blu,border:"1px solid "+C.blu+"40",borderRadius:12,fontSize:13,fontWeight:700,fontFamily:FD,cursor:"pointer",marginBottom:8}}>NEW PROGRAM</button>
+          <button onClick={function(){if(!confirm("Start a new program? Your history and PRs will be kept, but your current meso progress will reset."))return;setWeekNum(1);setADay(0);setCompletedDays([]);setRestDaysChecked([]);sSet("forge_completedDays",[]);sSet("forge_restdays",[]);setMesoSwaps({});sSet("forge_swaps",{});setSetupMode("choose");setPresetPick(null);setScreen("setup");setView("setup");setStep(0);}} style={{width:"100%",padding:"12px 0",background:C.blu+"15",color:C.blu,border:"1px solid "+C.blu+"40",borderRadius:12,fontSize:13,fontWeight:700,fontFamily:FD,cursor:"pointer",marginBottom:8}}>NEW PROGRAM</button>
           <button onClick={function(){if(confirm("Reset your program and start fresh? Your workout history and PRs will be kept.")){sSet("forge_program",[]);sSet("forge_config",null);sSet("forge_completedDays",[]);sSet("forge_restdays",[]);setProgram([]);setCompletedDays([]);setRestDaysChecked([]);setWeekNum(1);setADay(0);setMesoSwaps({});sSet("forge_swaps",{});setScreen("setup");setView("setup");setStep(0);}}} style={{width:"100%",padding:"10px 0",background:"transparent",color:C.orn,border:"1px solid "+C.orn+"40",borderRadius:12,fontSize:12,fontFamily:FD,cursor:"pointer"}}>RESET PROGRAM</button>
           {sessIdx.length>0&&<button onClick={rollbackLastSession} style={{width:"100%",padding:"10px 0",background:"transparent",color:C.dim,border:"1px solid "+C.bdr,borderRadius:12,fontSize:12,fontFamily:FD,cursor:"pointer",marginBottom:8}}>UNDO LAST SESSION</button>}
           <div style={{fontSize:10,color:C.dim,marginTop:6}}>New Program keeps your config. Reset clears everything and starts over. Undo removes last session from tracking. History and PRs are always kept.</div>
@@ -12549,9 +12549,11 @@ function Forge(props){
                     return;
                   }
                   if (p.id === "new") {
-                    // Full reset to setup wizard
+                    // Full reset to setup wizard — land on the 4-option chooser
                     closeTW();
                     setProgram([]);
+                    setSetupMode("choose");
+                    setPresetPick(null);
                     setScreen("setup");
                     return;
                   }
