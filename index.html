@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-19";
+  window.FORGE_BUILD="2026.07.03-20";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -7807,6 +7807,10 @@ function Forge(props){
   // targetRir data is missing (legacy history — fall back to old behavior).
   function getStallLevel(exName) {
     var hist = exHist[exName];
+    // STALL FIX: compare like-for-like — only sessions using this exercise's CURRENT method
+    // (myo vs straight are different rep-schemes and must never be diffed against each other).
+    var _stTech = (typeof findExerciseTech === "function") ? findExerciseTech(exName) : null;
+    if (hist && hist.length) hist = normHistForType(hist, _stTech || "straight");
     if (!hist || hist.length < 2) return 0;
     var last = hist[0];
     var prev = hist[1];
@@ -7851,6 +7855,9 @@ function Forge(props){
   // whether you're at 25lb or 200lb — whenever progress truly stalls.
   function getStallStep(exName) {
     var hist = exHist[exName];
+    // STALL FIX: same-method comparison only (see getStallLevel).
+    var _stTech = (typeof findExerciseTech === "function") ? findExerciseTech(exName) : null;
+    if (hist && hist.length) hist = normHistForType(hist, _stTech || "straight");
     if (!hist || hist.length < 2) return -1;
     // Helper: best set volume from a session
     function bestVol(entry) {
