@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-32";
+  window.FORGE_BUILD="2026.07.03-31";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -7365,6 +7365,7 @@ function Forge(props){
   var _specB=useState({}),specBudget=_specB[0],setSpecBudget=_specB[1]; // V2 #6: {muscle: points} 5-point budget
   var _woState=useState({}),weightOverrides=_woState[0],setWeightOverrides=_woState[1]; // V2 #4: {exName: suggestedLbs} from transition wizard
   var _ppState=useState(1),presetPhase=_ppState[0],setPresetPhase=_ppState[1]; // V2 #4: current AX preset phase (1-indexed)
+  var _ptState=useState("athleanx"),presetTab=_ptState[0],setPresetTab=_ptState[1]; // AthleanX vs Nippard preset tab
   var _tempoPre=useState(function(){return sGet("forge_tempoPreset","hyp");}),tempoPreset=_tempoPre[0],setTempoPreset=_tempoPre[1]; // V2 #7: active tempo preset id, persisted
   var _tempoOverlay=useState(null),tempoOverlay=_tempoOverlay[0],setTempoOverlay=_tempoOverlay[1]; // V2 #7: active tempo countdown {phase,sec,rep}
   useEffect(function(){
@@ -10362,13 +10363,14 @@ function Forge(props){
 
         {/* ═══ PRESET PROGRAMS ═══ */}
         {setupMode==="preset"&&(<div>
-          <div style={{textAlign:"center",padding:"24px 0 16px"}}><div style={{fontSize:30,fontFamily:FD,letterSpacing:3}}>AX PROGRAMS</div><div style={{fontSize:12,color:C.dim,marginTop:4}}>Select a program and phase</div></div>
+          <div style={{textAlign:"center",padding:"24px 0 16px"}}><div style={{fontSize:30,fontFamily:FD,letterSpacing:3}}>{presetTab==="nippard"?"NIPPARD":"ATHLEANX"}</div><div style={{fontSize:12,color:C.dim,marginTop:4}}>Select a program and phase</div></div>
           {!presetPick&&(<div>
+            <div style={{display:"flex",gap:8,marginBottom:16,justifyContent:"center"}}>{[{id:"athleanx",n:"AthleanX"},{id:"nippard",n:"Nippard"}].map(function(t){var on=presetTab===t.id;return <button key={t.id} onClick={function(){setPresetTab(t.id);}} style={{padding:"9px 22px",fontSize:14,fontFamily:FD,fontWeight:700,letterSpacing:1,background:on?(C.acc+"20"):"transparent",color:on?C.acc:C.dim,border:"1px solid "+(on?(C.acc+"60"):C.bdr),borderRadius:20,cursor:"pointer"}}>{t.n}</button>;})}</div>
             {(function(){var cats=[{id:"size",n:"MUSCLE SIZE",c:C.acc},{id:"athletic",n:"ATHLETIC",c:C.blu},{id:"cut",n:"FAT LOSS",c:C.red},{id:"health",n:"LONGEVITY",c:C.grn}];
-              return cats.map(function(cat){var progs=PRESETS.filter(function(p){return p.cat===cat.id;});if(progs.length===0)return null;
+              return cats.map(function(cat){var progs=PRESETS.filter(function(p){var trad=(p.designProfile==="nippard")?"nippard":"athleanx";return p.cat===cat.id&&trad===presetTab;});if(progs.length===0)return null;
                 return <div key={cat.id} style={{marginBottom:16}}>
                   <div style={{fontSize:12,fontWeight:700,fontFamily:FD,letterSpacing:2,color:cat.c,marginBottom:8}}>{cat.n}</div>
-                  {progs.map(function(p){return <button key={p.id} onClick={function(){setPresetPick(p.id);}} style={{width:"100%",textAlign:"left",padding:"14px 16px",marginBottom:8,background:C.bar,border:"1px solid "+C.bdr,borderRadius:12,cursor:"pointer",display:"flex",alignItems:"center",gap:12}}>
+                  {progs.map(function(p){return <button key={p.id} onClick={function(){setPresetPick(p.id);setPresetPhase(0);setGoal(null);setMethod(null);setSplit(null);}} style={{width:"100%",textAlign:"left",padding:"14px 16px",marginBottom:8,background:C.bar,border:"1px solid "+C.bdr,borderRadius:12,cursor:"pointer",display:"flex",alignItems:"center",gap:12}}>
                     <div style={{width:44,height:44,borderRadius:10,background:cat.c+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:700,color:cat.c,fontFamily:FD,flexShrink:0}}>{p.icon}</div>
                     <div style={{flex:1}}><div style={{fontSize:15,fontWeight:700,color:C.txt,fontFamily:FD}}>{p.n}</div><div style={{fontSize:11,color:C.dim,marginTop:2,lineHeight:1.4}}>{p.desc}</div><div style={{fontSize:10,color:C.mid,marginTop:3}}>{p.days+" days/wk • "+p.phases.length+" phases • "+p.mesoLen+" wk mesos"}</div></div>
                   </button>;})}
@@ -10383,7 +10385,7 @@ function Forge(props){
               </div>
               <div style={{fontSize:12,fontWeight:700,fontFamily:FD,letterSpacing:2,color:C.acc,marginBottom:8}}>CHOOSE YOUR PHASE (MESO)</div>
               <div style={{fontSize:11,color:C.dim,marginBottom:12}}>Each phase is a {p.mesoLen}-week mesocycle with a distinct training style. Start with Phase 1 if new.</div>
-              {p.phases.map(function(ph){var sel=goal===ph.goal&&method===ph.method;return <button key={ph.phase} onClick={function(){setGoal(ph.goal);setSplit(ph.split);setMethod(ph.method);setNumDays(p.days);setMesoLen(p.mesoLen);setPresetCd(typeof p.cd==="number"?p.cd:null);}} style={{width:"100%",textAlign:"left",padding:"14px 16px",marginBottom:8,background:sel?(catC+"12"):C.bar,border:"1px solid "+(sel?(catC+"50"):C.bdr),borderRadius:12,cursor:"pointer"}}>
+              {p.phases.map(function(ph){var sel=presetPhase===ph.phase;return <button key={ph.phase} onClick={function(){setPresetPhase(ph.phase);setGoal(ph.goal);setSplit(ph.split);setMethod(ph.method);setNumDays(p.days);setMesoLen(p.mesoLen);setPresetCd(typeof p.cd==="number"?p.cd:null);}} style={{width:"100%",textAlign:"left",padding:"14px 16px",marginBottom:8,background:sel?(catC+"12"):C.bar,border:"1px solid "+(sel?(catC+"50"):C.bdr),borderRadius:12,cursor:"pointer"}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{fontSize:15,fontWeight:700,color:sel?catC:C.txt,fontFamily:FD}}>{"PHASE "+ph.phase+": "+ph.n}</div><span style={{fontSize:10,color:C.dim}}>{p.mesoLen+" wks"}</span></div>
                 <div style={{fontSize:11,color:C.mid,marginTop:3,lineHeight:1.4}}>{ph.desc}</div>
               </button>;})}
