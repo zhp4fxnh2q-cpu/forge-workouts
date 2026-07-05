@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-31";
+  window.FORGE_BUILD="2026.07.03-32";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -3110,45 +3110,45 @@ var PRESETS=[
       {phase:2,n:"Inferno",method:"giant",goal:"balanced",split:"phat5",desc:"Giant set circuits + isometric holds. Metabolic finishers."},
       {phase:3,n:"Max Overload",method:"myo",goal:"balanced",split:"phat5",desc:"Myo-rep activation sets. Extended eccentrics. Peak mass stimulus."},
     ]},
-  {id:"builtsize",n:"BUILT For Size",desc:"Quality Control sets. Upper/Lower split. Strict form emphasis. 5 days.",icon:"BS",cat:"size",days:5,mesoLen:4,cd:1,
+  {id:"builtsize",n:"BUILT For Size",desc:"Quality-control sets. Upper/Lower split. Strict form emphasis. 4-day rotation.",icon:"BS",cat:"size",days:4,mesoLen:4,cd:1,designProfile:"athleanx",
     phases:[
       {phase:1,n:"QC Foundation",method:"straight",goal:"balanced",split:"ul4",desc:"Quality Control sets. 90s rest. Perfect form on every rep."},
       {phase:2,n:"EPF Development",method:"myo",goal:"balanced",split:"ul4",desc:"Effective Partials to Failure. Extend sets past form failure."},
       {phase:3,n:"Peak QC",method:"preexh",goal:"balanced",split:"ul4",desc:"Pre-exhaust into QC compounds. Maximum hypertrophy stimulus."},
     ]},
-  {id:"builtlong",n:"BUILT For Longevity",desc:"Sustainable strength. Zone 2 cardio. Mobility focus. 5 days. Long-term health.",icon:"BL",cat:"health",days:5,mesoLen:5,cd:1,
+  {id:"builtlong",n:"BUILT For Longevity",desc:"Sustainable strength. Zone 2 cardio. Mobility focus. 3 lifting days + conditioning. Long-term health.",icon:"BL",cat:"health",days:3,mesoLen:5,cd:2,designProfile:"athleanx",
     phases:[
       {phase:1,n:"Foundation",method:"straight",goal:"longevity",split:"fb3",desc:"Total body strength. Zone 2 cardio. Movement quality focus."},
       {phase:2,n:"Capacity",method:"straight",goal:"longevity",split:"fb3",desc:"Progressive loading. Balance and mobility work. Heart rate zones."},
     ]},
-  {id:"maxfx",n:"MAX FX",desc:"Minimal effective dose. Only 3 days/week. Full body rotating emphasis. Time-crunched.",icon:"FX",cat:"health",days:3,mesoLen:4,cd:1,
+  {id:"maxfx",n:"MAX FX",desc:"Minimal effective dose. 3 days/week (or 6-day variant). Full-body rotating emphasis. Time-crunched.",icon:"FX",cat:"health",days:3,mesoLen:4,cd:1,designProfile:"athleanx",
     phases:[
       {phase:1,n:"Foundation",method:"straight",goal:"express",split:"fb3",desc:"Full body. Ramp-up + working sets. Minimal volume, maximum effect."},
       {phase:2,n:"Intensification",method:"myo",goal:"express",split:"fb3",desc:"Myo-reps for time efficiency. Same growth, fewer sets."},
     ]},
-  {id:"aam",n:"All American Muscle",desc:"Size + power + athleticism. CAT-5, Shot Clock, Triple Doubles. PPL, 5 days, 16 weeks.",icon:"AA",cat:"size",days:5,mesoLen:4,cd:1,
+  {id:"aam",n:"All American Muscle",desc:"Size + power + athleticism. Four architecturally different months over 16 weeks — Upper/Lower, combined U+L, PPL, Total Body.",icon:"AA",cat:"size",days:5,mesoLen:4,cd:1,designProfile:"athleanx",
     phases:[
-      {phase:1,n:"Form Failure Foundation",method:"straight",goal:"balanced",split:"ppl6",desc:"Straight sets to form failure. Touch-up sets. Build the base."},
-      {phase:2,n:"Triple Doubles + Speed",method:"giant",goal:"balanced",split:"ppl6",desc:"Triple double chains (6/12/24 reps). Speed reps. Touch-up singles."},
-      {phase:3,n:"5-Sec Shot Clock",method:"mech",goal:"balanced",split:"ppl6",desc:"5-second eccentrics and lengthened isometrics. CAT-5 acceleration."},
-      {phase:4,n:"Sudden Death",method:"density",goal:"balanced",split:"ppl6",desc:"Sudden Death sets (100+ reps in 4 min). AMRAP finishers. Peak intensity."},
+      {phase:1,n:"Foundation (Mo 1)",method:"straight",goal:"balanced",split:"ul4",desc:"Upper/Lower + conditioning. Straight sets to form failure, touch-up sets."},
+      {phase:2,n:"Cascades + Speed (Mo 2)",method:"density",goal:"balanced",split:"pqph4",desc:"Combined upper+lower sessions. Fixed-time rep cascades and AMRAP finishers."},
+      {phase:3,n:"Tempo Block (Mo 3)",method:"mech",goal:"balanced",split:"ppl6",desc:"True Push/Pull/Legs. Slow eccentrics and lengthened isometrics."},
+      {phase:4,n:"Total Body Peak (Mo 4)",method:"straight",goal:"balanced",split:"fbsp4",desc:"Total-body sessions — heavy-strength pairs plus hypertrophy accessories."},
     ]},
-  {id:"critmas",n:"Critical Mass",desc:"Low volume, high intensity. Pre-exhaust chains. Mindful Mass tempo (3-3-1). 5 days.",icon:"CM",cat:"size",days:5,mesoLen:4,cd:1,
+  {id:"critmas",n:"Critical Mass",desc:"Low volume, high intensity. Pre-exhaust chains. Slow controlled tempo (3-3-1). 4 days.",icon:"CM",cat:"size",days:4,mesoLen:4,cd:1,designProfile:"athleanx",
     phases:[
       {phase:1,n:"Pre-Exhaust Chains",method:"preexh",goal:"balanced",split:"bro5",desc:"Pre-exhaust → compound → Mindful Mass (3s down, 3s hold, 1s up)."},
       {phase:2,n:"Chain Reactions",method:"giant",goal:"balanced",split:"bro5",desc:"Triple chain supersets. Drop sets. Minimal rest between chains."},
     ]},
-  {id:"hollywood",n:"BUILT For Hollywood",desc:"Aesthetic focus. PHAT-30 circuits. Interval cardio. Lean muscle + conditioning. 5 days.",icon:"BH",cat:"cut",days:5,mesoLen:4,cd:2,
+  {id:"hollywood",n:"BUILT For Hollywood",desc:"Aesthetic focus. Timed density circuits. Interval cardio. Lean muscle + conditioning. 7-day week.",icon:"BH",cat:"cut",days:7,mesoLen:4,cd:3,designProfile:"athleanx",
     phases:[
-      {phase:1,n:"PHAT-30 Circuits",method:"giant",goal:"shred",split:"phat5",desc:"30-second timed circuits. 4-5 rounds. Heart rate recovery monitoring."},
+      {phase:1,n:"Timed Circuits",method:"density",goal:"shred",split:"phat5",desc:"30-second timed circuits, 4-5 rounds. Heart-rate-gated rest between rounds."},
       {phase:2,n:"Interval Shred",method:"density",goal:"shred",split:"phat5",desc:"Density blocks. Sprint intervals. Bodyweight circuits. Maximum fat loss."},
     ]},
-  {id:"maxshred",n:"MAX/SHRED",desc:"Athlean Inferno. 5-alarm mobilization circuits. Burst Classix conditioning. Fire Drills. Fat loss + muscle. 5 days.",icon:"MX",cat:"cut",days:5,mesoLen:4,cd:3,
+  {id:"maxshred",n:"MAX/SHRED",desc:"Metabolic conditioning circuits. Density blocks. Fat loss with muscle retention. 4 days tapering to 2.",icon:"MX",cat:"cut",days:4,mesoLen:4,cd:3,designProfile:"athleanx",
     phases:[
-      {phase:1,n:"Mobilization Phase",method:"giant",goal:"shred",split:"nip5",desc:"Mobilization circuits with descending reps. 5-alarm progression. Fire escape swap-outs."},
+      {phase:1,n:"Mobilization Phase",method:"density",goal:"shred",split:"nip5",desc:"EMOM-style density circuits with descending-then-ascending reps."},
       {phase:2,n:"Metabolization Phase",method:"density",goal:"contest",split:"nip5",desc:"Burst Classix. Slow Burn + Flash Burn + Rug Burn circuits. Fire Drills. Maximum fat incineration."},
     ]},
-  {id:"oldschool",n:"Old School Iron",desc:"Classic bodybuilding. High volume bro split. School's Out finishers. 6 days.",icon:"OS",cat:"size",days:6,mesoLen:4,cd:1,
+  {id:"oldschool",n:"Old School Iron",desc:"Classic bodybuilding. High-volume bro-pairing split. Rotating high-rep finishers. 4-on/1-off.",icon:"OS",cat:"size",days:4,mesoLen:4,cd:1,designProfile:"athleanx",
     phases:[
       {phase:1,n:"Classic Mass",method:"straight",goal:"balanced",split:"arn6",desc:"Straight sets to failure. Supersets. 120-rep finishers. Old school volume."},
       {phase:2,n:"Detention Sets",method:"myo",goal:"balanced",split:"arn6",desc:"Extended sets. Myo-rep activation. School's Out high-rep challenges."},
