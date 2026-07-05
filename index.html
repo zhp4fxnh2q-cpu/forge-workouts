@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-30";
+  window.FORGE_BUILD="2026.07.03-31";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -3172,6 +3172,60 @@ var PRESETS=[
     phases:[
       {phase:1,n:"School's Out",method:"straight",goal:"balanced",split:"arn6",desc:"Superset pairs (3A/3B). Drop sets. School's Out high-rep gauntlets. 5x5 basics."},
       {phase:2,n:"Detention",method:"myo",goal:"balanced",split:"arn6",desc:"Same structure, Detention finishers replace School's Out. 120-rep challenges. Gauntlets."},
+    ]},
+  // ═══ NIPPARD BLUEPRINTS (designProfile:"nippard") — each program's verified block structure over FORGE primitives; the engine generates the exercises ═══
+  {id:"nip_purebb_fb",n:"Pure Bodybuilding — Full Body",desc:"Full-body split, two 5-week blocks. Block 1 holds a flat effort ceiling to one end-of-block deload; Block 2 ramps effort and opens each block with a lighter intro week.",icon:"PF",cat:"size",days:3,mesoLen:5,cd:0,designProfile:"nippard",
+    phases:[
+      {phase:1,n:"Block 1 — Build",method:"straight",goal:"balanced",split:"fb3",desc:"Flat effort ceiling across 4 weeks. Straight sets, double progression, full body every session."},
+      {phase:2,n:"Block 1 — Deload",method:"straight",goal:"balanced",split:"fb3",desc:"Semi-deload closing Block 1 — both volume and effort come down."},
+      {phase:3,n:"Block 2 — Intro",method:"straight",goal:"balanced",split:"fb3",desc:"Block 2 opens light on purpose, climbing from here."},
+      {phase:4,n:"Block 2 — Ramp",method:"straight",goal:"balanced",split:"fb3",desc:"Effort and sets climb toward a peak final week. No taper."},
+    ]},
+  {id:"nip_purebb_ul",n:"Pure Bodybuilding — Upper/Lower",desc:"Upper/Lower split, two 5-week blocks. Block 1 flat ceiling to one end-of-block deload; Block 2 ramps and opens each block light.",icon:"PU",cat:"size",days:4,mesoLen:5,cd:0,designProfile:"nippard",
+    phases:[
+      {phase:1,n:"Block 1 — Build",method:"straight",goal:"balanced",split:"ul4",desc:"Flat effort ceiling, straight sets, upper/lower alternating."},
+      {phase:2,n:"Block 1 — Deload",method:"straight",goal:"balanced",split:"ul4",desc:"Semi-deload closing Block 1."},
+      {phase:3,n:"Block 2 — Intro",method:"straight",goal:"balanced",split:"ul4",desc:"Block 2 opens light, climbing from here."},
+      {phase:4,n:"Block 2 — Ramp",method:"straight",goal:"balanced",split:"ul4",desc:"Effort and sets climb toward a peak final week."},
+    ]},
+  {id:"nip_purebb_ppl",n:"Pure Bodybuilding — Push/Pull/Legs",desc:"Push/Pull/Legs split, two 5-week blocks. Block 1 flat ceiling to one end-of-block deload; Block 2 ramps and opens each block light.",icon:"PP",cat:"size",days:6,mesoLen:5,cd:0,designProfile:"nippard",
+    phases:[
+      {phase:1,n:"Block 1 — Build",method:"straight",goal:"balanced",split:"ppl6",desc:"Flat effort ceiling, straight sets, push/pull/legs rotation."},
+      {phase:2,n:"Block 1 — Deload",method:"straight",goal:"balanced",split:"ppl6",desc:"Semi-deload closing Block 1."},
+      {phase:3,n:"Block 2 — Intro",method:"straight",goal:"balanced",split:"ppl6",desc:"Block 2 opens light, climbing from here."},
+      {phase:4,n:"Block 2 — Ramp",method:"straight",goal:"balanced",split:"ppl6",desc:"Effort and sets climb toward a peak final week."},
+    ]},
+  {id:"nip_powerbuild2",n:"Powerbuilding 2.0",desc:"4 days/week alternating a full-body strength microcycle with a Legs/Push/Pull hypertrophy microcycle. One technique-week deload; AMRAP checkpoints, no formal max test.",icon:"P2",cat:"size",days:4,mesoLen:6,cd:0,designProfile:"nippard",
+    phases:[
+      {phase:1,n:"Alternating Microcycles",method:"straight",goal:"strength",split:"phul4",desc:"Strength focus alternates with hypertrophy focus. Compounds locked, isolation open."},
+      {phase:2,n:"Technique Week",method:"straight",goal:"strength",split:"phul4",desc:"Semi-deload — volume and effort eased, not a full deload."},
+      {phase:3,n:"Alternating Microcycles",method:"straight",goal:"strength",split:"phul4",desc:"Resume the alternation to the close. AMRAP checkpoints, no separate max-test week."},
+    ]},
+  {id:"nip_powerbuild3",n:"Powerbuilding 3.0",desc:"5 days/week high-frequency training. Linear periodization — volume falls as load climbs. Technique-week deload, a true taper (volume cut, load held), dedicated max test.",icon:"P3",cat:"size",days:5,mesoLen:8,cd:0,designProfile:"nippard",
+    phases:[
+      {phase:1,n:"Linear Block",method:"straight",goal:"strength",split:"nip5",desc:"Volume high, load moderate. Squat/bench high frequency, deadlift once weekly."},
+      {phase:2,n:"Technique Week",method:"straight",goal:"strength",split:"nip5",desc:"Semi-deload — volume and effort eased."},
+      {phase:3,n:"Linear Block",method:"straight",goal:"strength",split:"nip5",desc:"Volume keeps falling as load climbs to the heaviest weeks."},
+      {phase:4,n:"Taper",method:"straight",goal:"strength",split:"nip5",desc:"True taper — main-lift volume cut, load held via heavy practice sets. Arrive fresh but strong."},
+      {phase:5,n:"Max Test",method:"straight",goal:"strength",split:"nip5",desc:"Realization week — heavy singles or a moderate-load AMRAP."},
+    ]},
+  {id:"nip_ulss",n:"Upper/Lower Size & Strength",desc:"Upper/Lower wave-loading engine, three 3-week waves. Each wave opens light (effort only), escalates, then resets with a small load bump. No terminal deload.",icon:"UL",cat:"size",days:4,mesoLen:9,cd:0,designProfile:"nippard",
+    phases:[
+      {phase:1,n:"Wave 1",method:"straight",goal:"strength",split:"ul4",desc:"Light to hardest across 3 weeks. Primaries on a load ladder, accessories on effort."},
+      {phase:2,n:"Wave 2",method:"straight",goal:"strength",split:"ul4",desc:"Resets with a small load bump; same 3-week shape."},
+      {phase:3,n:"Wave 3",method:"straight",goal:"strength",split:"ul4",desc:"Final wave, another load bump. Week 9 is simply the hardest week."},
+    ]},
+  {id:"nip_fbhf",n:"Full Body High Frequency",desc:"5 days/week, full body every session with rotating focal emphasis. Two 4-week blocks, an optional intensity-only deload (volume stays high), AMRAP test.",icon:"HF",cat:"size",days:5,mesoLen:4,cd:0,designProfile:"nippard",
+    phases:[
+      {phase:1,n:"Block 1",method:"straight",goal:"balanced",split:"nip5",desc:"Rotating full-body emphasis. Primaries undulate weekly; accessories progress linearly."},
+      {phase:2,n:"Block 2",method:"straight",goal:"balanced",split:"nip5",desc:"Same rotation with an added top-set + back-off structure on primaries."},
+      {phase:3,n:"Deload (optional)",method:"straight",goal:"balanced",split:"nip5",desc:"Intensity-only deload — effort drops, volume stays high. Skippable."},
+      {phase:4,n:"Max Test",method:"straight",goal:"balanced",split:"nip5",desc:"AMRAP realization week."},
+    ]},
+  {id:"nip_fundamentals",n:"Fundamentals",desc:"Beginner full-body program, two 4-week blocks. Flat straight sets, double progression, a mid-program step up in effort. No deload — runs straight through.",icon:"FN",cat:"size",days:3,mesoLen:4,cd:0,designProfile:"nippard",
+    phases:[
+      {phase:1,n:"Strength Base",method:"straight",goal:"balanced",split:"fb3",desc:"Straight sets, double progression, moderate effort. 5-7 exercises/session."},
+      {phase:2,n:"Modified Strength Base",method:"straight",goal:"balanced",split:"fb3",desc:"Same structure, effort steps up with a partial exercise swap. No deload."},
     ]},
 ];
 
@@ -7116,7 +7170,7 @@ function Forge(props){
   // DESIGN ENGINE activation: an explicit custom pick (designEngine) wins; otherwise the
   // AthleanX-inspired presets run the "athleanx" engine and My Choice runs "neutral".
   // Kept in sync so it can never get stuck.
-  useEffect(function(){ if(typeof _setDesignProfile==="function") _setDesignProfile(designEngine || (presetPick?"athleanx":"neutral")); },[presetPick,designEngine]);
+  useEffect(function(){ if(typeof _setDesignProfile!=="function")return; var _pp=presetPick?PRESETS.find(function(x){return x.id===presetPick;}):null; _setDesignProfile(designEngine || (_pp?(_pp.designProfile||"athleanx"):"neutral")); },[presetPick,designEngine]);
   var _pcd=useState(null),presetCd=_pcd[0],setPresetCd=_pcd[1];
   var _st=useState(0),step=_st[0],setStep=_st[1];
   var _gl=useState(null),goal=_gl[0],setGoal=_gl[1];
