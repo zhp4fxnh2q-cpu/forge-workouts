@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-27";
+  window.FORGE_BUILD="2026.07.03-28";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -4017,6 +4017,9 @@ function getRIR(wk,ml,rirClass,expLevel){
   // Apply experience-calibrated RIR_ERROR correction (cushion for under-predictors)
   var adj=getRirErrorAdjust(expLevel);
   var out=base+adj;
+  // DESIGN ENGINE — Nippard intensifies late in the block (works closer to failure as the meso
+  // progresses); a defining feature of his applied periodization.
+  if(_FORGE_DESIGN_PROFILE==="nippard"&&ml>0&&(wk/ml)>0.5)out-=1;
   if(out<0)out=0;
   if(out>4)out=4;
   return out;
@@ -6506,6 +6509,8 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
         var _tempoPicked=selectExercisesForMuscle(scored,numExercises,goalObj,muscle,rng,equipFilter,banned);
         var _tempoPreset=null;
         if(tempoPresetId){for(var _tpi=0;_tpi<TEMPO_PRESETS.length;_tpi++){if(TEMPO_PRESETS[_tpi].id===tempoPresetId){_tempoPreset=TEMPO_PRESETS[_tpi];break;}}}
+        // DESIGN ENGINE — AthleanX defaults tempo work to eccentric emphasis (controlled negatives).
+        if(!_tempoPreset&&_FORGE_DESIGN_PROFILE==="athleanx"){for(var _tei=0;_tei<TEMPO_PRESETS.length;_tei++){if(TEMPO_PRESETS[_tei].id==="ecc"){_tempoPreset=TEMPO_PRESETS[_tei];break;}}}
         if(!_tempoPreset)_tempoPreset=TEMPO_PRESETS[0]; // fallback: Hypertrophy Standard 3-1-2-0
         var _tempoArr=_tempoPreset.tempo;
         var _tempoTUT=getTempoTUT(_tempoArr);
@@ -6797,7 +6802,8 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       }
 
       // ── PRIORITY 5: SECOND PRIMER (different muscle than the first, lowest priority) ──
-      if(_extFree>=2){
+      // DESIGN ENGINE — Nippard skips the second primer too (full minimalism).
+      if(_extFree>=2&&_FORGE_DESIGN_PROFILE!=="nippard"){
         var _p2Muscle=null;
         for(var _p2i=0;_p2i<day.g.length;_p2i++){
           if(day.g[_p2i]!==_primerMuscle&&PRIMERS[day.g[_p2i]]){_p2Muscle=day.g[_p2i];break;}
