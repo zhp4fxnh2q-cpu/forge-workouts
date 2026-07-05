@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-28";
+  window.FORGE_BUILD="2026.07.03-29";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -4018,8 +4018,8 @@ function getRIR(wk,ml,rirClass,expLevel){
   var adj=getRirErrorAdjust(expLevel);
   var out=base+adj;
   // DESIGN ENGINE — Nippard intensifies late in the block (works closer to failure as the meso
-  // progresses); a defining feature of his applied periodization.
-  if(_FORGE_DESIGN_PROFILE==="nippard"&&ml>0&&(wk/ml)>0.5)out-=1;
+  // progresses) — but keeps COMPOUNDS off true failure (>=1 RIR); failure is reserved for isolations.
+  if(_FORGE_DESIGN_PROFILE==="nippard"&&ml>0&&(wk/ml)>0.5){out-=1;if((rirClass||"compound_free").indexOf("compound")>=0)out=Math.max(1,out);}
   if(out<0)out=0;
   if(out>4)out=4;
   return out;
