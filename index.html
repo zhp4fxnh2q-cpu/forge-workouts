@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-36";
+  window.FORGE_BUILD="2026.07.03-37";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -2458,6 +2458,8 @@ var SPLITS=[
   {id:"bro5",n:"Classic Bro Split",d:5,methodPolicy:"agnostic",desc:"One muscle per day. Max per-session volume. The old-school approach.",layout:[{n:"Chest",g:["chest"]},{n:"Back",g:["back"]},{n:"Shoulders",g:["shoulders"]},{n:"Legs",g:["quads","hams","core"]},{n:"Arms",g:["biceps","triceps"]}]},
   {id:"ppl6",n:"PPL x2",d:6,methodPolicy:"agnostic",desc:"Push/Pull/Legs twice per week. High frequency + high volume for advanced.",layout:[{n:"Push A",g:["chest","shoulders","triceps"]},{n:"Pull A",g:["back","biceps"]},{n:"Legs A",g:["quads","hams","core"]},{n:"Push B",g:["shoulders","chest","triceps"]},{n:"Pull B",g:["back","biceps"]},{n:"Legs B",g:["hams","quads","core"]}]},
   {id:"arn6",n:"Arnold Split",d:6,methodPolicy:"agnostic",desc:"Chest+Back supersets, Shoulders+Arms, Legs. Classic high-volume. Needs caloric surplus.",layout:[{n:"Chest+Back A",g:["chest","back"]},{n:"Shoulders+Arms A",g:["shoulders","biceps","triceps"]},{n:"Legs A",g:["quads","hams","core"]},{n:"Chest+Back B",g:["back","chest"]},{n:"Shoulders+Arms B",g:["triceps","biceps","shoulders"]},{n:"Legs B",g:["hams","quads","core"]}]},
+  {id:"ul6",n:"Upper / Lower x3",d:6,methodPolicy:"agnostic",desc:"Upper and lower each three times a week. Maximum frequency for advanced lifters with strong recovery.",layout:[{n:"Upper A",g:["chest","back","shoulders","biceps","triceps"]},{n:"Lower A",g:["quads","hams","core"]},{n:"Upper B",g:["back","chest","shoulders","triceps","biceps"]},{n:"Lower B",g:["hams","quads","core"]},{n:"Upper C",g:["chest","back","shoulders","biceps","triceps"]},{n:"Lower C",g:["quads","hams","core"]}]},
+  {id:"fb5",n:"Full Body x5",d:5,methodPolicy:"agnostic",desc:"Full body five days a week with a rotating daily emphasis. Very high frequency; for advanced lifters.",layout:[{n:"Full Body A",g:["chest","back","shoulders","biceps","triceps"]},{n:"Full Body B",g:["quads","hams","chest","back","core"]},{n:"Full Body C",g:["chest","back","shoulders","quads","hams"]},{n:"Full Body D",g:["back","chest","shoulders","biceps","triceps"]},{n:"Full Body E",g:["quads","hams","back","shoulders","core"]}]},
 ];
 // Wire calves into every leg day (any day training quads or hams) so the calf library actually gets programmed.
 (function(){for(var si=0;si<SPLITS.length;si++){var lay=SPLITS[si].layout||[];for(var di=0;di<lay.length;di++){var g=lay[di].g||[];var legDay=(g.indexOf("quads")>=0||g.indexOf("hams")>=0);if(legDay){if(g.indexOf("calves")<0)g.push("calves");if(g.indexOf("glutes")<0)g.push("glutes");}}}})();
@@ -3221,12 +3223,12 @@ var PRESETS=[
       {phase:2,n:"Detention",method:"myo",goal:"balanced",split:"arn6",desc:"Same structure, Detention finishers replace School's Out. 120-rep challenges. Gauntlets."},
     ]},
   // ═══ NIPPARD BLUEPRINTS (designProfile:"nippard") — each program's verified block structure over FORGE primitives; the engine generates the exercises ═══
-  {id:"nip_purebb_fb",n:"Pure Bodybuilding — Full Body",desc:"Full-body split, two 5-week blocks. Block 1 holds a flat effort ceiling to one end-of-block deload; Block 2 ramps effort and opens each block with a lighter intro week.",icon:"PF",cat:"size",days:3,mesoLen:5,cd:0,designProfile:"nippard",
+  {id:"nip_purebb_fb",n:"Pure Bodybuilding — Full Body",desc:"Full-body split, two 5-week blocks. Block 1 holds a flat effort ceiling to one end-of-block deload; Block 2 ramps effort and opens each block with a lighter intro week.",icon:"PF",cat:"size",days:5,mesoLen:5,cd:0,designProfile:"nippard",
     phases:[
-      {phase:1,n:"Block 1 — Build",method:"straight",goal:"balanced",split:"fb3",desc:"Flat effort ceiling across 4 weeks. Straight sets, double progression, full body every session."},
-      {phase:2,n:"Block 1 — Deload",method:"straight",goal:"balanced",split:"fb3",desc:"Semi-deload closing Block 1 — both volume and effort come down."},
-      {phase:3,n:"Block 2 — Intro",method:"straight",goal:"balanced",split:"fb3",desc:"Block 2 opens light on purpose, climbing from here."},
-      {phase:4,n:"Block 2 — Ramp",method:"straight",goal:"balanced",split:"fb3",desc:"Effort and sets climb toward a peak final week. No taper."},
+      {phase:1,n:"Block 1 — Build",method:"straight",goal:"balanced",split:"fb5",desc:"Flat effort ceiling across 4 weeks. Straight sets, double progression, full body every session."},
+      {phase:2,n:"Block 1 — Deload",method:"straight",goal:"balanced",split:"fb5",desc:"Semi-deload closing Block 1 — both volume and effort come down."},
+      {phase:3,n:"Block 2 — Intro",method:"straight",goal:"balanced",split:"fb5",desc:"Block 2 opens light on purpose, climbing from here."},
+      {phase:4,n:"Block 2 — Ramp",method:"straight",goal:"balanced",split:"fb5",desc:"Effort and sets climb toward a peak final week. No taper."},
     ]},
   {id:"nip_purebb_ul",n:"Pure Bodybuilding — Upper/Lower",desc:"Upper/Lower split, two 5-week blocks. Block 1 flat ceiling to one end-of-block deload; Block 2 ramps and opens each block light.",icon:"PU",cat:"size",days:4,mesoLen:5,cd:0,designProfile:"nippard",
     phases:[
@@ -3250,24 +3252,24 @@ var PRESETS=[
     ]},
   {id:"nip_powerbuild3",n:"Powerbuilding 3.0",desc:"5 days/week high-frequency training. Linear periodization — volume falls as load climbs. Technique-week deload, a true taper (volume cut, load held), dedicated max test.",icon:"P3",cat:"size",days:5,mesoLen:8,cd:0,designProfile:"nippard",
     phases:[
-      {phase:1,n:"Linear Block",method:"straight",goal:"strength",split:"nip5",desc:"Volume high, load moderate. Squat/bench high frequency, deadlift once weekly."},
-      {phase:2,n:"Technique Week",method:"straight",goal:"strength",split:"nip5",desc:"Semi-deload — volume and effort eased."},
-      {phase:3,n:"Linear Block",method:"straight",goal:"strength",split:"nip5",desc:"Volume keeps falling as load climbs to the heaviest weeks."},
-      {phase:4,n:"Taper",method:"straight",goal:"strength",split:"nip5",desc:"True taper — main-lift volume cut, load held via heavy practice sets. Arrive fresh but strong."},
-      {phase:5,n:"Max Test",method:"straight",goal:"strength",split:"nip5",desc:"Realization week — heavy singles or a moderate-load AMRAP."},
+      {phase:1,n:"Linear Block",method:"straight",goal:"strength",split:"fb5",desc:"Volume high, load moderate. Squat/bench high frequency, deadlift once weekly."},
+      {phase:2,n:"Technique Week",method:"straight",goal:"strength",split:"fb5",desc:"Semi-deload — volume and effort eased."},
+      {phase:3,n:"Linear Block",method:"straight",goal:"strength",split:"fb5",desc:"Volume keeps falling as load climbs to the heaviest weeks."},
+      {phase:4,n:"Taper",method:"straight",goal:"strength",split:"fb5",desc:"True taper — main-lift volume cut, load held via heavy practice sets. Arrive fresh but strong."},
+      {phase:5,n:"Max Test",method:"straight",goal:"strength",split:"fb5",desc:"Realization week — heavy singles or a moderate-load AMRAP."},
     ]},
-  {id:"nip_ulss",n:"Upper/Lower Size & Strength",desc:"Upper/Lower wave-loading engine, three 3-week waves. Each wave opens light (effort only), escalates, then resets with a small load bump. No terminal deload.",icon:"UL",cat:"size",days:4,mesoLen:9,cd:0,designProfile:"nippard",
+  {id:"nip_ulss",n:"Upper/Lower Size & Strength",desc:"Upper/Lower wave-loading engine, three 3-week waves. Each wave opens light (effort only), escalates, then resets with a small load bump. No terminal deload.",icon:"UL",cat:"size",days:6,mesoLen:9,cd:0,designProfile:"nippard",
     phases:[
-      {phase:1,n:"Wave 1",method:"straight",goal:"strength",split:"ul4",desc:"Light to hardest across 3 weeks. Primaries on a load ladder, accessories on effort."},
-      {phase:2,n:"Wave 2",method:"straight",goal:"strength",split:"ul4",desc:"Resets with a small load bump; same 3-week shape."},
-      {phase:3,n:"Wave 3",method:"straight",goal:"strength",split:"ul4",desc:"Final wave, another load bump. Week 9 is simply the hardest week."},
+      {phase:1,n:"Wave 1",method:"straight",goal:"strength",split:"ul6",desc:"Light to hardest across 3 weeks. Primaries on a load ladder, accessories on effort."},
+      {phase:2,n:"Wave 2",method:"straight",goal:"strength",split:"ul6",desc:"Resets with a small load bump; same 3-week shape."},
+      {phase:3,n:"Wave 3",method:"straight",goal:"strength",split:"ul6",desc:"Final wave, another load bump. Week 9 is simply the hardest week."},
     ]},
   {id:"nip_fbhf",n:"Full Body High Frequency",desc:"5 days/week, full body every session with rotating focal emphasis. Two 4-week blocks, an optional intensity-only deload (volume stays high), AMRAP test.",icon:"HF",cat:"size",days:5,mesoLen:4,cd:0,designProfile:"nippard",
     phases:[
-      {phase:1,n:"Block 1",method:"straight",goal:"balanced",split:"nip5",desc:"Rotating full-body emphasis. Primaries undulate weekly; accessories progress linearly."},
-      {phase:2,n:"Block 2",method:"straight",goal:"balanced",split:"nip5",desc:"Same rotation with an added top-set + back-off structure on primaries."},
-      {phase:3,n:"Deload (optional)",method:"straight",goal:"balanced",split:"nip5",desc:"Intensity-only deload — effort drops, volume stays high. Skippable."},
-      {phase:4,n:"Max Test",method:"straight",goal:"balanced",split:"nip5",desc:"AMRAP realization week."},
+      {phase:1,n:"Block 1",method:"straight",goal:"balanced",split:"fb5",desc:"Rotating full-body emphasis. Primaries undulate weekly; accessories progress linearly."},
+      {phase:2,n:"Block 2",method:"straight",goal:"balanced",split:"fb5",desc:"Same rotation with an added top-set + back-off structure on primaries."},
+      {phase:3,n:"Deload (optional)",method:"straight",goal:"balanced",split:"fb5",desc:"Intensity-only deload — effort drops, volume stays high. Skippable."},
+      {phase:4,n:"Max Test",method:"straight",goal:"balanced",split:"fb5",desc:"AMRAP realization week."},
     ]},
   {id:"nip_fundamentals",n:"Fundamentals",desc:"Beginner full-body program, two 4-week blocks. Flat straight sets, double progression, a mid-program step up in effort. No deload — runs straight through.",icon:"FN",cat:"size",days:3,mesoLen:4,cd:0,designProfile:"nippard",
     phases:[
@@ -5403,7 +5405,8 @@ function getStuckProgression(exName,hist,repRange,numSets,microplates,e1rmCtx){
   if(!hist||hist.length===0)return{action:"start",weight:null,targetReps:lo,note:"First time — find your "+lo+"-rep weight",sugSets:null,lever:"start",stuck:true,stuckStep:0};
   var ls=hist[0];
   if(!ls.sets||ls.sets.length===0)return{action:"start",weight:null,targetReps:lo,note:"No prior data",sugSets:null,lever:"start",stuck:true,stuckStep:0};
-  if(!ls.sets[0]||ls.sets[0].w===undefined||ls.sets[0].w===null)return{action:"start",weight:null,targetReps:lo,note:"Incomplete data — log weight next time",sugSets:null,lever:"start",stuck:true,stuckStep:0};
+  var _bwStk=!!(ls.sets[0]&&(ls.sets[0].w===undefined||ls.sets[0].w===null)&&ls.sets[0].r!==undefined&&ls.sets[0].r!==null);
+  if(!ls.sets[0]||((ls.sets[0].w===undefined||ls.sets[0].w===null)&&!_bwStk))return{action:"start",weight:null,targetReps:lo,note:"Incomplete data — log weight next time",sugSets:null,lever:"start",stuck:true,stuckStep:0};
   var lw=ls.sets[0].w;
   var allTop=true;var anyLow=false;var avg=0;
   var prevSets=ls.sets.length;
@@ -5411,6 +5414,12 @@ function getStuckProgression(exName,hist,repRange,numSets,microplates,e1rmCtx){
   avg=Math.round(avg/ls.sets.length);
   var lastMaxR=0;
   for(var li=0;li<ls.sets.length;li++){if(ls.sets[li].r>lastMaxR)lastMaxR=ls.sets[li].r;}
+  // BODYWEIGHT staller: no external load to add — engage the stall ladder on the rep/set axis only
+  // (weight stays null so numeric-safety treats it as bodyweight, not a 0-load). Never touches load math.
+  if(_bwStk){
+    if(!allTop){var _bwt=Math.min(avg+1,hi);var _bwss=[];for(var _bwi=0;_bwi<numSets;_bwi++){_bwss.push({w:null,r:Math.max(lo,Math.round(_bwt*(1-_bwi*0.07)))});}return{action:"stuckReps",weight:null,targetReps:_bwt,lever:"reps",stuck:true,stuckStep:1,note:"STEP 1: bodyweight × "+_bwt+" reps (beat last "+avg+"). Add reps before anything else.",sugSets:_bwss};}
+    var _bwns=Math.min(prevSets+1,maxSets);var _bwss2=[];for(var _bwj=0;_bwj<_bwns;_bwj++){_bwss2.push({w:null,r:hi});}return{action:"stuckSets",weight:null,targetReps:hi,lever:"sets",stuck:true,stuckStep:2,note:"STEP 2: add a set — bodyweight × "+hi+". Sets before load.",sugSets:_bwss2};
+  }
   // RIR-AWARE sessionsAtWeight (same logic as standard getProgression)
   var sessionsAtWeight=0;
   var _curTRstk=(hist[0]&&hist[0].targetRir!==undefined&&hist[0].targetRir!==null)?hist[0].targetRir:null;
@@ -5434,7 +5443,7 @@ function getStuckProgression(exName,hist,repRange,numSets,microplates,e1rmCtx){
   // (allTop). A staller under an undulating (dropping) rep target can otherwise read as
   // "improvement" and run the weight away — the density ladder owns that case instead.
   var _isBandStk=/band/i.test(exName||"");
-  if(!_isBandStk&&allTop&&_stuckTraj&&_stuckTraj.direction==="up"){
+  if(!_isBandStk&&!_bwStk&&allTop&&_stuckTraj&&_stuckTraj.direction==="up"){
     return {
       action:"stuckTrajectoryUp",
       weight:_stuckTraj.weight,
