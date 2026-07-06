@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-39";
+  window.FORGE_BUILD="2026.07.03-40";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -3307,10 +3307,10 @@ var PRESETS=[
     ]},
   {id:"w_postpartum",n:"Postpartum Return",desc:"A phased, criterion-based return to training after birth — reconnect the deep core and pelvic floor, rebuild movement, then load progressively. Diastasis-recti aware. Progresses by how you feel, not the calendar.",icon:"PP",cat:"health",days:3,mesoLen:4,cd:0,designProfile:"women",series:"women",gate:"postpartum",
     phases:[
-      {phase:1,n:"Reconnect & Foundation",guidance:true,goal:"balanced",method:"straight",split:"fb3",desc:"Pre-clearance and early weeks: 360° breathing, gentle pelvic-floor lift-and-release, deep-core (transverse abdominis) draw-ins, easy walking. No crunches, planks, impact, or heavy load. This phase is guidance, not a generated workout."},
-      {phase:2,n:"Rebuild Movement",guidance:true,goal:"balanced",method:"straight",split:"fb3",desc:"Re-learn squat, hinge, push, pull, carry — bodyweight and light, controlled tempo, exhale on effort. Anti-movement core (Pallof, carries) replaces crunches. Guidance-led; advance only when symptom-free."},
+      {phase:1,n:"Reconnect & Foundation",goal:"posterior",method:"straight",split:"fb3",desc:"A gentle full-body foundation, bodyweight-friendly, leaning on glutes, posterior chain and core. Pair every set with slow 360° breathing and a light pelvic-floor engagement — brace and exhale on the effort. Runs a four-week block; keep it symptom-free and the midline flat, then advance."},
+      {phase:2,n:"Rebuild Movement",goal:"balanced",method:"straight",split:"fb3",desc:"Re-learn the movements — squat, hinge, push, pull, carry — across light, controlled full-body sessions. Anti-movement core over crunches. A four-week block; add load only as long as it stays symptom-free and flat through the middle."},
       {phase:3,n:"Progressive Loading",method:"straight",goal:"balanced",split:"fb3",desc:"Light-to-moderate full-body strength, progressive overload, midline flat and no coning. Generated program unlocks after the clearance and symptom check pass."},
-      {phase:4,n:"Return to Strength",impact:true,method:"straight",goal:"balanced",split:"ul4",desc:"Full progressive strength. Impact/running stays locked until the readiness screen is passed."}
+      {phase:4,n:"Return to Strength",impact:true,method:"straight",goal:"strength",split:"fb3",desc:"Full-body progressive strength — heavier compounds, lower reps, real load. Impact and running stay locked until the readiness screen is passed."}
     ]},
   {id:"w_menopause",n:"Strong Through Menopause",desc:"The one strategy with direct bone-density trial evidence for postmenopausal women: heavy resistance plus impact (LIFTMOR). Heavy compounds for bone and strength, accessories for lean mass, a jump/landing finisher. Track strength and function, not the scale.",icon:"MP",cat:"health",days:3,mesoLen:5,cd:0,designProfile:"women",series:"women",gate:"menopause",
     phases:[
