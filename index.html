@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-41";
+  window.FORGE_BUILD="2026.07.03-42";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -2506,6 +2506,7 @@ var SPLITS=[
   {id:"ul6",n:"Upper / Lower x3",d:6,methodPolicy:"agnostic",desc:"Upper and lower each three times a week. Maximum frequency for advanced lifters with strong recovery.",layout:[{n:"Upper A",g:["chest","back","shoulders","biceps","triceps"]},{n:"Lower A",g:["quads","hams","core"]},{n:"Upper B",g:["back","chest","shoulders","triceps","biceps"]},{n:"Lower B",g:["hams","quads","core"]},{n:"Upper C",g:["chest","back","shoulders","biceps","triceps"]},{n:"Lower C",g:["quads","hams","core"]}]},
   {id:"fb5",n:"Full Body x5",d:5,methodPolicy:"agnostic",desc:"Full body five days a week with a rotating daily emphasis. Very high frequency; for advanced lifters.",layout:[{n:"Full Body A",g:["chest","back","shoulders","biceps","triceps"]},{n:"Full Body B",g:["quads","hams","chest","back","core"]},{n:"Full Body C",g:["chest","back","shoulders","quads","hams"]},{n:"Full Body D",g:["back","chest","shoulders","biceps","triceps"]},{n:"Full Body E",g:["quads","hams","back","shoulders","core"]}]},
   {id:"glute4",n:"Glute Focus x4",d:4,methodPolicy:"agnostic",desc:"Lower-body and glute emphasis — hips trained heavy and often across three lower days, upper body maintained on one.",layout:[{n:"Lower (Glute) A",g:["glutes","hams","quads","core"]},{n:"Upper",g:["back","chest","shoulders","biceps","triceps"]},{n:"Lower (Glute) B",g:["glutes","hams","quads"]},{n:"Lower (Posterior) C",g:["glutes","hams","core"]}]},
+  {id:"ulppl5",n:"Upper/Lower + PPL (Nippard)",d:5,methodPolicy:"locked",desc:"Nippard 5-day hybrid: two strength-biased Upper/Lower days feed three hypertrophy Push/Pull/Legs days. Most muscles 2-3x a week.",dayMethodRules:{"Upper (Strength)":{method:"straight",repRange:[5,8],rir:[1,2],restSec:180,compoundOverride:"straight"},"Lower (Strength)":{method:"straight",repRange:[5,8],rir:[1,2],restSec:210,compoundOverride:"straight"},"Pull (Hypertrophy)":{method:"userChoice",repRange:[8,15],rir:[1,3],restSec:90,compoundOverride:"straight"},"Push (Hypertrophy)":{method:"userChoice",repRange:[8,15],rir:[1,3],restSec:90,compoundOverride:"straight"},"Legs (Hypertrophy)":{method:"userChoice",repRange:[8,15],rir:[1,3],restSec:90,compoundOverride:"straight"}},lockedInfo:{title:"Upper/Lower + PPL fuses strength and hypertrophy",body:"Nippard hybrid runs two heavy Upper/Lower days (barbell-style, 5-8 reps, long rest) that build the strength to drive three higher-rep Push/Pull/Legs hypertrophy days (8-15 reps, shorter rest). Most muscles get hit 2-3 times a week - once heavy, once or twice for volume. Pull comes before Push."},layout:[{n:"Upper (Strength)",g:["chest","back","shoulders","triceps","biceps"]},{n:"Lower (Strength)",g:["quads","hams","core"]},{n:"Pull (Hypertrophy)",g:["back","shoulders","biceps"]},{n:"Push (Hypertrophy)",g:["chest","shoulders","triceps"]},{n:"Legs (Hypertrophy)",g:["quads","hams","core"]}]},
 ];
 // Wire calves into every leg day (any day training quads or hams) so the calf library actually gets programmed.
 (function(){for(var si=0;si<SPLITS.length;si++){var lay=SPLITS[si].layout||[];for(var di=0;di<lay.length;di++){var g=lay[di].g||[];var legDay=(g.indexOf("quads")>=0||g.indexOf("hams")>=0);if(legDay){if(g.indexOf("calves")<0)g.push("calves");if(g.indexOf("glutes")<0)g.push("glutes");}}}})();
@@ -3199,11 +3200,11 @@ var PRESETS=[
       {phase:2,n:"JACKED System",method:"preexh",goal:"balanced",split:"smart5",desc:"Pre-exhaust + heavy compounds. Rep range cycling (4-6, 6-10, 12-20)."},
       {phase:3,n:"Peak Hypertrophy",method:"hybrid",goal:"balanced",split:"smart5",desc:"Full system. Ignitor sets + compound peaks + isolation finishers."},
     ]},
-  {id:"maxsize",n:"MAX/SIZE",desc:"Mass building. XV-10 system (10x10). Propain finishers. 5-6 days. Heavy volume.",icon:"MS",cat:"size",days:5,mesoLen:4,cd:1,
+  {id:"maxsize",n:"MAX/SIZE",desc:"Mass the German Volume way - 10 sets of 10, heavy and relentless, one muscle group per day. Progressive loading across the block. 5 days.",icon:"MS",cat:"size",days:5,mesoLen:4,cd:1,
     phases:[
-      {phase:1,n:"Ignition",method:"straight",goal:"balanced",split:"phat5",desc:"XV-10: 10 sets of 10 with progressive loading. Propain finishers."},
-      {phase:2,n:"Inferno",method:"giant",goal:"balanced",split:"phat5",desc:"Giant set circuits + isometric holds. Metabolic finishers."},
-      {phase:3,n:"Max Overload",method:"myo",goal:"balanced",split:"phat5",desc:"Myo-rep activation sets. Extended eccentrics. Peak mass stimulus."},
+      {phase:1,n:"Ignition",method:"straight",goal:"balanced",split:"bro5",desc:"German Volume base: 10 sets of 10 at a weight you can just complete every set. Straight sets, full rest, controlled tempo."},
+      {phase:2,n:"Saturation",method:"straight",goal:"balanced",split:"bro5",desc:"Same 10x10 skeleton, load creeps up as the reps get easier. Heavy straight-set volume, no circuits, no shortcuts."},
+      {phase:3,n:"Peak Volume",method:"straight",goal:"balanced",split:"bro5",desc:"Drive the load to the top of the 10x10 range, then deload. Pure accumulation for mass."},
     ]},
   {id:"builtsize",n:"BUILT For Size",desc:"Quality-control sets. Upper/Lower split. Strict form emphasis. 4-day rotation.",icon:"BS",cat:"size",days:4,mesoLen:4,cd:1,designProfile:"athleanx",
     phases:[
@@ -3238,10 +3239,10 @@ var PRESETS=[
       {phase:1,n:"Timed Circuits",method:"density",goal:"shred",split:"phat5",desc:"30-second timed circuits, 4-5 rounds. Heart-rate-gated rest between rounds."},
       {phase:2,n:"Interval Shred",method:"density",goal:"shred",split:"phat5",desc:"Density blocks. Sprint intervals. Bodyweight circuits. Maximum fat loss."},
     ]},
-  {id:"maxshred",n:"MAX/SHRED",desc:"Metabolic conditioning circuits. Density blocks. Fat loss with muscle retention. 4 days tapering to 2.",icon:"MX",cat:"cut",days:4,mesoLen:4,cd:3,designProfile:"athleanx",
+  {id:"maxshred",n:"MAX/SHRED",desc:"Metabolic circuits and inferno finishers - antagonist density blocks and giant-set burnouts that torch calories while you hold your muscle. 4 days.",icon:"MX",cat:"cut",days:4,mesoLen:4,cd:3,designProfile:"athleanx",
     phases:[
-      {phase:1,n:"Mobilization Phase",method:"density",goal:"shred",split:"nip5",desc:"EMOM-style density circuits with descending-then-ascending reps."},
-      {phase:2,n:"Metabolization Phase",method:"density",goal:"contest",split:"nip5",desc:"Burst Classix. Slow Burn + Flash Burn + Rug Burn circuits. Fire Drills. Maximum fat incineration."},
+      {phase:1,n:"Mobilization",method:"density",goal:"shred",split:"ant4",desc:"EMOM-style density circuits on antagonist pairs - minimal rest, beat your rep total each session."},
+      {phase:2,n:"Inferno",method:"giant",goal:"contest",split:"ant4",desc:"Giant-set circuits: four exercises per muscle back to back for a metabolic burn. Fire drills to finish."},
     ]},
   {id:"oldschool",n:"Old School Iron",desc:"Classic bodybuilding. High-volume bro-pairing split. Rotating high-rep finishers. 4-on/1-off.",icon:"OS",cat:"size",days:4,mesoLen:4,cd:1,designProfile:"athleanx",
     phases:[
@@ -3316,6 +3317,12 @@ var PRESETS=[
       {phase:2,n:"Block 2",method:"straight",goal:"balanced",split:"fb5",desc:"Same rotation with an added top-set + back-off structure on primaries."},
       {phase:3,n:"Deload (optional)",method:"straight",goal:"balanced",split:"fb5",desc:"Intensity-only deload — effort drops, volume stays high. Skippable."},
       {phase:4,n:"Max Test",method:"straight",goal:"balanced",split:"fb5",desc:"AMRAP realization week."},
+    ]},
+  {id:"nip_transform",n:"Bodybuilding Transformation",desc:"Nippard 5-day Upper/Lower + Push/Pull/Legs hybrid. Two strength-biased UL days feed three hypertrophy PPL days; most muscles hit 2-3x a week. Two blocks with an opening deload.",icon:"BT",cat:"size",days:5,mesoLen:5,cd:0,designProfile:"nippard",
+    phases:[
+      {phase:1,n:"Block 1 - Build",method:"straight",goal:"balanced",split:"ulppl5",desc:"Establish the loads. Strength UL days at 5-8 reps and long rest, hypertrophy PPL days at 8-15. Straight sets, RIR 1-3."},
+      {phase:2,n:"Block 1 - Intensify",method:"straight",goal:"balanced",split:"ulppl5",desc:"Volume climbs on the PPL days and effort steps toward a last-set-to-failure; loads climb on the heavy UL days."},
+      {phase:3,n:"Block 2 - Peak",method:"myo",goal:"balanced",split:"ulppl5",desc:"Second block. PPL isolation slots add myo-reps and lengthened partials; the UL days stay heavy straight sets. Then deload."}
     ]},
   {id:"nip_fundamentals",n:"Fundamentals",desc:"Beginner full-body program, two 4-week blocks. Flat straight sets, double progression, a mid-program step up in effort. No deload — runs straight through.",icon:"FN",cat:"size",days:3,mesoLen:4,cd:0,designProfile:"nippard",
     phases:[
@@ -6434,7 +6441,8 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
     weeklyVols[m2]=calcWeekVol(m2,wk,ml,vm2,fbAdj?fbAdj[m2]:0,primarySetsEst,specBdg);
   }
 
-  splitObj.layout.forEach(function(day,di){var exs=[];var used=0;var firstComp=true;
+  var _weekMuscleEx={}; // per-muscle cross-day exercise usage — anti-repetition + distinct-exercise budget (keeps weekly distinct-set volume within MRV)
+  splitObj.layout.forEach(function(day,di){var exs=[];var used=0;var firstComp=true;var _dayMyo=0;
     // V2: Per-day method override for method-locked splits (PHUL, PHAT, DC, etc.)
     var _dayRule=splitObj.dayMethodRules?splitObj.dayMethodRules[day.n]:null;
     var _dayMid=_dayRule?(_dayRule.method==="userChoice"?mid:_dayRule.method):mid;
@@ -6488,6 +6496,15 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       // Equipment filter: restrict exercises to matching equipment type
       if(equipFilter&&EQUIP_FILTERS[equipFilter]){pool=pool.filter(EQUIP_FILTERS[equipFilter]);}
       if(pool.length===0)return;
+      // ── ANTI-REPETITION (hard pool filter, respected by every selection path) ──
+      // Cap any exercise at 2 distinct days/week; once a muscle hits its distinct-exercise budget
+      // (~MRV/2 so summed distinct volume stays within MRV) block NEW distinct and reuse instead.
+      // Graceful fallback to the full pool if the filter would leave nothing to pick.
+      (function(){var _mUsed=_weekMuscleEx[muscle]||{};var _distinctN=0;for(var _mk in _mUsed)_distinctN++;
+        var _maxDistinct=Math.max(2,Math.floor((((VOL_LM[muscle]&&VOL_LM[muscle].mrv)||16)-2)/2));
+        var _fp=pool.filter(function(e){var _wu=_mUsed[e.n]||0;if(_wu>=2)return false;if(_distinctN>=_maxDistinct&&_wu===0)return false;return true;});
+        if(typeof process!=="undefined"&&muscle==="back")process.stderr.write("[back di="+di+"] used="+JSON.stringify(_mUsed)+" fpLen="+_fp.length+" poolLen="+pool.length+"\n");
+        if(_fp.length>0)pool=_fp;});
       // ── VOLUME: weekly target ÷ frequency = session target (FIX: divide AMONG exercises, not per-exercise) ──
       var weeklyTarget=Math.min(weeklyVols[muscle]||10,(VOL_LM[muscle]&&VOL_LM[muscle].mrv)||99);
       var freq=Math.max(1,splitObj.layout.filter(function(d){return d.g.indexOf(muscle)>=0;}).length);
@@ -6627,17 +6644,18 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
           if(myx&&!myUsed[myx.n]){picked.push(myx);myUsed[myx.n]=1;}
         }
         picked.forEach(function(ex){
-          var isMyo=ex.myo;
           var isComp=ex.t==="C";
-          // Compounds that can't do myo-reps get standard sets instead
-          var forceStandard=isComp&&!isMyo;
+          // Myo-reps are for ISOLATION work only (Fagerli): single-joint, myo-eligible, low systemic
+          // fatigue, and never a compound/big lift. Cap at 2 per session; the rest stay straight sets.
+          var _qual=(!isComp&&ex.myo&&(ex.fat||1)<=2&&ex.pat==="iso");
+          var isMyo=_qual&&_dayMyo<2&&!(firstComp&&isComp);
+          if(isMyo)_dayMyo++;
           var myTime=exTime(isMyo?1:setsPerExercise,isMyo?15:10,isComp,firstComp&&isComp,isMyo?"myo":"straight");
           if(groupUsed+myTime>avail)return; // Budget guard
           var myNote=isMyo
-            ?"MYO-REP: Activation set 12-30 reps to near failure. Rest 5-10 seconds (3-5 deep breaths). Mini-set: 3-5 reps. Repeat 4-5 mini-sets. STOP when you lose a rep vs previous mini-set."
-            :forceStandard?"Standard sets — this compound isn't suited for myo-reps (safety/setup). Use for progressive overload."
-            :"Standard sets (not myo-rep compatible)";
-          exs.push({name:ex.n,muscle:muscle,tech:isMyo?"myo":"straight",sets:isMyo?1:setsPerExercise,reps:isMyo?"12-30 + 4-5×3-5":"8-12",time:myTime,mv:ex.mv,note:myNote});
+            ?"MYO-REP: Activation set 12-20 reps to 1-2 RIR. Rest 3-5 deep breaths (~10-15s). Mini-sets of 3-5 reps. Stop when you lose a rep or after 5 mini-sets. Isolation only, used sparingly."
+            :"Straight sets. Myo-reps are reserved for isolation work - compounds and heavy lifts stay on straight sets for safe progressive overload.";
+          exs.push({name:ex.n,muscle:muscle,tech:isMyo?"myo":"straight",sets:isMyo?1:setsPerExercise,reps:isMyo?"12-20 + 3-5x3-5":"8-12",time:myTime,mv:ex.mv,note:myNote});
           if(isComp)firstComp=false;used+=myTime;groupUsed+=myTime;
         });
         return;
@@ -7203,6 +7221,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
     // D-Apr2026: round tot to integer minutes so the display never shows 22.9999997
     var estClean=Math.round(tot);
     var correctedEst=Math.round(tot*tf);
+    for(var _wi=0;_wi<exs.length;_wi++){var _we=exs[_wi];if(_we&&_we.name&&_we.muscle&&_we.tier!=="primer"&&_we.tier!=="corrective"&&_we.tier!=="grit"&&_we.tier!=="carry"&&!_we.isCardio){(_weekMuscleEx[_we.muscle]=_weekMuscleEx[_we.muscle]||{});_weekMuscleEx[_we.muscle][_we.name]=(_weekMuscleEx[_we.muscle][_we.name]||0)+1;}}
     sessions.push({label:day.n,exercises:exs,est:estClean,correctedEst:correctedEst,timeFactor:tf,timeFactorSessions:tfMeta.sessions,timeFactorSource:tfMeta.source,dayMethodRule:_dayRule||null,dayMethod:_dayMid});
   });
   // ── FINAL MRV SAFETY NET ── No muscle's weekly DIRECT working sets may exceed its MRV.
@@ -7230,6 +7249,28 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
         for(var _j=0;_j<_wk[_m].length;_j++){var _c=_wk[_m][_j];if((_c.sets||0)>2&&(!_top||_c.sets>_top.sets))_top=_c;}
         if(!_top)break;
         _top.sets-=1;_tot-=1;_g++;
+      }
+    }
+  })();
+  // ── ANTI-REPETITION post-pass (path-independent guarantee): cap any working exercise at 2 distinct
+  // days/week; swap surplus occurrences to an unused same-muscle alternative. Runs after all selection.
+  (function(){
+    var _seen={};
+    var _work=function(e){return e&&e.name&&e.muscle&&EX[e.muscle]&&e.tier!=="primer"&&e.tier!=="corrective"&&e.tier!=="grit"&&e.tier!=="carry"&&!e.isCardio;};
+    for(var _si=0;_si<sessions.length;_si++){
+      var _exl=sessions[_si].exercises||[];var _dayHas={};
+      for(var _ei=0;_ei<_exl.length;_ei++){
+        var _e=_exl[_ei];if(!_work(_e)){if(_e&&_e.name)_dayHas[_e.name]=1;continue;}
+        if((_seen[_e.name]||0)>=2){
+          var _alt=null,_mp=EX[_e.muscle]||[];
+          for(var _ai=0;_ai<_mp.length;_ai++){var _c=_mp[_ai];
+            if(banned.indexOf(_c.n)>=0)continue;
+            if(equipFilter&&EQUIP_FILTERS[equipFilter]&&!EQUIP_FILTERS[equipFilter](_c))continue;
+            if((_seen[_c.n]||0)>=2)continue;if(_dayHas[_c.n])continue;if(_c.n===_e.name)continue;
+            _alt=_c;break;}
+          if(_alt){_e.name=_alt.n;_e.mv=_alt.mv;_e.t=_alt.t;}
+        }
+        _seen[_e.name]=(_seen[_e.name]||0)+1;_dayHas[_e.name]=1;
       }
     }
   })();
