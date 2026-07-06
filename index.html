@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-37";
+  window.FORGE_BUILD="2026.07.03-38";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -2460,6 +2460,7 @@ var SPLITS=[
   {id:"arn6",n:"Arnold Split",d:6,methodPolicy:"agnostic",desc:"Chest+Back supersets, Shoulders+Arms, Legs. Classic high-volume. Needs caloric surplus.",layout:[{n:"Chest+Back A",g:["chest","back"]},{n:"Shoulders+Arms A",g:["shoulders","biceps","triceps"]},{n:"Legs A",g:["quads","hams","core"]},{n:"Chest+Back B",g:["back","chest"]},{n:"Shoulders+Arms B",g:["triceps","biceps","shoulders"]},{n:"Legs B",g:["hams","quads","core"]}]},
   {id:"ul6",n:"Upper / Lower x3",d:6,methodPolicy:"agnostic",desc:"Upper and lower each three times a week. Maximum frequency for advanced lifters with strong recovery.",layout:[{n:"Upper A",g:["chest","back","shoulders","biceps","triceps"]},{n:"Lower A",g:["quads","hams","core"]},{n:"Upper B",g:["back","chest","shoulders","triceps","biceps"]},{n:"Lower B",g:["hams","quads","core"]},{n:"Upper C",g:["chest","back","shoulders","biceps","triceps"]},{n:"Lower C",g:["quads","hams","core"]}]},
   {id:"fb5",n:"Full Body x5",d:5,methodPolicy:"agnostic",desc:"Full body five days a week with a rotating daily emphasis. Very high frequency; for advanced lifters.",layout:[{n:"Full Body A",g:["chest","back","shoulders","biceps","triceps"]},{n:"Full Body B",g:["quads","hams","chest","back","core"]},{n:"Full Body C",g:["chest","back","shoulders","quads","hams"]},{n:"Full Body D",g:["back","chest","shoulders","biceps","triceps"]},{n:"Full Body E",g:["quads","hams","back","shoulders","core"]}]},
+  {id:"glute4",n:"Glute Focus x4",d:4,methodPolicy:"agnostic",desc:"Lower-body and glute emphasis — hips trained heavy and often across three lower days, upper body maintained on one.",layout:[{n:"Lower (Glute) A",g:["glutes","hams","quads","core"]},{n:"Upper",g:["back","chest","shoulders","biceps","triceps"]},{n:"Lower (Glute) B",g:["glutes","hams","quads"]},{n:"Lower (Posterior) C",g:["glutes","hams","core"]}]},
 ];
 // Wire calves into every leg day (any day training quads or hams) so the calf library actually gets programmed.
 (function(){for(var si=0;si<SPLITS.length;si++){var lay=SPLITS[si].layout||[];for(var di=0;di<lay.length;di++){var g=lay[di].g||[];var legDay=(g.indexOf("quads")>=0||g.indexOf("hams")>=0);if(legDay){if(g.indexOf("calves")<0)g.push("calves");if(g.indexOf("glutes")<0)g.push("glutes");}}}})();
@@ -3276,15 +3277,46 @@ var PRESETS=[
       {phase:1,n:"Strength Base",method:"straight",goal:"balanced",split:"fb3",desc:"Straight sets, double progression, moderate effort. 5-7 exercises/session."},
       {phase:2,n:"Modified Strength Base",method:"straight",goal:"balanced",split:"fb3",desc:"Same structure, effort steps up with a partial exercise swap. No deload."},
     ]},
-  {id:"women_foundation",n:"Women's Foundation",desc:"Andrea's beginner base. Two four-week waves, effort ramping RPE 6 to 9. Lower body trained twice a week, upper twice — quality movement first, load second.",icon:"WF",cat:"size",days:4,mesoLen:4,cd:0,designProfile:"neutral",series:"women",
+  {id:"w_foundations",n:"Foundations",desc:"Beginner on-ramp. Full body three days a week — learn to squat, hinge, push, pull, and carry, then add weight session to session. Full progressive overload from day one.",icon:"FN",cat:"size",days:3,mesoLen:4,cd:0,designProfile:"women",series:"women",
     phases:[
-      {phase:1,n:"Base Wave",method:"straight",goal:"balanced",split:"ul4",desc:"Straight sets, learn the patterns, RPE builds 6 to 8. Full lower and upper each twice weekly."},
-      {phase:2,n:"Build Wave",method:"straight",goal:"balanced",split:"ul4",desc:"Second wave, effort steps to RPE 9, same movements with progressive overload."}
+      {phase:1,n:"Learn the Patterns",method:"straight",goal:"balanced",split:"fb3",desc:"Straight sets, 8-10 reps, 2-4 in reserve. Groove the five movements with clean form."},
+      {phase:2,n:"Build the Base",method:"straight",goal:"balanced",split:"fb3",desc:"Same movements, add a little weight or a rep each session. Micro-load the presses. Get confident under the bar."}
     ]},
-  {id:"women_specialization",n:"Women's Specialization",desc:"Andrea's intermediate glute and lower focus. High lower-body frequency, upper twice weekly, a deload opening the second block. Posterior chain and shoulders emphasized.",icon:"WS",cat:"size",days:5,mesoLen:4,cd:0,designProfile:"neutral",series:"women",
+  {id:"w_physique",n:"Total Physique",desc:"Balanced full-body development. Upper/lower four days, each muscle twice a week, volume climbing across the block. Shorter accessory rest and a touch more volume — built on the female fatigue-resistance edge.",icon:"TP",cat:"size",days:4,mesoLen:5,cd:0,designProfile:"women",series:"women",
     phases:[
-      {phase:1,n:"Specialize Block 1",method:"straight",goal:"posterior",split:"nip5",desc:"Glute and posterior-chain emphasis. Primary lifts progressed on load, accessories on effort."},
-      {phase:2,n:"Specialize Block 2",method:"straight",goal:"posterior",split:"nip5",desc:"Opens lighter to recover, then climbs again. Same lower-focused structure, more volume."}
+      {phase:1,n:"Accumulate",method:"straight",goal:"balanced",split:"ul4",desc:"Build volume, 8-15 reps, 3 in reserve early. Double progression, own the eccentric."},
+      {phase:2,n:"Intensify",method:"myo",goal:"balanced",split:"ul4",desc:"Effort climbs to 0-1 RIR, myo-rep finishers on isolations. Chase the pump."},
+      {phase:3,n:"Deload",method:"straight",goal:"balanced",split:"ul4",desc:"Volume and effort back off a week to recover and resensitize."}
+    ]},
+  {id:"w_glute",n:"Glute & Posterior",desc:"Hips trained heavy and often — glutes and hamstrings three days a week across three loading vectors (thrust, hinge, abduction), upper body maintained. Hip-thrust primary, per Contreras' EMG work.",icon:"GP",cat:"size",days:4,mesoLen:5,cd:0,designProfile:"women",series:"women",
+    phases:[
+      {phase:1,n:"Build the Hips",method:"straight",goal:"posterior",split:"glute4",desc:"Hip thrust, RDL, and single-leg work. 6-15 reps split across strength and pump ranges."},
+      {phase:2,n:"Overload",method:"myo",goal:"posterior",split:"glute4",desc:"Add sets and intensity techniques, drive the glute pump. Effort to 0-1 RIR."},
+      {phase:3,n:"Deload",method:"straight",goal:"posterior",split:"glute4",desc:"Back off a week, keep the pattern, let the hips recover."}
+    ]},
+  {id:"w_strong",n:"Strong",desc:"Get strong on the big lifts. Squat, hinge, press and pull trained heavy twice a week — low reps, long rest, real load. No reason to train light: relative strength gains match men.",icon:"SG",cat:"athletic",days:4,mesoLen:5,cd:0,designProfile:"women",series:"women",
+    phases:[
+      {phase:1,n:"Hypertrophy Base",method:"straight",goal:"balanced",split:"ul4",desc:"Build the muscle that drives strength. 6-10 reps, 2-3 in reserve."},
+      {phase:2,n:"Strength Block",method:"straight",goal:"strength",split:"phul4",desc:"Heavy compounds, 3-6 reps, long rest, RPE 7-8. Power and hypertrophy days."},
+      {phase:3,n:"Peak",method:"straight",goal:"strength",split:"phul4",desc:"Heavier top sets, fewer reps, see where you are. Then deload."}
+    ]},
+  {id:"w_lean",n:"Lean",desc:"Hold your muscle while you diet. Maintain training volume in a deficit — the food does the fat loss, the lifting keeps the shape. No 'toning,' no light-weight myth.",icon:"LN",cat:"cut",days:4,mesoLen:5,cd:0,designProfile:"women",series:"women",
+    phases:[
+      {phase:1,n:"Maintain & Diet",method:"straight",goal:"shred",split:"ul4",desc:"Keep the working sets, 8-15 reps, 1-2 in reserve. Preserve muscle in the deficit."},
+      {phase:2,n:"Hold the Line",method:"myo",goal:"shred",split:"ul4",desc:"Intensity techniques keep the stimulus high as calories drop. Protect the shape."}
+    ]},
+  {id:"w_postpartum",n:"Postpartum Return",desc:"A phased, criterion-based return to training after birth — reconnect the deep core and pelvic floor, rebuild movement, then load progressively. Diastasis-recti aware. Progresses by how you feel, not the calendar.",icon:"PP",cat:"health",days:3,mesoLen:4,cd:0,designProfile:"women",series:"women",gate:"postpartum",
+    phases:[
+      {phase:1,n:"Reconnect & Foundation",guidance:true,goal:"balanced",method:"straight",split:"fb3",desc:"Pre-clearance and early weeks: 360° breathing, gentle pelvic-floor lift-and-release, deep-core (transverse abdominis) draw-ins, easy walking. No crunches, planks, impact, or heavy load. This phase is guidance, not a generated workout."},
+      {phase:2,n:"Rebuild Movement",guidance:true,goal:"balanced",method:"straight",split:"fb3",desc:"Re-learn squat, hinge, push, pull, carry — bodyweight and light, controlled tempo, exhale on effort. Anti-movement core (Pallof, carries) replaces crunches. Guidance-led; advance only when symptom-free."},
+      {phase:3,n:"Progressive Loading",method:"straight",goal:"balanced",split:"fb3",desc:"Light-to-moderate full-body strength, progressive overload, midline flat and no coning. Generated program unlocks after the clearance and symptom check pass."},
+      {phase:4,n:"Return to Strength",impact:true,method:"straight",goal:"balanced",split:"ul4",desc:"Full progressive strength. Impact/running stays locked until the readiness screen is passed."}
+    ]},
+  {id:"w_menopause",n:"Strong Through Menopause",desc:"The one strategy with direct bone-density trial evidence for postmenopausal women: heavy resistance plus impact (LIFTMOR). Heavy compounds for bone and strength, accessories for lean mass, a jump/landing finisher. Track strength and function, not the scale.",icon:"MP",cat:"health",days:3,mesoLen:5,cd:0,designProfile:"women",series:"women",gate:"menopause",
+    phases:[
+      {phase:1,n:"Build Strength",method:"straight",goal:"strength",split:"fb3",desc:"Heavy compounds 3-6 reps at RPE 7-8 (deadlift, squat, press) plus accessories 8-15. Bone loves heavy, infrequent, high-magnitude load."},
+      {phase:2,n:"Load & Power",impact:true,method:"straight",goal:"strength",split:"fb3",desc:"Keep it heavy, add speed on the compounds. Impact/jump finisher unlocks after the fracture-risk screen. Progress impact by height, not reps."},
+      {phase:3,n:"Deload & Reassess",method:"straight",goal:"balanced",split:"fb3",desc:"Back off a week. Retest a top set and a movement check — progress is strength and function, not bodyweight."}
     ]},
 ];
 
@@ -3787,6 +3819,7 @@ function getTimeFactorMeta(dayLabel){
 function exTime(sets,reps,isCompound,isFirst,method){
   var sd=TIMING.setDuration(reps||10);
   var rest=isCompound?TIMING.rest.compoundHyp:TIMING.rest.isolation;
+  if(_FORGE_DESIGN_PROFILE==="women"&&!isCompound)rest=Math.round(rest*0.8); // women's engine: shorter accessory rest (superior between-set recovery) → denser sessions
   var warmup=isFirst?TIMING.warmup.first:isCompound?TIMING.warmup.subsequent:0;
   var wc=TIMING.weightChange; // weight change time (once per exercise)
 
@@ -4255,7 +4288,7 @@ function calcWeekVol(muscle,wk,ml,goalMul,fbAdj,primarySetsMap,specBdg){
   if(progress>1)progress=1;
   // DESIGN ENGINE — Nippard accumulates volume harder toward MRV across the block (block-
   // periodization signature); neutral + AthleanX ramp to MAV as before.
-  var _volTop=(_FORGE_DESIGN_PROFILE==="nippard")?Math.round((lm.mav+lm.mrv)/2):lm.mav;
+  var _volTop=(_FORGE_DESIGN_PROFILE==="nippard")?Math.round((lm.mav+lm.mrv)/2):(_FORGE_DESIGN_PROFILE==="women"?Math.round(lm.mav+(lm.mrv-lm.mav)*0.3):lm.mav);
   var base=lm.mev+Math.round((_volTop-lm.mev)*progress);
   // V2 #6: Apply specialization multiplier if budget has points for this muscle
   var specMul = specBdg ? getSpecMultiplier(muscle, specBdg) : 1.0;
@@ -5700,10 +5733,10 @@ function isBandExercise(ex){
 // buildProgram hooks so AthleanX and Nippard programs are GENERATED with different logic
 // (core divergence, not flare). Defaults to "neutral" → identical to today's behavior.
 var _FORGE_DESIGN_PROFILE="neutral";
-function _setDesignProfile(p){_FORGE_DESIGN_PROFILE=(p==="athleanx"||p==="nippard")?p:"neutral";return _FORGE_DESIGN_PROFILE;}
+function _setDesignProfile(p){_FORGE_DESIGN_PROFILE=(p==="athleanx"||p==="nippard"||p==="women")?p:"neutral";return _FORGE_DESIGN_PROFILE;}
 function getDesignProfile(){return _FORGE_DESIGN_PROFILE;}
 // Per-engine coaching cue appended to working-exercise notes — reflects each philosophy in original words.
-function _engineNote(n){var b=n||"";if(_FORGE_DESIGN_PROFILE==="athleanx")return (b?b+"  ":"")+"AthleanX: control the eccentric, full range, protect the joint.";if(_FORGE_DESIGN_PROFILE==="nippard")return (b?b+"  ":"")+"Nippard: chase the stretch, log every set, aim to beat last session.";return b;}
+function _engineNote(n){var b=n||"";if(_FORGE_DESIGN_PROFILE==="athleanx")return (b?b+"  ":"")+"AthleanX: control the eccentric, full range, protect the joint.";if(_FORGE_DESIGN_PROFILE==="nippard")return (b?b+"  ":"")+"Nippard: chase the stretch, log every set, aim to beat last session.";if(_FORGE_DESIGN_PROFILE==="women")return (b?b+"  ":"")+"Women's engine: brace on the hard rep, exhale as you drive, own the eccentric.";return b;}
 function scoreEx(ex,mid,hist,goalId,slotType,equipFilter,muscle,priorityMuscle,weekNum,mesoLen){
   // slotType: "compound","isolation","any" — helps contextualize scoring
   // equipFilter: "band","bw","db",null — from preset selection
@@ -5728,6 +5761,7 @@ function scoreEx(ex,mid,hist,goalId,slotType,equipFilter,muscle,priorityMuscle,w
   // AthleanX: bias unilateral + rear-delt/pull "athletic + joint-health" picks.
   if(_FORGE_DESIGN_PROFILE==="nippard"){if(ex.len==="L")s+=12;if(ex.t==="I"&&ex.len==="L")s+=4;}
   else if(_FORGE_DESIGN_PROFILE==="athleanx"){if(ex.uni)s+=7;if(ex.mv==="pull")s+=4;}
+  else if(_FORGE_DESIGN_PROFILE==="women"){if(ex.uni)s+=9;if(ex.pat==="hi"||ex.mv==="curl")s+=9;if(ex.ss==="hd")s+=5;if(ex.len==="L")s+=4;}
   // Compound priority (v2: demoted from +10 to a tiebreaker. Compounds win when
   // close-scored, but aren't allowed to outweigh stretch-bias + method fit.)
   if(ex.t==="C")s+=(slotType==="compound"?7:5);
@@ -7432,6 +7466,9 @@ function Forge(props){
   var _woState=useState({}),weightOverrides=_woState[0],setWeightOverrides=_woState[1]; // V2 #4: {exName: suggestedLbs} from transition wizard
   var _ppState=useState(1),presetPhase=_ppState[0],setPresetPhase=_ppState[1]; // V2 #4: current AX preset phase (1-indexed)
   var _ptState=useState("athleanx"),presetTab=_ptState[0],setPresetTab=_ptState[1]; // AthleanX vs Nippard preset tab
+  var _gaState=useState(false),gateAck=_gaState[0],setGateAck=_gaState[1]; // medical-clearance acknowledged for a gated program
+  var _spState=useState(false),symptomPass=_spState[0],setSymptomPass=_spState[1]; // readiness/symptom check passed → impact phases unlock
+  var _ssState=useState(false),showSympt=_ssState[0],setShowSympt=_ssState[1]; // readiness-check modal open
   var _tempoPre=useState(function(){return sGet("forge_tempoPreset","hyp");}),tempoPreset=_tempoPre[0],setTempoPreset=_tempoPre[1]; // V2 #7: active tempo preset id, persisted
   var _tempoOverlay=useState(null),tempoOverlay=_tempoOverlay[0],setTempoOverlay=_tempoOverlay[1]; // V2 #7: active tempo countdown {phase,sec,rep}
   useEffect(function(){
@@ -10436,7 +10473,7 @@ function Forge(props){
               return cats.map(function(cat){var progs=PRESETS.filter(function(p){var trad=(p.series==="women")?"women":((p.designProfile==="nippard")?"nippard":"athleanx");return p.cat===cat.id&&trad===presetTab;});if(progs.length===0)return null;
                 return <div key={cat.id} style={{marginBottom:16}}>
                   <div style={{fontSize:12,fontWeight:700,fontFamily:FD,letterSpacing:2,color:cat.c,marginBottom:8}}>{cat.n}</div>
-                  {progs.map(function(p){return <button key={p.id} onClick={function(){setPresetPick(p.id);setPresetPhase(0);setGoal(null);setMethod(null);setSplit(null);}} style={{width:"100%",textAlign:"left",padding:"14px 16px",marginBottom:8,background:C.bar,border:"1px solid "+C.bdr,borderRadius:12,cursor:"pointer",display:"flex",alignItems:"center",gap:12}}>
+                  {progs.map(function(p){return <button key={p.id} onClick={function(){setPresetPick(p.id);setPresetPhase(0);setGoal(null);setMethod(null);setSplit(null);setGateAck(false);setSymptomPass(false);}} style={{width:"100%",textAlign:"left",padding:"14px 16px",marginBottom:8,background:C.bar,border:"1px solid "+C.bdr,borderRadius:12,cursor:"pointer",display:"flex",alignItems:"center",gap:12}}>
                     <div style={{width:44,height:44,borderRadius:10,background:cat.c+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:700,color:cat.c,fontFamily:FD,flexShrink:0}}>{p.icon}</div>
                     <div style={{flex:1}}><div style={{fontSize:15,fontWeight:700,color:C.txt,fontFamily:FD}}>{p.n}</div><div style={{fontSize:11,color:C.dim,marginTop:2,lineHeight:1.4}}>{p.desc}</div><div style={{fontSize:10,color:C.mid,marginTop:3}}>{p.days+" days/wk • "+p.phases.length+" phases • "+p.mesoLen+" wk mesos"}</div></div>
                   </button>;})}
@@ -10449,18 +10486,57 @@ function Forge(props){
                 <div style={{width:52,height:52,borderRadius:12,background:catC+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,fontWeight:700,color:catC,fontFamily:FD}}>{p.icon}</div>
                 <div><div style={{fontSize:20,fontWeight:700,fontFamily:FD,color:catC}}>{p.n}</div><div style={{fontSize:11,color:C.dim,marginTop:2}}>{p.desc}</div></div>
               </div>
-              <div style={{fontSize:12,fontWeight:700,fontFamily:FD,letterSpacing:2,color:C.acc,marginBottom:8}}>CHOOSE YOUR PHASE (MESO)</div>
-              <div style={{fontSize:11,color:C.dim,marginBottom:12}}>Each phase is a {p.mesoLen}-week mesocycle with a distinct training style. Start with Phase 1 if new.</div>
-              {p.phases.map(function(ph){var sel=presetPhase===ph.phase;return <button key={ph.phase} onClick={function(){setPresetPhase(ph.phase);setGoal(ph.goal);setSplit(ph.split);setMethod(ph.method);setNumDays(p.days);setMesoLen(p.mesoLen);setPresetCd(typeof p.cd==="number"?p.cd:null);}} style={{width:"100%",textAlign:"left",padding:"14px 16px",marginBottom:8,background:sel?(catC+"12"):C.bar,border:"1px solid "+(sel?(catC+"50"):C.bdr),borderRadius:12,cursor:"pointer"}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{fontSize:15,fontWeight:700,color:sel?catC:C.txt,fontFamily:FD}}>{"PHASE "+ph.phase+": "+ph.n}</div><span style={{fontSize:10,color:C.dim}}>{p.mesoLen+" wks"}</span></div>
-                <div style={{fontSize:11,color:C.mid,marginTop:3,lineHeight:1.4}}>{ph.desc}</div>
-              </button>;})}
-              <div style={{fontSize:12,fontWeight:700,fontFamily:FD,letterSpacing:2,color:C.acc,marginTop:16,marginBottom:8}}>SESSION LENGTH</div>
-              <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:16}}>{[30,45,60,75,90].map(function(t){return pill(t+" min",mins===t,C.grn,function(){setMins(t);},"pt"+t);})}</div>
-              <div style={{display:"flex",gap:10,marginTop:4}}>
-                {secBtn("BACK",function(){setPresetPick(null);setGoal(null);setSplit(null);setMethod(null);})}
-                {mainBtn("GENERATE",function(){generateProg();setReviewMode(true);setEditDay(0);setEditPick(null);setScreen("workout");setView("edit");},!goal||!split||!method)}
-              </div>
+              {showSympt&&<div onClick={function(){setShowSympt(false);}} style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.78)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+                <div onClick={function(e){e.stopPropagation();}} style={{background:C.bar,border:"1px solid "+C.bdr,borderRadius:16,padding:20,maxWidth:440,width:"100%",maxHeight:"85vh",overflowY:"auto"}}>
+                  <div style={{fontSize:16,fontWeight:700,fontFamily:FD,letterSpacing:1,marginBottom:6}}>READINESS CHECK</div>
+                  <div style={{fontSize:11,color:C.dim,marginBottom:14,lineHeight:1.5}}>Answer honestly. Any "yes" here means the impact phase stays locked — see your provider or a pelvic-floor PT first.</div>
+                  <div style={{fontSize:11,fontWeight:700,fontFamily:FD,color:C.red,letterSpacing:1,marginBottom:8}}>DO YOU HAVE ANY OF THESE?</div>
+                  {(p.gate==="postpartum"?["Leaking urine when you cough, jump, or lift","Heaviness, dragging, or a bulge in the pelvic area","A ridge or 'coning' down your midline when you brace","Pelvic, abdominal, or new low-back pain","Bleeding that restarts with activity"]:["Diagnosed osteoporosis or a prior fragility fracture","Unexplained or worsening back pain","Balance problems or a recent fall","A spine condition your doctor flagged for heavy lifting"]).map(function(q,qi){return <div key={qi} style={{fontSize:12,color:C.mid,padding:"5px 0",lineHeight:1.4}}>{"• "+q}</div>;})}
+                  <div style={{display:"flex",gap:10,marginTop:16}}>
+                    {secBtn("YES — ONE OR MORE",function(){setShowSympt(false);alert("Please hold off on impact and heavy work and check in with your provider or a pelvic-floor physical therapist first. The earlier phases are still yours to keep working on.");})}
+                    {mainBtn("NO — ALL CLEAR",function(){setSymptomPass(true);setShowSympt(false);})}
+                  </div>
+                  <div style={{fontSize:9,color:C.dim,marginTop:14,lineHeight:1.5}}>{p.gate==="postpartum"?"You should also be able to walk 30 min, do ~20 single-leg squats per side, and hop in place — all symptom-free — before impact. Not medical advice.":"Progress impact by height, not reps, and keep spinal flexion out of loaded lifts. Not medical advice."}</div>
+                </div>
+              </div>}
+              {(function(){
+                var _selPh=null;for(var _pi=0;_pi<p.phases.length;_pi++){if(p.phases[_pi].phase===presetPhase)_selPh=p.phases[_pi];}
+                var _selGuid=!!(_selPh&&_selPh.guidance),_selImpact=!!(_selPh&&_selPh.impact),_selLocked=_selImpact&&!symptomPass;
+                if(p.gate&&!gateAck){
+                  return <div>
+                    <div style={{background:C.red+"10",border:"1px solid "+C.red+"40",borderRadius:12,padding:14,marginBottom:12}}>
+                      <div style={{fontSize:12,fontWeight:700,fontFamily:FD,letterSpacing:1,color:C.red,marginBottom:6}}>BEFORE YOU START — SAFETY CHECK</div>
+                      <div style={{fontSize:12,color:C.mid,lineHeight:1.5}}>{p.gate==="postpartum"?"Returning to training after birth carries real risk to the healing pelvic floor and ab wall if you start too soon. This program is education, not medical advice, and does not replace your provider.":"Heavy loading and impact build bone, but carry fracture risk with osteoporosis or a prior fragility fracture. This program is education, not medical advice, and does not replace your provider."}</div>
+                    </div>
+                    <div style={{fontSize:11,fontWeight:700,fontFamily:FD,letterSpacing:1,color:C.dim,marginBottom:6}}>SEE A PROVIDER FIRST IF YOU HAVE:</div>
+                    <div style={{fontSize:11,color:C.mid,lineHeight:1.6,marginBottom:14}}>{p.gate==="postpartum"?"Bleeding that restarts or worsens · heaviness, a bulge, or leaking · pelvic or abdominal pain · a bulge/coning down the midline when you brace.":"Diagnosed osteoporosis or a prior fragility/spine fracture · unexplained back pain · balance problems or recent falls · anything your doctor flagged for heavy lifting."}</div>
+                    <div style={{fontSize:13,fontWeight:700,color:C.txt,fontFamily:FD,marginBottom:10}}>{p.gate==="postpartum"?"Has your doctor or midwife cleared you to return to exercise?":"Has your doctor cleared you for heavy resistance training and impact?"}</div>
+                    <div style={{display:"flex",gap:10}}>
+                      {secBtn("NOT YET",function(){setPresetPick(null);setGoal(null);setSplit(null);setMethod(null);})}
+                      {mainBtn("YES — I'VE BEEN CLEARED",function(){setGateAck(true);})}
+                    </div>
+                    <div style={{fontSize:9,color:C.dim,marginTop:12,lineHeight:1.5}}>FORGE is not a medical device and does not diagnose or treat. A pelvic-floor physical therapist assessment is the single highest-value step in a postpartum return.</div>
+                  </div>;
+                }
+                return <div>
+                  {p.gate&&<div style={{fontSize:10,color:C.dim,marginBottom:10,lineHeight:1.5}}>{"Cleared ✓ — progress by how you feel, not the calendar. Impact and heavy phases stay locked until the readiness check passes. "}<span onClick={function(){setGateAck(false);setSymptomPass(false);}} style={{color:C.blu,cursor:"pointer"}}>Review safety</span></div>}
+                  <div style={{fontSize:12,fontWeight:700,fontFamily:FD,letterSpacing:2,color:C.acc,marginBottom:8}}>CHOOSE YOUR PHASE (MESO)</div>
+                  <div style={{fontSize:11,color:C.dim,marginBottom:12}}>Each phase is a {p.mesoLen}-week block. Start with Phase 1 if new.</div>
+                  {p.phases.map(function(ph){var sel=presetPhase===ph.phase;var _g=!!ph.guidance;var _im=!!ph.impact;var _lk=_im&&!symptomPass;return <button key={ph.phase} onClick={function(){setPresetPhase(ph.phase);setGoal(ph.goal);setSplit(ph.split);setMethod(ph.method);setNumDays(p.days);setMesoLen(p.mesoLen);setPresetCd(typeof p.cd==="number"?p.cd:null);}} style={{width:"100%",textAlign:"left",padding:"14px 16px",marginBottom:8,background:sel?(catC+"12"):C.bar,border:"1px solid "+(sel?(catC+"50"):C.bdr),borderRadius:12,cursor:"pointer"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{fontSize:15,fontWeight:700,color:sel?catC:C.txt,fontFamily:FD}}>{"PHASE "+ph.phase+": "+ph.n}</div><span style={{fontSize:9,fontWeight:700,fontFamily:FD,color:_g?C.blu:_lk?C.red:C.dim}}>{_g?"GUIDANCE":_lk?"LOCKED":p.mesoLen+" wks"}</span></div>
+                    <div style={{fontSize:11,color:C.mid,marginTop:3,lineHeight:1.4}}>{ph.desc}</div>
+                  </button>;})}
+                  {_selGuid?<div style={{background:C.blu+"10",border:"1px solid "+C.blu+"30",borderRadius:12,padding:14,marginTop:8,marginBottom:8}}><div style={{fontSize:11,color:C.mid,lineHeight:1.6}}>This phase is <b>guidance</b>, not a generated workout — follow the steps in the description at your own pace, and move on only when you can do it symptom-free.</div></div>:<div>
+                    <div style={{fontSize:12,fontWeight:700,fontFamily:FD,letterSpacing:2,color:C.acc,marginTop:16,marginBottom:8}}>SESSION LENGTH</div>
+                    <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:16}}>{[30,45,60,75,90].map(function(t){return pill(t+" min",mins===t,C.grn,function(){setMins(t);},"pt"+t);})}</div>
+                  </div>}
+                  {_selLocked&&<div style={{background:C.red+"10",border:"1px solid "+C.red+"40",borderRadius:12,padding:14,marginBottom:10}}><div style={{fontSize:12,color:C.mid,lineHeight:1.5,marginBottom:10}}>{"This phase adds "+(p.gate==="postpartum"?"running and impact":"impact and heavier axial loading")+". Pass a quick readiness check to unlock it."}</div>{mainBtn("START READINESS CHECK",function(){setShowSympt(true);})}</div>}
+                  <div style={{display:"flex",gap:10,marginTop:4}}>
+                    {secBtn("BACK",function(){setPresetPick(null);setGoal(null);setSplit(null);setMethod(null);})}
+                    {mainBtn("GENERATE",function(){generateProg();setReviewMode(true);setEditDay(0);setEditPick(null);setScreen("workout");setView("edit");},!goal||!split||!method||_selGuid||_selLocked)}
+                  </div>
+                </div>;
+              })()}
             </div>;})()}
         </div>)}
 
