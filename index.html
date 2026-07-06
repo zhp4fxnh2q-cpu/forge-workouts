@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-44";
+  window.FORGE_BUILD="2026.07.03-58";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -1115,6 +1115,17 @@ function sarahSay(key){
   if(_voiceQueue.length&&_voiceQueue[_voiceQueue.length-1]===key)return;
   _voiceQueue.push(key);
   _processVoiceQueue();
+}
+// Postpartum-runner cue: plays an ElevenLabs clip in the chosen voice (Sarah/Daniel) through the
+// shared no-overlap queue, INDEPENDENT of the global metronome-voice flag — the postpartum runner
+// carries its own on/off switch so the session is voice-coached by default.
+function ppCue(key){
+  try{
+    if(!key)return;
+    if(_voiceQueue.length&&_voiceQueue[_voiceQueue.length-1]===key)return;
+    _voiceQueue.push(key);
+    _processVoiceQueue();
+  }catch(e){}
 }
 function sarahStop(){
   _voiceQueue.length=0;
@@ -1399,6 +1410,48 @@ var EX_MP4S=typeof window!=="undefined"&&window.EX_MP4S?window.EX_MP4S:(typeof E
 // completely wrong free-exercise-db entry. Sourced from nerdfitness.com — they
 // serve CORS-enabled gifs that animate naturally.
 var EX_MEDIA_MAPPINGS={
+"DB Deficit Reverse Lunge":{gif:"https://www.powrpersonaltraining.com/wp-content/uploads/2025/10/Deficit-Reverse-Lunge-Exercise-Demo.gif"},
+"Reverse Hyper":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Reverse%20Hypers.mp4"},
+"Kas Glute Bridge":{gif:"https://fitnessprogramer.com/wp-content/uploads/2021/12/Barbell-Glute-Bridge.gif"},
+"DB Sumo Squat":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/DB%20Sumo%20Squats.mp4"},
+"Bicep Chin Curls":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Bicep%20Chin%20Curls.mp4"},
+"Single Arm DB Kickbacks":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Single%20Arm%20DB%20Kickbacks.mp4"},
+"DB Standing JM Press":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/DB%20Standing%20JM%20Press.mp4"},
+"Pushup Plus":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Pushup%20Plus.mp4"},
+"Angels and Devils":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Angels%20and%20Devils.mp4"},
+"DB Over and Backs":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/DB%20Over%20and%20Backs.mp4"},
+"1.5 Side Lateral Raises":{mp4:"https://athleanx.com/wp-content/uploads/2022/02/1-and-1-half-side-lateral-raise.mp4"},
+"Alternating DB UCV Raises":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Alternating%20DB%20UCV%20Raises.mp4"},
+"DB W Raises":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/DB%20W%20Raises.mp4"},
+"DB Reverse Pec Decks":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/DB%20Reverse%20Pec%20Decks.mp4"},
+"Superman Pressouts":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Superman%20Pressouts.mp4"},
+"DB Abduction Rows":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/DB%20Abduction%20Rows.mp4"},
+"Double DB Pullovers":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Double%20DB%20Pullovers.mp4"},
+"DB Cossack Squats":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/DB%20Cossack%20Squats.mp4"},
+"DB Reverse Sprinter Lunges":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/DB%20Reverse%20Sprinter%20Lunges.mp4"},
+"DB Spanish Squats":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/DB%20Spanish%20Squats.mp4"},
+"DB Bent-Over Lateral Raise":{gif:"https://fitnessprogramer.com/wp-content/uploads/2021/02/Bent-Over-Lateral-Raise.gif"},
+"DB Shrug":{gif:"https://fitnessprogramer.com/wp-content/uploads/2021/04/Dumbbell-Shrug.gif"},
+"Incline DB Fly":{gif:"https://fitnessprogramer.com/wp-content/uploads/2021/02/Incline-dumbbell-Fly.gif"},
+"Decline DB Fly":{gif:"https://fitnessprogramer.com/wp-content/uploads/2021/06/Decline-Dumbbell-Fly.gif"},
+"Decline DB Press":{gif:"https://fitnessprogramer.com/wp-content/uploads/2021/02/Decline-Dumbbell-Press.gif"},
+"DB Zottman Curl":{gif:"https://fitnessprogramer.com/wp-content/uploads/2021/04/zottman-curl.gif"},
+"DB Reverse Curl":{gif:"https://fitnessprogramer.com/wp-content/uploads/2021/04/dumbbell-reverse-curl.gif"},
+"Nordic Hamstring Curl":{gif:"https://fitnessprogramer.com/wp-content/uploads/2021/06/Nordic-Hamstring-Curl.gif"},
+"Lying DB Leg Curl":{gif:"https://fitnessprogramer.com/wp-content/uploads/2022/04/Lying-Dumbbell-Leg-Curl.gif"},
+"Single-Leg Donkey Calf Raise":{gif:"https://fitnessprogramer.com/wp-content/uploads/2022/10/Single-Leg-Donkey-Calf-Raise.gif"},
+"Donkey Calf Raise":{gif:"https://fitnessprogramer.com/wp-content/uploads/2021/09/Donkey-Calf-Raise.gif"},
+"Band Glute Kickback":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/09/cable-glute-kickback.gif"},
+"Single-Leg DB Hip Thrust":{gif:"https://fitnessprogramer.com/wp-content/uploads/2025/03/Single-Leg-Dumbbell-Hip-Thrust.gif"},
+"Banded Goblet Squats":{gif:"https://fitnessprogramer.com/wp-content/uploads/2022/10/Banded-Kettlebell-Goblet-Squat.gif"},
+"Pike Pushups":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Pike%20Pushups.mp4"},
+"DB Hang Clean & Press":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Barbell%20Hang%20Clean%20and%20Press.mp4"},
+"Levitation Squats":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Levitation%20Squats.mp4"},
+"Banded Reverse Lunges":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Banded%20Reverse%20Lunges.mp4"},
+"Reverse Crunches":{gif:"https://fitnessprogramer.com/wp-content/uploads/2021/02/Reverse-Crunch-1.gif"},
+"Band Pallof Press":{gif:"https://www.nerdfitness.com/wp-content/uploads/2020/04/pallof-press.gif"},
+"Crossover Pushups":{gif:"https://fitnessprogramer.com/wp-content/uploads/2022/02/Cross-Body-Push-up_Plyometric.gif"},
+"Jump Rope Intervals":{gif:"https://fitnessprogramer.com/wp-content/uploads/2023/10/Skip-Jump-Rope.gif"},
   // ── Sprint 5 (Jul 2026): 44 newer exercises (ADD pool: calves, glutes, hams, isos)
   // that fell back to the SVG stick figure — pinned to verified free-exercise-db images.
   "DB Standing Calf Raise":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Calf_Raise_On_A_Dumbbell/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Calf_Raise_On_A_Dumbbell/1.jpg"]},
@@ -1406,31 +1459,31 @@ var EX_MEDIA_MAPPINGS={
   "DB Standing Single-Leg Calf Raise":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Calf_Raise_On_A_Dumbbell/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Calf_Raise_On_A_Dumbbell/1.jpg"]},
   "Deficit Bodyweight Calf Raise":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Rocking_Standing_Calf_Raise/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Rocking_Standing_Calf_Raise/1.jpg"]},
   "Bodyweight Wall Calf Raise":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Rocking_Standing_Calf_Raise/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Rocking_Standing_Calf_Raise/1.jpg"]},
-  "DB Seated Calf Raise":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Calf_Raise/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Calf_Raise/1.jpg"]},
-  "Band Seated Calf Raise":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Calf_Raise/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Calf_Raise/1.jpg"]},
-  "Band Calf Raise":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Calf_Raises_-_With_Bands/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Calf_Raises_-_With_Bands/1.jpg"]},
+  "DB Seated Calf Raise":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/DB%20Seated%20Calf%20Raises.mp4"},
+  
+  "Band Calf Raise":{gif:"https://fitnessprogramer.com/wp-content/uploads/2022/05/Calf-Raise-with-Resistance-Band.gif"},
   "DB Donkey Calf Raise":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Donkey_Calf_Raises/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Donkey_Calf_Raises/1.jpg"]},
   "DB Glute Bridge":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Glute_Bridge/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Glute_Bridge/1.jpg"]},
   "DB Frog Pump":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Glute_Bridge/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Glute_Bridge/1.jpg"]},
   "DB Single-Leg Glute Bridge":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Single_Leg_Glute_Bridge/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Single_Leg_Glute_Bridge/1.jpg"]},
-  "DB B-Stance Hip Thrust":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Hip_Thrust/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Hip_Thrust/1.jpg"]},
+  "DB B-Stance Hip Thrust":{gif:"https://bretcontreras.com/wp-content/uploads/B-Stance-Hip-Thrust-GIF.gif"},
   "Band Hip Abduction":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Monster_Walk/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Monster_Walk/1.jpg"]},
-  "Band Fire Hydrant":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Monster_Walk/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Monster_Walk/1.jpg"]},
+  "Band Fire Hydrant":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Monster_Walk/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Monster_Walk/1.jpg"],gif:"https://fitnessprogramer.com/wp-content/uploads/2022/02/Banded-Fire-Hydrant.gif"},
   "Band Lateral Monster Walk":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Monster_Walk/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Monster_Walk/1.jpg"]},
-  "Band Standing Glute Kickback":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Monster_Walk/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Monster_Walk/1.jpg"]},
+  "Band Standing Glute Kickback":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Monster_Walk/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Monster_Walk/1.jpg"],gif:"https://fitnessprogramer.com/wp-content/uploads/2022/02/Banded-Standing-Glute-Kickback.gif"},
   "DB Curtsy Lunge":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Lunges/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Lunges/1.jpg"]},
   "DB Kickstand RDL":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Romanian_Deadlift/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Romanian_Deadlift/1.jpg"]},
   "DB Deficit RDL":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Romanian_Deadlift/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Romanian_Deadlift/1.jpg"]},
   "DB Stiff-Leg Deadlift":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Stiff-Legged_Dumbbell_Deadlift/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Stiff-Legged_Dumbbell_Deadlift/1.jpg"]},
   "Nordic Curl (anchored, negatives)":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Floor_Glute-Ham_Raise/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Floor_Glute-Ham_Raise/1.jpg"]},
-  "Band-Assisted Nordic Curl":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Floor_Glute-Ham_Raise/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Floor_Glute-Ham_Raise/1.jpg"]},
+  
   "Slider Hamstring Curl (bent-knee)":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Lying_Leg_Curls/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Lying_Leg_Curls/1.jpg"]},
-  "DB Leaning Lateral Raises":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Side_Lateral_Raise/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Side_Lateral_Raise/1.jpg"]},
-  "DB Y-Raises":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Front_Dumbbell_Raise/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Front_Dumbbell_Raise/1.jpg"]},
+  "DB Leaning Lateral Raises":{gif:"https://fitnessprogramer.com/wp-content/uploads/2021/06/Leaning-Single-Arm-Dumbbell-Lateral-Raise.gif"},
+  "DB Y-Raises":{gif:"https://fitnessprogramer.com/wp-content/uploads/2021/10/Incline-Dumbbell-Y-Raise.gif"},
   "DB Leaning Rear Delt Fly":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Reverse_Flyes/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Reverse_Flyes/1.jpg"]},
   "DB Cuban Press":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cuban_Press/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cuban_Press/1.jpg"]},
   "DB Rolling Extensions":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Dumbbell_Triceps_Extension/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Dumbbell_Triceps_Extension/1.jpg"]},
-  "Band Overhead Extensions":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Dumbbell_Triceps_Extension/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Dumbbell_Triceps_Extension/1.jpg"]},
+  "Band Overhead Extensions":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Dumbbell_Triceps_Extension/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Dumbbell_Triceps_Extension/1.jpg"],gif:"https://fitnessprogramer.com/wp-content/uploads/2020/05/Banded-Triceps-Extension.gif"},
   "DB Half-Kneeling Overhead Extension":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Dumbbell_Triceps_Extension/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Dumbbell_Triceps_Extension/1.jpg"]},
   "Band Triceps Kickback":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Tricep_Dumbbell_Kickback/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Tricep_Dumbbell_Kickback/1.jpg"]},
   "DB Zottman Curl":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Zottman_Curl/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Zottman_Curl/1.jpg"]},
@@ -1439,7 +1492,7 @@ var EX_MEDIA_MAPPINGS={
   "DB Decline Floor Press":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Decline_Dumbbell_Bench_Press/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Decline_Dumbbell_Bench_Press/1.jpg"]},
   "DB Svend Press":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Svend_Press/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Svend_Press/1.jpg"]},
   "DB Seal Row":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Incline_Row/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Incline_Row/1.jpg"]},
-  "Band Straight-Arm Pulldown":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bent-Arm_Dumbbell_Pullover/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bent-Arm_Dumbbell_Pullover/1.jpg"]},
+  
   "DB Sissy Squat":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Weighted_Sissy_Squat/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Weighted_Sissy_Squat/1.jpg"]},
   "DB Walking Lunges":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Lunges/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Lunges/1.jpg"]},
   "Side Plank Hold":{imgs:["https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Side_Bridge/0.jpg","https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Side_Bridge/1.jpg"]},
@@ -1448,10 +1501,10 @@ var EX_MEDIA_MAPPINGS={
 
   // 7 entries that had NO image at all (used the generic SVG fallback before)
   "Single-Arm Band Chest Press":{gif:"https://www.nerdfitness.com/wp-content/uploads/2020/04/band-chest-press.gif"},
-  "Band One-Arm Row":{gif:"https://www.nerdfitness.com/wp-content/uploads/2020/04/band-one-arm-row.gif"},
+  "Band One-Arm Row":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Banded%20Seated%201-Arm%20Rows.mp4"},
   "High to Low Band Row":{gif:"https://www.nerdfitness.com/wp-content/uploads/2020/04/band-high-low-pull.gif"},
   "Band Overhead Press":{gif:"https://www.nerdfitness.com/wp-content/uploads/2020/04/overhead-press-band.gif"},
-  "Overhead Band Pull-Apart":{gif:"https://www.nerdfitness.com/wp-content/uploads/2020/04/overhead-pull-apart.gif"},
+  "Overhead Band Pull-Apart":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Band%20Pull%20Aparts.mp4"},
   "Band Squats":{gif:"https://www.nerdfitness.com/wp-content/uploads/2020/04/band-squat.gif"},
   "Band Deadlift":{gif:"https://www.nerdfitness.com/wp-content/uploads/2020/04/band-deadlift.gif"},
   // 1 entry that had a wrong mapping (was mapped to Face_Pull, which is not over-and-back)
@@ -1472,35 +1525,35 @@ var EX_MEDIA_MAPPINGS={
   "DB Incline Press":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/Dumbbell-Incline-Press.gif"},
   "DB Floor Press":{gif:"https://www.strengthlog.com/wp-content/uploads/2022/09/dumbbell-floor-press.gif"},
   "Weighted Dips (chest)":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/02/Dips.gif"},
-  "DB Floor Flys":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/Dumbbell-Chest-Fly.gif"},
-  "Band Crossovers":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/11/standing-cable-chest-fly.gif"},
+  "DB Floor Flys":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/DB%20Floor%20Flys.mp4"},
+  "Band Crossovers":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Banded%20Crossovers.mp4"},
   "DB Pullover (chest)":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/Dumbbell-Pullover.gif"},
-  "Banded Floor Flys":{gif:"https://www.strengthlog.com/wp-content/uploads/2023/02/standing-resistance-band-chest-fly.gif"},
-  "Banded Upper Chest Pullovers":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/Dumbbell-Pullover.gif"},
+  "Banded Floor Flys":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Banded%20Floor%20Flys.mp4"},
+  
   "Single-Arm Band Chest Press":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/cable-chest-press.gif"},
   "Pushups":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/02/Push-up.gif"},
   "Cobra Pushups":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/09/Cobra-push-up.gif"},
-  "Banded Pushups":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/02/Push-up.gif"},
+  "Banded Pushups":{gif:"https://workoutlabs.com/train/wp-content/uploads/2023/05/Resistance_Band_Push-ups_anim-c.gif"},
   "DB Decline Floor Press":{gif:"https://www.strengthlog.com/wp-content/uploads/2023/02/dumbbell-decline-chest-press.gif"},
   "Weighted Pull-ups":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/12/pull-ups.gif"},
   "DB Rows":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/Dumbbell-Row.gif"},
   "DB Chest-Supported Row":{gif:"https://www.strengthlog.com/wp-content/uploads/2024/11/chest-supported-dumbbell-row.gif"},
   "Chin-ups":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/chin-up.gif"},
-  "DB Gorilla Rows":{gif:"https://www.strengthlog.com/wp-content/uploads/2024/11/gorilla-row-dumbbells.gif"},
-  "DB Dead Rows":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/Dumbbell-Row.gif"},
-  "DB Tripod Row":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/Dumbbell-Row.gif"},
+  "DB Gorilla Rows":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/DB%20Alt.%20Gorilla%20Rows.mp4"},
+  "DB Dead Rows":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/DB%20Dead%20Rows.mp4"},
+  "DB Tripod Row":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/DB%20Tripod%20Row.mp4"},
   "DB Pullover (back)":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/Dumbbell-Pullover.gif"},
   "Inverted Rows":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/10/hangande-rodd-overhandsgrepp.gif"},
-  "Band Lat Pulldowns":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/lat-pulldown-with-pronated-grip.gif"},
-  "Band Face Pulls":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/05/face-pull.gif"},
-  "Banded Straight Arm Pushdowns":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/12/Straight-arm-lat-pulldown.gif"},
+  "Band Lat Pulldowns":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Banded%20Pulldowns.mp4"},
+  "Band Face Pulls":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/04/banded-face-pull.gif"},
+  
   "Band One-Arm Row":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/Dumbbell-Row.gif"},
-  "Sliding Pullups":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/12/pull-ups.gif"},
+  "Sliding Pullups":{gif:"https://fitnessprogramer.com/wp-content/uploads/2022/01/Archer-Pull-up.gif"},
   "DB Seal Row":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/10/seal-row.gif"},
   "Band Straight-Arm Pulldown":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/12/Straight-arm-lat-pulldown.gif"},
   "DB OHP":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/02/Dumbbell-shoulder-press.gif"},
   "DB Arnold Press":{gif:"https://www.strengthlog.com/wp-content/uploads/2024/10/arnold-press.gif"},
-  "DB Push Press":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/10/push-press.gif"},
+  "DB Push Press":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/DB%20Push%20Press.mp4"},
   "DB Lateral Raises":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/12/Dumbbell-Lateral-Raise.gif"},
   "DB Leaning Lateral Raises":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/12/Dumbbell-Lateral-Raise.gif"},
   "DB Rear Delt Rows":{gif:"https://www.strengthlog.com/wp-content/uploads/2021/01/Dumbbell-Rear-Delt-Row.gif"},
@@ -1508,7 +1561,7 @@ var EX_MEDIA_MAPPINGS={
   "DB Reverse Flys":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/02/Reverse-dumbbell-flyes.gif"},
   "DB Front Raises":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/Dumbbell-Front-Raise.gif"},
   "Overhead Band Pull-Apart":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/04/Band-Pull-Apart.gif"},
-  "Banded Rear Delt Pulls":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/04/banded-face-pull.gif"},
+  "Banded Rear Delt Pulls":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Banded%20Rear%20Delt%20Rows.mp4"},
   "Handstand Pushups (wall)":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/02/HSPU.gif"},
   "DB Leaning Rear Delt Fly":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/02/Reverse-dumbbell-flyes.gif"},
   "DB Cuban Press":{gif:"https://www.strengthlog.com/wp-content/uploads/2024/10/cuban-press.gif"},
@@ -1519,31 +1572,31 @@ var EX_MEDIA_MAPPINGS={
   "DB Spider Curls":{gif:"https://www.strengthlog.com/wp-content/uploads/2022/09/spider-curl-does-whatever-a-spider-curl-does-2.gif"},
   "Band Curls":{gif:"https://www.strengthlog.com/wp-content/uploads/2024/11/resistance-band-curl.gif"},
   "DB Concentration Curls":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/Concentration-curl.gif"},
-  "DB Cross-Body Hammer Curls":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/02/Hammer-curl.gif"},
-  "DB Drag Curls":{gif:"https://www.strengthlog.com/wp-content/uploads/2024/10/drag-curl.gif"},
+  "DB Cross-Body Hammer Curls":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Cross%20Body%20Hammer%20Curls.mp4"},
+  "DB Drag Curls":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/DB%20Drag%20Curls.mp4"},
   "Banded Stretch Curls":{gif:"https://www.strengthlog.com/wp-content/uploads/2024/11/resistance-band-curl.gif"},
-  "Banded Hammer Curls":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/02/Hammer-curl.gif"},
-  "Banded Bayesian Curls":{gif:"https://www.strengthlog.com/wp-content/uploads/2024/11/Bayesian-curls.gif"},
-  "Chin-up Curl Holds":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/chin-up.gif"},
+  "Banded Hammer Curls":{gif:"https://fitnessprogramer.com/wp-content/uploads/2022/07/Hammer-Curl-with-Resistance-Band.gif"},
+  
+  "Chin-up Curl Holds":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Inverted%20Chin%20Curl%20Hold.mp4"},
   "DB Zottman Curl":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/04/zottman-curl.gif"},
   "DB Reverse Curl":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/10/reverse-dumbbell-curl.gif"},
   "DB Preacher-Style Curl":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/Dumbbell-Preacher-Curl.gif"},
   "Dips (upright)":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/02/Dips.gif"},
-  "DB Skull Crushers":{gif:"https://www.strengthlog.com/wp-content/uploads/2023/03/Lying-Dumbbell-Triceps-Extension-1.gif"},
+  "DB Skull Crushers":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/DB%20or%20EZ%20Bar%20Lying%20Tricep%20Extensions.mp4"},
   "DB Rolling Extensions":{gif:"https://www.strengthlog.com/wp-content/uploads/2023/03/Lying-Dumbbell-Triceps-Extension-1.gif"},
   "Band Overhead Extensions":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/11/overhead-tricep-extension-lower-position.gif"},
   "DB Overhead Extensions":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/Dumbbell-Standing-Triceps-Extension.gif"},
   "DB Kickbacks":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/11/Triceps-kickback.gif"},
-  "Band Pushdowns":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/triceps-pushdown-with-rope.gif"},
+  "Band Pushdowns":{gif:"https://fitnessprogramer.com/wp-content/uploads/2022/02/Band-Pushdown.gif"},
   "DB Tate Press":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/03/tate-press.gif"},
-  "DB Floor Tricep Extensions":{gif:"https://www.strengthlog.com/wp-content/uploads/2023/03/Lying-Dumbbell-Triceps-Extension-1.gif"},
-  "Banded Skull Crushers":{gif:"https://www.strengthlog.com/wp-content/uploads/2023/03/Lying-Dumbbell-Triceps-Extension-1.gif"},
-  "Banded Drag Pushdowns":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/triceps-pushdown-with-rope.gif"},
-  "Diamond Pushups":{gif:"https://www.strengthlog.com/wp-content/uploads/2022/09/close-grip-push-up.gif"},
+  "DB Floor Tricep Extensions":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Floor%20DB%20Tricep%20Extensions%20(SHACKLED).mp4"},
+  "Banded Skull Crushers":{gif:"https://fitnessprogramer.com/wp-content/uploads/2022/02/Band-Skull-Crusher.gif"},
+  
+  "Diamond Pushups":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/Diamond%20Cutter%20Pushups.mp4"},
   "Bodyweight Skull Crushers":{gif:"https://www.strengthlog.com/wp-content/uploads/2023/02/Bodyweight-triceps-extension.gif"},
   "Bench Dips":{gif:"https://www.strengthlog.com/wp-content/uploads/2022/12/C7251A7B-7A1B-47AE-A88C-7054692BCEF0.gif"},
   "DB Half-Kneeling Overhead Extension":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/Dumbbell-Standing-Triceps-Extension.gif"},
-  "DB Bulgarian Split Squats":{gif:"https://www.strengthlog.com/wp-content/uploads/2023/02/Bulgarian-split-squat-barbell.gif"},
+  "DB Bulgarian Split Squats":{mp4:"https://portal.athleanx.com/workout-exer-videos/mp4/DB%20Bulgarian%20Split%20Squats.mp4"},
   "DB Goblet Squats":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/02/Goblet-squat.gif"},
   "DB Step Ups":{gif:"https://www.strengthlog.com/wp-content/uploads/2021/03/step-up-exercise.gif"},
   "DB Reverse Lunges":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/01/reverse-dumbbell-lunge.gif"},
@@ -1554,16 +1607,16 @@ var EX_MEDIA_MAPPINGS={
   "DB Suitcase Reverse Lunges":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/01/reverse-dumbbell-lunge.gif"},
   "Pistol Squats":{gif:"https://www.strengthlog.com/wp-content/uploads/2024/11/Pistol-squat.gif"},
   "Cossack Squats":{gif:"https://www.strengthlog.com/wp-content/uploads/2024/10/cossack-squat.gif"},
-  "Banded Split Squats":{gif:"https://www.strengthlog.com/wp-content/uploads/2023/02/Bulgarian-split-squat-barbell.gif"},
-  "Banded Goblet Squats":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/02/Goblet-squat.gif"},
-  "Banded Reverse Lunges":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/01/reverse-dumbbell-lunge.gif"},
+  
+  
+  
   "DB Walking Lunges":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/06/walking-dumbbell-lunges.gif"},
   "DB RDLs":{gif:"https://www.strengthlog.com/wp-content/uploads/2022/09/romanian-deadlift-with-dumbbells.gif"},
   "DB Single Leg RDLs":{gif:"https://www.strengthlog.com/wp-content/uploads/2023/01/Single-leg-romanian-deadlift.gif"},
   "DB Hip Thrusts":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/02/Hip-thrust.gif"},
-  "Band Pull-Throughs":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/04/cable-pull-through.gif"},
-  "Band Leg Curls":{gif:"https://www.strengthlog.com/wp-content/uploads/2023/09/lying-leg-curl.gif"},
-  "Banded Good Mornings":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/02/Good-morning.gif"},
+  "Band Pull-Throughs":{gif:"https://fitnessprogramer.com/wp-content/uploads/2022/05/Pull-through-Hips.gif"},
+  "Band Leg Curls":{gif:"https://fitnessprogramer.com/wp-content/uploads/2022/05/Lying-leg-curl.gif"},
+  "Banded Good Mornings":{gif:"https://fitnessprogramer.com/wp-content/uploads/2022/07/Good-Morning-With-Resistance-Band.gif"},
   "Glute-Ham Raises (BW)":{gif:"https://www.strengthlog.com/wp-content/uploads/2024/11/glute-ham-raise.gif"},
   "Single Leg Hip Thrusts":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/06/One-Legged-Hip-Thrust.gif"},
   "Nordic Curl (anchored, negatives)":{gif:"https://www.strengthlog.com/wp-content/uploads/2024/11/glute-ham-raise.gif"},
@@ -1572,10 +1625,10 @@ var EX_MEDIA_MAPPINGS={
   "DB Stiff-Leg Deadlift":{gif:"https://www.strengthlog.com/wp-content/uploads/2021/10/stiff-leg-deadlifts.gif"},
   "Slider Hamstring Curl (bent-knee)":{gif:"https://www.strengthlog.com/wp-content/uploads/2023/09/lying-leg-curl.gif"},
   "DB Renegade Rows":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/06/kb-renegade-row.gif"},
-  "Band Pallof Press":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/10/pallof-press.gif"},
-  "Band Woodchops":{gif:"https://www.strengthlog.com/wp-content/uploads/2025/03/cable-high-to-low-woodchop.gif"},
-  "Banded Dead Bugs":{gif:"https://www.strengthlog.com/wp-content/uploads/2023/01/deadbug.gif"},
-  "Banded Crunches":{gif:"https://www.strengthlog.com/wp-content/uploads/2023/01/Crunch.gif"},
+  
+  "Band Woodchops":{gif:"https://www.strengthlog.com/wp-content/uploads/2021/01/Band-Wood-Chop-Horizontal.gif"},
+  
+  "Banded Crunches":{gif:"https://spotebi.com/wp-content/uploads/2018/01/band-leg-abduction-crunch-exercise-illustration-spotebi.jpg"},
   "Hanging Leg Raises":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/03/hanging-leg-raise.gif"},
   "Ab Wheel Rollouts":{gif:"https://www.strengthlog.com/wp-content/uploads/2020/05/kneeling-ab-wheel.gif"},
   "Dragon Flags":{gif:"https://www.strengthlog.com/wp-content/uploads/2024/11/dragonflag.gif"},
@@ -1658,6 +1711,163 @@ function ExImg(props){
   </div>;
 }
 
+// ── Static-plan media: direct GIF url, or a FORGE exercise name (resolveMedia), or a breath/cue placeholder
+function StaticExMedia(props){
+  var sz=props.size||68;
+  var _e=useState(false),err=_e[0],setErr=_e[1];
+  var box={width:sz,height:sz,borderRadius:10,overflow:"hidden",background:C.bar,flexShrink:0,position:"relative",display:"flex",alignItems:"center",justifyContent:"center",border:"1px solid "+C.bdr};
+  if(props.gif&&!err){
+    return <div style={box}><img src={props.gif} alt="" onError={function(){setErr(true);}} style={{width:"100%",height:"100%",objectFit:"contain"}} loading="lazy"/></div>;
+  }
+  if(props.forge){
+    return <div style={{width:sz,height:sz,flexShrink:0,borderRadius:10,overflow:"hidden",background:C.bar,border:"1px solid "+C.bdr}}><ExImg name={props.forge} size={sz}/></div>;
+  }
+  return <div style={box}><span style={{fontSize:8,fontFamily:FD,color:C.blu,letterSpacing:1,textAlign:"center",lineHeight:1.4,fontWeight:700}}>BREATH<br/>+ CUE</span></div>;
+}
+// ── Postpartum SESSION RUNNER: self-paced timed walk-through of a fixed plan (per-exercise countdown + nav + log).
+function fmtMMSS(s){s=Math.max(0,Math.round(s));var m=Math.floor(s/60);var x=s%60;return m+":"+(x<10?"0":"")+x;}
+function PPRunner(props){
+  var plan=props.plan||[],cc=props.color||C.grn;
+  var _i=useState(0),idx=_i[0],setIdx=_i[1];
+  var _s=useState(plan[0]?plan[0].sec:0),secLeft=_s[0],setSecLeft=_s[1];
+  var _r=useState(true),running=_r[0],setRunning=_r[1];
+  var _el=useState(0),elapsed=_el[0],setElapsed=_el[1];
+  var _pv=useState(true),ppVoice=_pv[0],setPpVoice=_pv[1];
+  var _spokenRef=useRef({});
+  var _startedRef=useRef(false);
+  var ex=plan[idx]||{};
+  var total=0;for(var q=0;q<plan.length;q++)total+=(plan[q].sec||0);
+  useEffect(function(){
+    if(!running)return undefined;
+    var t=setInterval(function(){setSecLeft(function(s){return s>0?s-1:0;});setElapsed(function(e){return e+1;});},1000);
+    return function(){clearInterval(t);};
+  },[running]);
+  useEffect(function(){if(secLeft===0&&running)setRunning(false);},[secLeft,running]);
+  // ═══ VOICE COACHING (ElevenLabs, voice-of-choice) ═══
+  // Announce each move, then count it down. Own on/off switch (default ON) so the postpartum
+  // session is voice-coached regardless of the global metronome-voice setting. Gentle clip
+  // subset only — no "push/work/go", which are wrong for pelvic-floor rehab.
+  useEffect(function(){
+    if(!ppVoice)return undefined;
+    _spokenRef.current={};
+    if(!_startedRef.current){_startedRef.current=true;ppCue("lets_go");}
+    else ppCue("begin");
+    return undefined;
+  },[idx,ppVoice]);
+  useEffect(function(){
+    if(!ppVoice||!running)return undefined;
+    var sp=_spokenRef.current||{};var S=ex.sec||0;
+    if(secLeft>0){
+      if(S>=20&&!sp.h&&secLeft<=Math.round(S/2)&&secLeft>11){sp.h=1;ppCue("halfway");}
+      else if(S>=14&&secLeft===10&&!sp.t){sp.t=1;ppCue("ten_seconds");}
+      else if(S>=8&&secLeft===5&&!sp.f5){sp.f5=1;ppCue("n_five");}
+      else if(S>=8&&secLeft===4&&!sp.f4){sp.f4=1;ppCue("n_four");}
+      else if(S>=6&&secLeft===3&&!sp.f3){sp.f3=1;ppCue("n_three");}
+      else if(S>=6&&secLeft===2&&!sp.f2){sp.f2=1;ppCue("n_two");}
+      else if(S>=6&&secLeft===1&&!sp.f1){sp.f1=1;ppCue("n_one");}
+    } else if(secLeft===0&&!sp.d){sp.d=1;ppCue("rest");}
+    _spokenRef.current=sp;
+    return undefined;
+  },[secLeft,running,ppVoice]);
+  function jump(n){if(n<0||n>=plan.length)return;setIdx(n);setSecLeft(plan[n].sec||0);setRunning(true);}
+  var timeUp=secLeft===0, atLast=idx>=plan.length-1;
+  var frac=ex.sec?(1-secLeft/ex.sec):1;var pctDone=Math.round((idx+Math.max(0,Math.min(1,frac)))/plan.length*100);
+  var ctlBtn={flex:1,padding:"10px 0",background:C.bar,border:"1px solid "+C.bdr,borderRadius:10,color:C.txt,fontFamily:FD,fontSize:12,fontWeight:700,cursor:"pointer"};
+  var _overlay=<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:C.bg,zIndex:9999,overflowY:"auto",display:"flex",justifyContent:"center"}}>
+    <div style={{maxWidth:440,width:"100%",padding:"18px 18px 32px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+        <div style={{fontSize:11,fontFamily:FD,letterSpacing:2,color:cc}}>{"MOVE "+(idx+1)+" / "+plan.length}</div>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <button onClick={function(){var nv=!ppVoice;setPpVoice(nv);if(!nv){try{sarahStop();}catch(e){}}}} style={{background:ppVoice?cc+"22":"transparent",border:"1px solid "+(ppVoice?cc+"66":C.bdr),borderRadius:8,color:ppVoice?cc:C.dim,fontFamily:FD,fontSize:11,letterSpacing:1,padding:"6px 11px",cursor:"pointer"}}>{ppVoice?"VOICE ON":"VOICE OFF"}</button>
+          <button onClick={props.onClose} style={{background:"transparent",border:"1px solid "+C.bdr,borderRadius:8,color:C.dim,fontFamily:FD,fontSize:11,padding:"6px 12px",cursor:"pointer"}}>CLOSE</button>
+        </div>
+      </div>
+      <div style={{height:4,background:C.bar,borderRadius:2,marginBottom:16,overflow:"hidden"}}><div style={{height:"100%",width:pctDone+"%",background:cc,transition:"width 0.3s"}}/></div>
+      <div style={{display:"flex",justifyContent:"center",marginBottom:14}}><StaticExMedia gif={ex.gif} forge={ex.forge} size={190}/></div>
+      <div style={{textAlign:"center",fontSize:20,fontWeight:700,fontFamily:FD,color:C.txt,lineHeight:1.2}}>{ex.n}</div>
+      <div style={{textAlign:"center",fontSize:13,fontWeight:700,color:cc,marginTop:4}}>{ex.dose}</div>
+      <div style={{textAlign:"center",margin:"14px 0 6px"}}>
+        <div style={{fontSize:54,fontFamily:FD,fontWeight:700,letterSpacing:2,color:timeUp?C.grn:C.txt,lineHeight:1}}>{fmtMMSS(secLeft)}</div>
+        <div style={{fontSize:11,color:timeUp?C.grn:C.dim,fontFamily:FD,letterSpacing:1,marginTop:4}}>{timeUp?"DONE — NEXT WHEN READY":(running?"IN PROGRESS":"PAUSED")}</div>
+      </div>
+      <div style={{display:"flex",gap:8,marginBottom:12}}>
+        <button onClick={function(){var nr=!running;setRunning(nr);if(ppVoice)ppCue(nr?"resuming":"paused");}} style={ctlBtn}>{running?"PAUSE":"RESUME"}</button>
+        <button onClick={function(){setSecLeft(secLeft+30);setRunning(true);}} style={ctlBtn}>+30s</button>
+        <button onClick={function(){setSecLeft(ex.sec||0);setRunning(true);}} style={ctlBtn}>RESET</button>
+      </div>
+      <div style={{fontSize:12,color:C.mid,lineHeight:1.6,background:C.bar,borderRadius:10,padding:12,marginBottom:12}}>{ex.cue}</div>
+      <div style={{display:"flex",gap:10,marginBottom:12}}>
+        <button onClick={function(){jump(idx-1);}} disabled={idx===0} style={{flex:1,padding:"13px 0",background:"transparent",border:"1px solid "+C.bdr,borderRadius:12,color:idx===0?C.dim:C.txt,fontFamily:FD,fontSize:13,fontWeight:700,letterSpacing:1,cursor:idx===0?"default":"pointer",opacity:idx===0?0.5:1}}>BACK</button>
+        <button onClick={function(){jump(idx+1);}} disabled={atLast} style={{flex:2,padding:"13px 0",background:atLast?C.bar:cc,border:"none",borderRadius:12,color:atLast?C.dim:"#0d0d10",fontFamily:FD,fontSize:13,fontWeight:700,letterSpacing:1,cursor:atLast?"default":"pointer"}}>NEXT MOVE</button>
+      </div>
+      <button onClick={function(){if(ppVoice){try{ppCue("session_done");}catch(e){}}if(props.onDone)props.onDone();}} style={{width:"100%",padding:"14px",background:C.grn,border:"none",borderRadius:12,color:"#0d0d10",fontFamily:FD,fontSize:14,fontWeight:700,letterSpacing:2,cursor:"pointer"}}>{"FINISH & LOG SESSION"}</button>
+      <div style={{textAlign:"center",fontSize:10,color:C.dim,marginTop:12,fontFamily:FD,letterSpacing:1}}>{"ELAPSED "+fmtMMSS(elapsed)+"  ·  PLAN ~"+Math.round(total/60)+" MIN"}</div>
+      <div style={{textAlign:"center",fontSize:10,color:C.red,marginTop:8,lineHeight:1.5}}>Stop and regress if you see coning, feel heaviness or a bulge, leak, or have pain.</div>
+    </div>
+  </div>;
+  // Portal to <body> so the overlay escapes the transformed .view-slide ancestor and covers the true viewport.
+  return (typeof ReactDOM!=="undefined"&&ReactDOM.createPortal)?ReactDOM.createPortal(_overlay,document.body):_overlay;
+}
+// ── Static-plan view: a fixed, ordered session (postpartum phases 1-3). Saveable + week-to-week progress + timed runner.
+function StaticPlanView(props){
+  var plan=props.plan||[],cc=props.color||C.grn,pk=props.planKey||"pp",phaseNum=props.phase||1,mesoLen=props.mesoLen||4;
+  var tot=0;for(var i=0;i<plan.length;i++)tot+=(plan[i].sec||0);
+  var mins=Math.round(tot/60);
+  var KEY="forge_pp_"+pk;
+  var _ps=useState(null),ppState=_ps[0],setPpState=_ps[1];
+  var _ro=useState(false),runOpen=_ro[0],setRunOpen=_ro[1];
+  var _tst=useState(false),toast=_tst[0],setToast=_tst[1];
+  useEffect(function(){var live=true;sGet(KEY,null).then(function(v){if(live)setPpState(v||{start:null,sessions:[]});});return function(){live=false;};},[KEY]);
+  function logSession(){
+    var now=new Date();var day=now.toISOString().slice(0,10);
+    var st=ppState||{start:null,sessions:[]};
+    var ns={start:st.start||day,sessions:(st.sessions||[]).concat([now.toISOString()])};
+    setPpState(ns);sSet(KEY,ns);setToast(true);setTimeout(function(){setToast(false);},2600);
+  }
+  var weekNum=1,totalSessions=0,weekSessions=0,started=!!(ppState&&ppState.start);
+  if(started){
+    var startD=new Date(ppState.start+"T00:00:00");
+    var days=Math.floor((Date.now()-startD.getTime())/86400000);
+    weekNum=Math.max(1,Math.min(mesoLen,Math.floor(days/7)+1));
+    totalSessions=(ppState.sessions||[]).length;
+    var wkStart=startD.getTime()+(weekNum-1)*7*86400000;
+    for(var z=0;z<(ppState.sessions||[]).length;z++){if(new Date(ppState.sessions[z]).getTime()>=wkStart)weekSessions++;}
+  }
+  return <div style={{marginTop:14}}>
+    {started?<div style={{background:cc+"12",border:"1px solid "+cc+"38",borderRadius:12,padding:"11px 14px",marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+      <div><div style={{fontSize:12,fontWeight:700,fontFamily:FD,letterSpacing:1,color:cc}}>{"WEEK "+weekNum+" OF "+mesoLen}</div>
+      <div style={{fontSize:10,color:C.mid,marginTop:3}}>{weekSessions+" this week · "+totalSessions+" total · aim for most days, advance when symptom-free"}</div></div>
+      <div style={{fontSize:26,fontFamily:FD,fontWeight:700,color:cc,lineHeight:1}}>{totalSessions}</div>
+    </div>:<div style={{fontSize:11,color:C.dim,lineHeight:1.5,marginBottom:12}}>Save this as your active plan and run it with a timer. It tracks your weeks and sessions, and progresses by how you feel — not the calendar.</div>}
+    <button onClick={function(){if(props.onActivate){props.onActivate(pk,phaseNum);}else{setRunOpen(true);}}} style={{width:"100%",padding:"15px",background:cc,border:"none",borderRadius:12,color:"#0d0d10",fontFamily:FD,fontSize:15,fontWeight:700,letterSpacing:2,cursor:"pointer",marginBottom:8}}>{started?"START TODAY'S SESSION":"SET AS MY PLAN & START"}</button>
+    {started?null:<div style={{fontSize:10,color:C.dim,textAlign:"center",marginBottom:8,marginTop:-2}}>Saves to your dashboard — one tap from Home next time.</div>}
+    {started?<button onClick={logSession} style={{width:"100%",padding:"10px",background:"transparent",border:"1px solid "+C.bdr,borderRadius:10,color:C.mid,fontFamily:FD,fontSize:11,fontWeight:700,letterSpacing:1,cursor:"pointer",marginBottom:14}}>+ LOG A SESSION I DID OFFLINE</button>:<div style={{height:6}}/>}
+    {toast?<div style={{background:C.grn+"18",border:"1px solid "+C.grn+"44",borderRadius:10,padding:"9px 12px",marginBottom:12,fontSize:11,color:C.grn,fontFamily:FD,letterSpacing:1,textAlign:"center"}}>SESSION LOGGED ✓</div>:null}
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+      <div style={{fontSize:12,fontWeight:700,fontFamily:FD,letterSpacing:2,color:cc}}>YOUR FIXED PLAN</div>
+      <div style={{fontSize:12,fontFamily:FD,fontWeight:700,color:C.txt,background:cc+"18",border:"1px solid "+cc+"40",borderRadius:20,padding:"3px 12px"}}>{"~"+mins+" min · "+plan.length+" moves"}</div>
+    </div>
+    <div style={{fontSize:11,color:C.dim,lineHeight:1.5,marginBottom:12}}>Same session every time — this phase is learned, not shuffled. Do it in order; progress by symptoms, not the calendar. Regress any move (less range or reps) the instant the midline domes.</div>
+    {plan.map(function(e,idx){return <div key={idx} style={{display:"flex",gap:12,padding:"12px 0",borderTop:idx>0?("1px solid "+C.bdr):"none"}}>
+      <div style={{fontSize:13,fontFamily:FD,fontWeight:700,color:cc,width:16,flexShrink:0,paddingTop:2}}>{idx+1}</div>
+      <StaticExMedia gif={e.gif} forge={e.forge} size={68}/>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:8}}>
+          <div style={{fontSize:14,fontWeight:700,color:C.txt,fontFamily:FD,lineHeight:1.25}}>{e.n}</div>
+          <div style={{fontSize:10,fontFamily:FD,color:C.mid,flexShrink:0,whiteSpace:"nowrap"}}>{"~"+(Math.round(e.sec/6)/10)+" min"}</div>
+        </div>
+        <div style={{fontSize:11,fontWeight:700,color:cc,marginTop:3}}>{e.dose}</div>
+        <div style={{fontSize:11,color:C.mid,marginTop:4,lineHeight:1.5}}>{e.cue}</div>
+      </div>
+    </div>;})}
+    <div style={{marginTop:14,padding:12,background:C.blu+"0d",border:"1px solid "+C.blu+"26",borderRadius:12}}>
+      <div style={{fontSize:10,fontWeight:700,fontFamily:FD,letterSpacing:1,color:C.blu,marginBottom:6}}>EVERY REP</div>
+      <div style={{fontSize:11,color:C.mid,lineHeight:1.6}}>Exhale on the effort ("blow before you go"). Inhale expands the ribs 360°; keep the ribs stacked over the hips. Fingertips on the midline confirm no doming.</div>
+      <div style={{fontSize:11,color:C.red,lineHeight:1.6,marginTop:8}}><b>STOP</b> and regress if you see coning/doming, feel heaviness or a bulge, leak, or have pain — and see a pelvic-floor PT if it persists. Education, not medical advice.</div>
+    </div>
+    {runOpen?<PPRunner plan={plan} color={cc} onClose={function(){setRunOpen(false);}} onDone={function(){logSession();setRunOpen(false);}}/>:null}
+  </div>;
+}
 // Helper: standing stick person at position (cx, headY)
 function standPerson(cx,headY){
   var cl=C.acc;var R="round";
@@ -2326,208 +2536,241 @@ var EX_INFO={
 // ═══ EXERCISE DATABASE ═══
 var EX={
   chest:[
+    {n:"Pushup Plus",t:"B",mv:"press",m:3,myo:1,drop:0,len:"M",pat:"hp",fat:1,uni:0,ss:"push",region:"serratus"},
+    {n:"Decline DB Press",t:"C",mv:"press",m:6,myo:0,drop:1,len:"M",pat:"hp",fat:3,uni:0,ss:"push",region:"lower-chest"},
+    {n:"Decline DB Fly",t:"I",mv:"press",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"push",region:"lower-chest"},
+    {n:"Incline DB Fly",t:"I",mv:"press",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"push",region:"upper-chest"},
     // ── COMPOUNDS ──
-    {n:"DB Bench Press",t:"C",mv:"press",m:6,myo:0,drop:1,len:"M",pat:"hp",fat:3,uni:0,ss:"push"},
-    {n:"DB Incline Press",t:"C",mv:"press",m:6,myo:0,drop:1,len:"L",pat:"hp",fat:3,uni:0,ss:"push"},
-    {n:"DB Floor Press",t:"C",mv:"press",m:5,myo:0,drop:1,len:"M",pat:"hp",fat:3,uni:0,ss:"push"},
-    {n:"Weighted Dips (chest)",t:"C",mv:"press",m:6,myo:0,drop:0,len:"L",pat:"hp",fat:3,uni:0,ss:"push"},
-    {n:"DB Squeeze Press",t:"C",mv:"press",m:5,myo:0,drop:1,len:"M",pat:"hp",fat:3,uni:0,ss:"push"},       // Jacked: crush grip DB bench
-    {n:"DB See-Saw Press",t:"C",mv:"press",m:5,myo:0,drop:1,len:"M",pat:"hp",fat:2,uni:1,ss:"push"},       // Jacked: alternating unilateral press
-    {n:"DB UCV Raise",t:"C",mv:"press",m:5,myo:1,drop:1,len:"S",pat:"iso",fat:2,uni:0,ss:"siso"},           // Jacked: underhand chest raise
+    {n:"DB Bench Press",t:"C",mv:"press",m:6,myo:0,drop:1,len:"M",pat:"hp",fat:3,uni:0,ss:"push",region:"mid-chest"},
+    {n:"DB Incline Press",t:"C",mv:"press",m:6,myo:0,drop:1,len:"L",pat:"hp",fat:3,uni:0,ss:"push",region:"upper-chest"},
+    {n:"DB Floor Press",t:"C",mv:"press",m:5,myo:0,drop:1,len:"M",pat:"hp",fat:3,uni:0,ss:"push",region:"mid-chest"},
+    {n:"Weighted Dips (chest)",t:"C",mv:"press",m:6,myo:0,drop:0,len:"L",pat:"hp",fat:3,uni:0,ss:"push",region:"mid-chest"},
+    {n:"DB Squeeze Press",t:"C",mv:"press",m:5,myo:0,drop:1,len:"M",pat:"hp",fat:3,uni:0,ss:"push",region:"mid-chest"},       // Jacked: crush grip DB bench
+    {n:"DB See-Saw Press",t:"C",mv:"press",m:5,myo:0,drop:1,len:"M",pat:"hp",fat:2,uni:1,ss:"push",region:"mid-chest"},       // Jacked: alternating unilateral press
+    {n:"DB UCV Raise",t:"C",mv:"press",m:5,myo:1,drop:1,len:"S",pat:"iso",fat:2,uni:0,ss:"siso",region:"mid-chest"},           // Jacked: underhand chest raise
     // ── ISOLATION ──
-    {n:"DB Floor Flys",t:"I",mv:"press",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:2,uni:0,ss:"siso"},
-    {n:"Band Crossovers",t:"I",mv:"press",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"DB Pullover (chest)",t:"I",mv:"pull",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:2,uni:0,ss:"siso"},
-    {n:"Banded Cavaliere Crossovers",t:"I",mv:"press",m:5,myo:1,drop:0,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"}, // Elast-X: signature band crossover
-    {n:"Banded Floor Flys",t:"I",mv:"press",m:4,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},      // Elast-X
-    {n:"Banded Upper Chest Pullovers",t:"I",mv:"pull",m:4,myo:1,drop:0,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"}, // Elast-X
-    {n:"Single-Arm Band Chest Press",t:"C",mv:"press",m:4,myo:1,drop:0,len:"M",pat:"hp",fat:2,uni:1,ss:"push"}, // NerdFitness: anchor band, staggered stance, press forward
+    {n:"DB Floor Flys",t:"I",mv:"press",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:2,uni:0,ss:"siso",region:"mid-chest"},
+    {n:"Band Crossovers",t:"I",mv:"press",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso",region:"mid-chest"},
+    {n:"DB Pullover (chest)",t:"I",mv:"pull",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:2,uni:0,ss:"siso",region:"mid-chest"},
+    {n:"Banded Cavaliere Crossovers",t:"I",mv:"press",m:5,myo:1,drop:0,len:"L",pat:"iso",fat:1,uni:0,ss:"siso",region:"mid-chest"}, // Elast-X: signature band crossover
+    {n:"Banded Floor Flys",t:"I",mv:"press",m:4,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"mid-chest"},      // Elast-X
+    {n:"Banded Upper Chest Pullovers",t:"I",mv:"pull",m:4,myo:1,drop:0,len:"L",pat:"iso",fat:1,uni:0,ss:"siso",region:"mid-chest"}, // Elast-X
+    {n:"Single-Arm Band Chest Press",t:"C",mv:"press",m:4,myo:1,drop:0,len:"M",pat:"hp",fat:2,uni:1,ss:"push",region:"mid-chest"}, // NerdFitness: anchor band, staggered stance, press forward
     // ── BODYWEIGHT ──
-    {n:"Pushups",t:"B",mv:"press",m:4,myo:1,drop:0,len:"M",pat:"hp",fat:2,uni:0,ss:"push"},
-    {n:"Cobra Pushups",t:"B",mv:"press",m:4,myo:0,drop:0,len:"L",pat:"hp",fat:1,uni:0,ss:"push"},          // Xero: arching pushup, great chest stretch
-    {n:"Divebomber Pushups",t:"B",mv:"press",m:5,myo:0,drop:0,len:"L",pat:"hp",fat:1,uni:0,ss:"push"},     // Xero: swooping pushup pattern
-    {n:"Crossover Pushups",t:"B",mv:"press",m:4,myo:0,drop:0,len:"M",pat:"hp",fat:1,uni:0,ss:"push"},      // Xero: hand-over-hand crossover
-    {n:"Banded Pushups",t:"B",mv:"press",m:5,myo:0,drop:0,len:"M",pat:"hp",fat:1,uni:0,ss:"push"},         // Elast-X: band-resisted pushup
+    {n:"Pushups",t:"B",mv:"press",m:4,myo:1,drop:0,len:"M",pat:"hp",fat:2,uni:0,ss:"push",region:"mid-chest"},
+    {n:"Cobra Pushups",t:"B",mv:"press",m:4,myo:0,drop:0,len:"L",pat:"hp",fat:1,uni:0,ss:"push",region:"mid-chest"},          // Xero: arching pushup, great chest stretch
+    {n:"Divebomber Pushups",t:"B",mv:"press",m:5,myo:0,drop:0,len:"L",pat:"hp",fat:1,uni:0,ss:"push",region:"mid-chest"},     // Xero: swooping pushup pattern
+    {n:"Crossover Pushups",t:"B",mv:"press",m:4,myo:0,drop:0,len:"M",pat:"hp",fat:1,uni:0,ss:"push",region:"mid-chest"},      // Xero: hand-over-hand crossover
+    {n:"Banded Pushups",t:"B",mv:"press",m:5,myo:0,drop:0,len:"M",pat:"hp",fat:1,uni:0,ss:"push",region:"mid-chest"},         // Elast-X: band-resisted pushup
   ],
   back:[
+    {n:"Double DB Pullovers",t:"I",mv:"pull",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:2,uni:0,ss:"pull",region:"lats"},
+    {n:"DB Abduction Rows",t:"C",mv:"pull",m:5,myo:0,drop:1,len:"M",pat:"hpl",fat:2,uni:0,ss:"pull",region:"mid-back"},
+    {n:"Superman Pressouts",t:"B",mv:"pull",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"pull",region:"lower-traps"},
+    {n:"DB Shrug",t:"I",mv:"pull",m:5,myo:1,drop:1,len:"S",pat:"iso",fat:1,uni:0,ss:"pull",region:"traps"},
     // ── COMPOUNDS ──
-    {n:"Weighted Pull-ups",t:"C",mv:"pull",m:7,myo:0,drop:0,len:"M",pat:"vpl",fat:3,uni:0,ss:"pull"},
-    {n:"DB Rows",t:"C",mv:"pull",m:6,myo:0,drop:1,len:"M",pat:"hpl",fat:3,uni:0,ss:"pull"},
-    {n:"DB Chest-Supported Row",t:"C",mv:"pull",m:6,myo:0,drop:1,len:"M",pat:"hpl",fat:2,uni:0,ss:"pull"},
-    {n:"Chin-ups",t:"C",mv:"pull",m:6,myo:0,drop:0,len:"M",pat:"vpl",fat:3,uni:0,ss:"pull"},
-    {n:"DB Gorilla Rows",t:"C",mv:"pull",m:5,myo:0,drop:1,len:"M",pat:"hpl",fat:2,uni:0,ss:"pull"},
-    {n:"DB Dead Rows",t:"C",mv:"pull",m:6,myo:0,drop:1,len:"M",pat:"hpl",fat:3,uni:0,ss:"pull"},            // Jacked: row from floor each rep
-    {n:"DB Tripod Row",t:"C",mv:"pull",m:5,myo:0,drop:1,len:"M",pat:"hpl",fat:2,uni:1,ss:"pull"},           // Jacked: 3-point stance row
-    {n:"Commando Pull-ups",t:"C",mv:"pull",m:6,myo:0,drop:0,len:"M",pat:"vpl",fat:2,uni:1,ss:"pull"},       // Xero: alternating grip pull-ups
-    {n:"DB Pullover (back)",t:"C",mv:"pull",m:5,myo:0,drop:1,len:"L",pat:"hpl",fat:2,uni:0,ss:"pull"},      // Jacked: lat-focused pullover
+    {n:"Weighted Pull-ups",t:"C",mv:"pull",m:7,myo:0,drop:0,len:"M",pat:"vpl",fat:3,uni:0,ss:"pull",region:"lats"},
+    {n:"DB Rows",t:"C",mv:"pull",m:6,myo:0,drop:1,len:"M",pat:"hpl",fat:3,uni:0,ss:"pull",region:"mid-back"},
+    {n:"DB Chest-Supported Row",t:"C",mv:"pull",m:6,myo:0,drop:1,len:"M",pat:"hpl",fat:2,uni:0,ss:"pull",region:"mid-back"},
+    {n:"Chin-ups",t:"C",mv:"pull",m:6,myo:0,drop:0,len:"M",pat:"vpl",fat:3,uni:0,ss:"pull",region:"lats"},
+    {n:"DB Gorilla Rows",t:"C",mv:"pull",m:5,myo:0,drop:1,len:"M",pat:"hpl",fat:2,uni:0,ss:"pull",region:"mid-back"},
+    {n:"DB Dead Rows",t:"C",mv:"pull",m:6,myo:0,drop:1,len:"M",pat:"hpl",fat:3,uni:0,ss:"pull",region:"mid-back"},            // Jacked: row from floor each rep
+    {n:"DB Tripod Row",t:"C",mv:"pull",m:5,myo:0,drop:1,len:"M",pat:"hpl",fat:2,uni:1,ss:"pull",region:"mid-back"},           // Jacked: 3-point stance row
+    {n:"Commando Pull-ups",t:"C",mv:"pull",m:6,myo:0,drop:0,len:"M",pat:"vpl",fat:2,uni:1,ss:"pull",region:"lats"},       // Xero: alternating grip pull-ups
+    {n:"DB Pullover (back)",t:"C",mv:"pull",m:5,myo:0,drop:1,len:"L",pat:"hpl",fat:2,uni:0,ss:"pull",region:"lats"},      // Jacked: lat-focused pullover
     // ── ISOLATION / BAND ──
-    {n:"Inverted Rows",t:"B",mv:"pull",m:5,myo:1,drop:0,len:"M",pat:"hpl",fat:1,uni:0,ss:"pull"},
-    {n:"Band Lat Pulldowns",t:"I",mv:"pull",m:4,myo:1,drop:0,len:"S",pat:"vpl",fat:1,uni:0,ss:"siso"},
-    {n:"Band Face Pulls",t:"I",mv:"pull",m:4,myo:1,drop:0,len:"S",pat:"hpl",fat:1,uni:0,ss:"siso"},
-    {n:"Banded Straight Arm Pushdowns",t:"I",mv:"pull",m:4,myo:1,drop:0,len:"L",pat:"vpl",fat:1,uni:0,ss:"siso"}, // Elast-X
-    {n:"Band-Bell Rows",t:"I",mv:"pull",m:5,myo:1,drop:0,len:"M",pat:"hpl",fat:2,uni:0,ss:"pull"},          // Elast-X: band wrapped around DB
-    {n:"Hi-Lo Kneeling Banded Rows",t:"I",mv:"pull",m:4,myo:1,drop:0,len:"M",pat:"hpl",fat:1,uni:0,ss:"siso"}, // Elast-X
-    {n:"Band One-Arm Row",t:"C",mv:"pull",m:4,myo:1,drop:0,len:"M",pat:"hpl",fat:1,uni:1,ss:"siso"},          // NerdFitness: anchor band mid-height, single arm pull
-    {n:"High to Low Band Row",t:"C",mv:"pull",m:4,myo:1,drop:0,len:"M",pat:"hpl",fat:1,uni:0,ss:"siso"},      // NerdFitness: anchor overhead, pull elbows to sides
+    {n:"Inverted Rows",t:"B",mv:"pull",m:5,myo:1,drop:0,len:"M",pat:"hpl",fat:1,uni:0,ss:"pull",region:"mid-back"},
+    {n:"Band Lat Pulldowns",t:"I",mv:"pull",m:4,myo:1,drop:0,len:"S",pat:"vpl",fat:1,uni:0,ss:"siso",region:"lats"},
+    {n:"Band Face Pulls",t:"I",mv:"pull",m:4,myo:1,drop:0,len:"S",pat:"hpl",fat:1,uni:0,ss:"siso",region:"mid-back"},
+    {n:"Banded Straight Arm Pushdowns",t:"I",mv:"pull",m:4,myo:1,drop:0,len:"L",pat:"vpl",fat:1,uni:0,ss:"siso",region:"lats"}, // Elast-X
+    {n:"Band-Bell Rows",t:"I",mv:"pull",m:5,myo:1,drop:0,len:"M",pat:"hpl",fat:2,uni:0,ss:"pull",region:"mid-back"},          // Elast-X: band wrapped around DB
+    {n:"Hi-Lo Kneeling Banded Rows",t:"I",mv:"pull",m:4,myo:1,drop:0,len:"M",pat:"hpl",fat:1,uni:0,ss:"siso",region:"mid-back"}, // Elast-X
+    {n:"Band One-Arm Row",t:"C",mv:"pull",m:4,myo:1,drop:0,len:"M",pat:"hpl",fat:1,uni:1,ss:"siso",region:"mid-back"},          // NerdFitness: anchor band mid-height, single arm pull
+    {n:"High to Low Band Row",t:"C",mv:"pull",m:4,myo:1,drop:0,len:"M",pat:"hpl",fat:1,uni:0,ss:"siso",region:"mid-back"},      // NerdFitness: anchor overhead, pull elbows to sides
     // ── BODYWEIGHT ──
-    {n:"Back Widows",t:"B",mv:"pull",m:4,myo:0,drop:0,len:"S",pat:"hpl",fat:1,uni:0,ss:"siso"},             // Xero: floor back squeeze (signature)
-    {n:"Sliding Pullups",t:"B",mv:"pull",m:5,myo:0,drop:0,len:"M",pat:"vpl",fat:1,uni:0,ss:"pull"},         // Xero: towel/floor sliding pull
-    {n:"Human Pullovers",t:"B",mv:"pull",m:5,myo:0,drop:0,len:"L",pat:"vpl",fat:1,uni:0,ss:"pull"},         // Xero: bodyweight lat pullover on floor
+    {n:"Back Widows",t:"B",mv:"pull",m:4,myo:0,drop:0,len:"S",pat:"hpl",fat:1,uni:0,ss:"siso",region:"mid-back"},             // Xero: floor back squeeze (signature)
+    {n:"Sliding Pullups",t:"B",mv:"pull",m:5,myo:0,drop:0,len:"M",pat:"vpl",fat:1,uni:0,ss:"pull",region:"lats"},         // Xero: towel/floor sliding pull
+    {n:"Human Pullovers",t:"B",mv:"pull",m:5,myo:0,drop:0,len:"L",pat:"vpl",fat:1,uni:0,ss:"pull",region:"lats"},         // Xero: bodyweight lat pullover on floor
   ],
   shoulders:[
+    {n:"DB Reverse Pec Decks",t:"I",mv:"pull",m:4,myo:1,drop:1,len:"S",pat:"iso",fat:1,uni:0,ss:"siso",region:"rear-delt"},
+    {n:"DB W Raises",t:"I",mv:"pull",m:4,myo:1,drop:1,len:"S",pat:"iso",fat:1,uni:0,ss:"siso",region:"rear-delt"},
+    {n:"Alternating DB UCV Raises",t:"I",mv:"curl",m:4,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:1,ss:"siso",region:"front-delt"},
+    {n:"1.5 Side Lateral Raises",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso",region:"side-delt"},
+    {n:"DB Over and Backs",t:"I",mv:"curl",m:4,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"front-delt"},
+    {n:"Angels and Devils",t:"B",mv:"pull",m:3,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso",region:"rear-delt"},
+    {n:"DB Bent-Over Lateral Raise",t:"I",mv:"pull",m:4,myo:1,drop:1,len:"S",pat:"iso",fat:1,uni:0,ss:"pull",region:"rear-delt"},
     // ── COMPOUNDS ──
-    {n:"DB OHP",t:"C",mv:"press",m:6,myo:0,drop:1,len:"M",pat:"vp",fat:3,uni:0,ss:"push"},
-    {n:"DB Arnold Press",t:"C",mv:"press",m:6,myo:0,drop:1,len:"M",pat:"vp",fat:3,uni:0,ss:"push"},
-    {n:"DB Push Press",t:"C",mv:"press",m:6,myo:0,drop:1,len:"M",pat:"vp",fat:3,uni:0,ss:"push"},          // Jacked/Beaxst: explosive OHP
-    {n:"DB Hang Clean & Press",t:"C",mv:"press",m:6,myo:0,drop:0,len:"M",pat:"vp",fat:3,uni:0,ss:"push"},  // Beaxst: power movement
-    {n:"DB High Pulls",t:"C",mv:"pull",m:5,myo:0,drop:1,len:"M",pat:"vp",fat:2,uni:0,ss:"push"},           // Beaxst: explosive upright pull
-    {n:"Band Overhead Press",t:"C",mv:"press",m:4,myo:0,drop:0,len:"M",pat:"vp",fat:2,uni:0,ss:"push"},     // NerdFitness: stand on band, press overhead
+    {n:"DB OHP",t:"C",mv:"press",m:6,myo:0,drop:1,len:"M",pat:"vp",fat:3,uni:0,ss:"push",region:"front-delt"},
+    {n:"DB Arnold Press",t:"C",mv:"press",m:6,myo:0,drop:1,len:"M",pat:"vp",fat:3,uni:0,ss:"push",region:"front-delt"},
+    {n:"DB Push Press",t:"C",mv:"press",m:6,myo:0,drop:1,len:"M",pat:"vp",fat:3,uni:0,ss:"push",region:"front-delt"},          // Jacked/Beaxst: explosive OHP
+    {n:"DB Hang Clean & Press",t:"C",mv:"press",m:6,myo:0,drop:0,len:"M",pat:"vp",fat:3,uni:0,ss:"push",region:"front-delt"},  // Beaxst: power movement
+    {n:"DB High Pulls",t:"C",mv:"pull",m:5,myo:0,drop:1,len:"M",pat:"vp",fat:2,uni:0,ss:"push",region:"front-delt"},           // Beaxst: explosive upright pull
+    {n:"Band Overhead Press",t:"C",mv:"press",m:4,myo:0,drop:0,len:"M",pat:"vp",fat:2,uni:0,ss:"push",region:"front-delt"},     // NerdFitness: stand on band, press overhead
     // ── ISOLATION ──
-    {n:"DB Lateral Raises",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"DB Leaning Lateral Raises",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:1,ss:"siso"},
-    {n:"DB Y-Raises",t:"I",mv:"pull",m:4,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"DB Rear Delt Rows",t:"I",mv:"pull",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"Band Lateral Raises",t:"I",mv:"curl",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"DB Reverse Flys",t:"I",mv:"pull",m:4,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"DB Front Raises",t:"I",mv:"curl",m:4,myo:1,drop:1,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"DB Urlachers",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},            // Jacked: front-to-lateral raise combo
-    {n:"DB L-Raises",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"},             // Jacked: L-position lateral raise
-    {n:"DB Cheat Laterals",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},       // Jacked: heavy swing laterals
-    {n:"Banded Over-and-Backs",t:"I",mv:"pull",m:4,myo:0,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},   // Elast-X: shoulder mobility/rear delt
-    {n:"Overhead Band Pull-Apart",t:"I",mv:"pull",m:4,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"}, // NerdFitness: band overhead, pull down and apart pinching shoulder blades
-    {n:"Banded OHP",t:"I",mv:"press",m:5,myo:0,drop:0,len:"M",pat:"vp",fat:1,uni:0,ss:"push"},            // Elast-X: band under feet, press overhead
-    {n:"Banded Rear Delt Pulls",t:"I",mv:"pull",m:4,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"}, // Elast-X: pull-apart variation for rear delts
-    {n:"Banded Front Raises",t:"I",mv:"curl",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},    // Elast-X: band under feet, front raise
+    {n:"DB Lateral Raises",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso",region:"side-delt"},
+    {n:"DB Leaning Lateral Raises",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:1,ss:"siso",region:"side-delt"},
+    {n:"DB Y-Raises",t:"I",mv:"pull",m:4,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"front-delt"},
+    {n:"DB Rear Delt Rows",t:"I",mv:"pull",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"rear-delt"},
+    {n:"Band Lateral Raises",t:"I",mv:"curl",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso",region:"side-delt"},
+    {n:"DB Reverse Flys",t:"I",mv:"pull",m:4,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"rear-delt"},
+    {n:"DB Front Raises",t:"I",mv:"curl",m:4,myo:1,drop:1,len:"S",pat:"iso",fat:1,uni:0,ss:"siso",region:"front-delt"},
+    {n:"DB Urlachers",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"front-delt"},            // Jacked: front-to-lateral raise combo
+    {n:"DB L-Raises",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso",region:"front-delt"},             // Jacked: L-position lateral raise
+    {n:"DB Cheat Laterals",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"side-delt"},       // Jacked: heavy swing laterals
+    {n:"Banded Over-and-Backs",t:"I",mv:"pull",m:4,myo:0,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso",region:"front-delt"},   // Elast-X: shoulder mobility/rear delt
+    {n:"Overhead Band Pull-Apart",t:"I",mv:"pull",m:4,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"front-delt"}, // NerdFitness: band overhead, pull down and apart pinching shoulder blades
+    {n:"Banded OHP",t:"I",mv:"press",m:5,myo:0,drop:0,len:"M",pat:"vp",fat:1,uni:0,ss:"push",region:"front-delt"},            // Elast-X: band under feet, press overhead
+    {n:"Banded Rear Delt Pulls",t:"I",mv:"pull",m:4,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"rear-delt"}, // Elast-X: pull-apart variation for rear delts
+    {n:"Banded Front Raises",t:"I",mv:"curl",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso",region:"front-delt"},    // Elast-X: band under feet, front raise
     // ── BODYWEIGHT ──
-    {n:"Pike Pushups",t:"B",mv:"press",m:5,myo:0,drop:0,len:"M",pat:"vp",fat:1,uni:0,ss:"push"},           // Xero: vertical press bodyweight
-    {n:"Handstand Pushups (wall)",t:"B",mv:"press",m:6,myo:0,drop:0,len:"M",pat:"vp",fat:2,uni:0,ss:"push"}, // Xero: advanced BW press
-    {n:"BW Side Lateral Raise",t:"B",mv:"curl",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},   // Xero: door/wall lateral raise
+    {n:"Pike Pushups",t:"B",mv:"press",m:5,myo:0,drop:0,len:"M",pat:"vp",fat:1,uni:0,ss:"push",region:"front-delt"},           // Xero: vertical press bodyweight
+    {n:"Handstand Pushups (wall)",t:"B",mv:"press",m:6,myo:0,drop:0,len:"M",pat:"vp",fat:2,uni:0,ss:"push",region:"front-delt"}, // Xero: advanced BW press
+    {n:"BW Side Lateral Raise",t:"B",mv:"curl",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso",region:"side-delt"},   // Xero: door/wall lateral raise
   ],
   biceps:[
+    {n:"Bicep Chin Curls",t:"C",mv:"pull",m:5,myo:0,drop:0,len:"M",pat:"vpl",fat:2,uni:0,ss:"pull",region:"short-head"},
+    {n:"DB Reverse Curl",t:"I",mv:"curl",m:4,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"brachialis"},
+    {n:"DB Zottman Curl",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"brachialis"},
     // ── COMPOUNDS ──
-    {n:"Weighted Chins",t:"C",mv:"pull",m:6,myo:0,drop:0,len:"M",pat:"vpl",fat:3,uni:0,ss:"pull"},
+    {n:"Weighted Chins",t:"C",mv:"pull",m:6,myo:0,drop:0,len:"M",pat:"vpl",fat:3,uni:0,ss:"pull",region:"short-head"},
     // ── ISOLATION ──
-    {n:"DB Curls",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"DB Incline Curls",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"DB Hammer Curls",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"DB Spider Curls",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"Band Curls",t:"I",mv:"curl",m:4,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"DB Concentration Curls",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"S",pat:"iso",fat:1,uni:1,ss:"siso"},
-    {n:"DB Cross-Body Hammer Curls",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"}, // Jacked: cross-body for brachialis
-    {n:"DB No Money Curls",t:"I",mv:"curl",m:4,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},       // Jacked: palms-up external rotation curl
-    {n:"DB Waiter Curls",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},         // Jacked: plate-grip DB curl (long head)
-    {n:"DB Drag Curls",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},           // Jacked: elbows-back drag curl
-    {n:"Banded Stretch Curls",t:"I",mv:"curl",m:4,myo:1,drop:0,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"},    // Elast-X: peak stretch under tension
-    {n:"Banded Hammer Curls",t:"I",mv:"curl",m:4,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},    // Elast-X: neutral grip band curl
-    {n:"Banded Bayesian Curls",t:"I",mv:"curl",m:5,myo:1,drop:0,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"},  // Elast-X: band behind body, max stretch
-    {n:"Lip Busters",t:"B",mv:"curl",m:4,myo:0,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},             // Xero: bodyweight chin-up curl hold
-    {n:"Chin-up Curl Holds",t:"B",mv:"curl",m:5,myo:0,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},      // Xero: isometric chin position hold
-    {n:"Headbanger Pull-ups",t:"B",mv:"curl",m:5,myo:0,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},    // Xero: explosive horizontal pull at top
-    {n:"Towel Curls",t:"B",mv:"curl",m:4,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},            // Xero: self-resisted towel bicep curl
+    {n:"DB Curls",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"short-head"},
+    {n:"DB Incline Curls",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso",region:"long-head"},
+    {n:"DB Hammer Curls",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"brachialis"},
+    {n:"DB Spider Curls",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"S",pat:"iso",fat:1,uni:0,ss:"siso",region:"long-head"},
+    {n:"Band Curls",t:"I",mv:"curl",m:4,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"short-head"},
+    {n:"DB Concentration Curls",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"S",pat:"iso",fat:1,uni:1,ss:"siso",region:"short-head"},
+    {n:"DB Cross-Body Hammer Curls",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"brachialis"}, // Jacked: cross-body for brachialis
+    {n:"DB No Money Curls",t:"I",mv:"curl",m:4,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"short-head"},       // Jacked: palms-up external rotation curl
+    {n:"DB Waiter Curls",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"brachialis"},         // Jacked: plate-grip DB curl (long head)
+    {n:"DB Drag Curls",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"short-head"},           // Jacked: elbows-back drag curl
+    {n:"Banded Stretch Curls",t:"I",mv:"curl",m:4,myo:1,drop:0,len:"L",pat:"iso",fat:1,uni:0,ss:"siso",region:"long-head"},    // Elast-X: peak stretch under tension
+    {n:"Banded Hammer Curls",t:"I",mv:"curl",m:4,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"brachialis"},    // Elast-X: neutral grip band curl
+    {n:"Banded Bayesian Curls",t:"I",mv:"curl",m:5,myo:1,drop:0,len:"L",pat:"iso",fat:1,uni:0,ss:"siso",region:"long-head"},  // Elast-X: band behind body, max stretch
+    {n:"Lip Busters",t:"B",mv:"curl",m:4,myo:0,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"short-head"},             // Xero: bodyweight chin-up curl hold
+    {n:"Chin-up Curl Holds",t:"B",mv:"curl",m:5,myo:0,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"short-head"},      // Xero: isometric chin position hold
+    {n:"Headbanger Pull-ups",t:"B",mv:"curl",m:5,myo:0,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso",region:"short-head"},    // Xero: explosive horizontal pull at top
+    {n:"Towel Curls",t:"B",mv:"curl",m:4,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"short-head"},            // Xero: self-resisted towel bicep curl
   ],
   triceps:[
+    {n:"DB Standing JM Press",t:"C",mv:"press",m:5,myo:0,drop:1,len:"M",pat:"hp",fat:2,uni:0,ss:"push",region:"lateral-head"},
+    {n:"Single Arm DB Kickbacks",t:"I",mv:"press",m:4,myo:1,drop:1,len:"S",pat:"iso",fat:1,uni:1,ss:"siso",region:"lateral-head"},
     // ── COMPOUNDS ──
-    {n:"Dips (upright)",t:"C",mv:"press",m:6,myo:0,drop:0,len:"M",pat:"hp",fat:3,uni:0,ss:"push"},
-    {n:"DB JM Press",t:"C",mv:"press",m:5,myo:0,drop:1,len:"M",pat:"hp",fat:2,uni:0,ss:"push"},
+    {n:"Dips (upright)",t:"C",mv:"press",m:6,myo:0,drop:0,len:"M",pat:"hp",fat:3,uni:0,ss:"push",region:"lateral-head"},
+    {n:"DB JM Press",t:"C",mv:"press",m:5,myo:0,drop:1,len:"M",pat:"hp",fat:2,uni:0,ss:"push",region:"lateral-head"},
     // ── ISOLATION ──
-    {n:"DB Skull Crushers",t:"I",mv:"press",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"DB Rolling Extensions",t:"I",mv:"press",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"Band Overhead Extensions",t:"I",mv:"press",m:4,myo:1,drop:0,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"DB Overhead Extensions",t:"I",mv:"press",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"DB Kickbacks",t:"I",mv:"curl",m:4,myo:1,drop:1,len:"S",pat:"iso",fat:1,uni:1,ss:"siso"},
-    {n:"Band Pushdowns",t:"I",mv:"press",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"DB Tate Press",t:"I",mv:"press",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},          // Jacked: elbows-out extension
-    {n:"DB Floor Tricep Extensions",t:"I",mv:"press",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"}, // Jacked: lying floor skull crusher
-    {n:"Banded Skull Crushers",t:"I",mv:"press",m:4,myo:1,drop:0,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"},  // Elast-X
-    {n:"Banded Drag Pushdowns",t:"I",mv:"press",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},  // Elast-X: drag-style pushdown
+    {n:"DB Skull Crushers",t:"I",mv:"press",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"long-head"},
+    {n:"DB Rolling Extensions",t:"I",mv:"press",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso",region:"long-head"},
+    {n:"Band Overhead Extensions",t:"I",mv:"press",m:4,myo:1,drop:0,len:"L",pat:"iso",fat:1,uni:0,ss:"siso",region:"long-head"},
+    {n:"DB Overhead Extensions",t:"I",mv:"press",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso",region:"long-head"},
+    {n:"DB Kickbacks",t:"I",mv:"curl",m:4,myo:1,drop:1,len:"S",pat:"iso",fat:1,uni:1,ss:"siso",region:"lateral-head"},
+    {n:"Band Pushdowns",t:"I",mv:"press",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso",region:"lateral-head"},
+    {n:"DB Tate Press",t:"I",mv:"press",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"lateral-head"},          // Jacked: elbows-out extension
+    {n:"DB Floor Tricep Extensions",t:"I",mv:"press",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso",region:"long-head"}, // Jacked: lying floor skull crusher
+    {n:"Banded Skull Crushers",t:"I",mv:"press",m:4,myo:1,drop:0,len:"L",pat:"iso",fat:1,uni:0,ss:"siso",region:"long-head"},  // Elast-X
+    {n:"Banded Drag Pushdowns",t:"I",mv:"press",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso",region:"lateral-head"},  // Elast-X: drag-style pushdown
     // ── BODYWEIGHT ──
-    {n:"Diamond Pushups",t:"B",mv:"press",m:4,myo:1,drop:0,len:"M",pat:"hp",fat:1,uni:0,ss:"push"},
-    {n:"Bodyweight Skull Crushers",t:"B",mv:"press",m:5,myo:0,drop:0,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"}, // Xero: bar/bench BW skull crusher
-    {n:"Power Pushaways",t:"B",mv:"press",m:4,myo:0,drop:0,len:"S",pat:"hp",fat:1,uni:0,ss:"push"},        // Xero: explosive tricep pushaway
-    {n:"Bench Dips",t:"B",mv:"press",m:4,myo:1,drop:0,len:"M",pat:"hp",fat:1,uni:0,ss:"push"},             // Jacked/Xero
+    {n:"Diamond Pushups",t:"B",mv:"press",m:4,myo:1,drop:0,len:"M",pat:"hp",fat:1,uni:0,ss:"push",region:"lateral-head"},
+    {n:"Bodyweight Skull Crushers",t:"B",mv:"press",m:5,myo:0,drop:0,len:"L",pat:"iso",fat:1,uni:0,ss:"siso",region:"long-head"}, // Xero: bar/bench BW skull crusher
+    {n:"Power Pushaways",t:"B",mv:"press",m:4,myo:0,drop:0,len:"S",pat:"hp",fat:1,uni:0,ss:"push",region:"lateral-head"},        // Xero: explosive tricep pushaway
+    {n:"Bench Dips",t:"B",mv:"press",m:4,myo:1,drop:0,len:"M",pat:"hp",fat:1,uni:0,ss:"push",region:"lateral-head"},             // Jacked/Xero
   ],
   quads:[
+    {n:"DB Spanish Squats",t:"C",mv:"squat",m:5,myo:0,drop:1,len:"M",pat:"sq",fat:2,uni:0,ss:"qd",region:"rectus-femoris"},
+    {n:"DB Reverse Sprinter Lunges",t:"C",mv:"squat",m:6,myo:0,drop:0,len:"L",pat:"sq",fat:2,uni:1,ss:"qd",region:"quad"},
     // ── COMPOUNDS ──
-    {n:"DB Bulgarian Split Squats",t:"C",mv:"squat",m:7,myo:0,drop:1,len:"L",pat:"sq",fat:3,uni:1,ss:"qd"},
-    {n:"DB Goblet Squats",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"M",pat:"sq",fat:3,uni:0,ss:"qd"},
-    {n:"DB Step Ups",t:"C",mv:"squat",m:6,myo:0,drop:0,len:"M",pat:"sq",fat:2,uni:1,ss:"qd"},
-    {n:"DB Reverse Lunges",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"L",pat:"sq",fat:2,uni:1,ss:"qd"},
-    {n:"DB Lateral Lunges",t:"C",mv:"squat",m:5,myo:0,drop:0,len:"M",pat:"sq",fat:2,uni:1,ss:"qd"},
-    {n:"DB Front Squats",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"M",pat:"sq",fat:3,uni:0,ss:"qd"},        // Jacked: front-rack goblet variation
-    {n:"DB Split Squats",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"L",pat:"sq",fat:2,uni:1,ss:"qd"},        // Jacked: static split stance
-    {n:"DB Jump Squats",t:"C",mv:"squat",m:5,myo:0,drop:0,len:"M",pat:"sq",fat:2,uni:0,ss:"qd"},         // Beaxst: explosive loaded squat
-    {n:"DB Sprinter Lunges",t:"C",mv:"squat",m:5,myo:0,drop:0,len:"L",pat:"sq",fat:2,uni:1,ss:"qd"},     // Jacked: explosive reverse lunge
-    {n:"DB Suitcase Reverse Lunges",t:"C",mv:"squat",m:5,myo:0,drop:1,len:"L",pat:"sq",fat:2,uni:1,ss:"qd"}, // Beaxst: single-side loaded
-    {n:"Band Squats",t:"C",mv:"squat",m:4,myo:0,drop:0,len:"M",pat:"sq",fat:2,uni:0,ss:"qd"},             // NerdFitness: stand on band, hold at shoulders, squat
+    {n:"DB Bulgarian Split Squats",t:"C",mv:"squat",m:7,myo:0,drop:1,len:"L",pat:"sq",fat:3,uni:1,ss:"qd",region:"quad"},
+    {n:"DB Goblet Squats",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"M",pat:"sq",fat:3,uni:0,ss:"qd",region:"quad"},
+    {n:"DB Step Ups",t:"C",mv:"squat",m:6,myo:0,drop:0,len:"M",pat:"sq",fat:2,uni:1,ss:"qd",region:"quad"},
+    {n:"DB Reverse Lunges",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"L",pat:"sq",fat:2,uni:1,ss:"qd",region:"quad"},
+    {n:"DB Lateral Lunges",t:"C",mv:"squat",m:5,myo:0,drop:0,len:"M",pat:"sq",fat:2,uni:1,ss:"qd",region:"quad"},
+    {n:"DB Front Squats",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"M",pat:"sq",fat:3,uni:0,ss:"qd",region:"quad"},        // Jacked: front-rack goblet variation
+    {n:"DB Split Squats",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"L",pat:"sq",fat:2,uni:1,ss:"qd",region:"quad"},        // Jacked: static split stance
+    {n:"DB Jump Squats",t:"C",mv:"squat",m:5,myo:0,drop:0,len:"M",pat:"sq",fat:2,uni:0,ss:"qd",region:"quad"},         // Beaxst: explosive loaded squat
+    {n:"DB Sprinter Lunges",t:"C",mv:"squat",m:5,myo:0,drop:0,len:"L",pat:"sq",fat:2,uni:1,ss:"qd",region:"quad"},     // Jacked: explosive reverse lunge
+    {n:"DB Suitcase Reverse Lunges",t:"C",mv:"squat",m:5,myo:0,drop:1,len:"L",pat:"sq",fat:2,uni:1,ss:"qd",region:"quad"}, // Beaxst: single-side loaded
+    {n:"Band Squats",t:"C",mv:"squat",m:4,myo:0,drop:0,len:"M",pat:"sq",fat:2,uni:0,ss:"qd",region:"quad"},             // NerdFitness: stand on band, hold at shoulders, squat
     // ── BODYWEIGHT ──
-    {n:"Pistol Squats",t:"B",mv:"squat",m:6,myo:0,drop:0,len:"L",pat:"sq",fat:2,uni:1,ss:"qd"},          // Xero: single leg squat
-    {n:"Cossack Squats",t:"B",mv:"squat",m:5,myo:0,drop:0,len:"L",pat:"sq",fat:1,uni:0,ss:"qd"},         // Xero: deep lateral squat
-    {n:"Rolling Scissor Squats",t:"B",mv:"squat",m:5,myo:0,drop:0,len:"L",pat:"sq",fat:1,uni:1,ss:"qd"}, // Xero: alternating lunge flow
-    {n:"Levitation Squats",t:"B",mv:"squat",m:6,myo:0,drop:0,len:"L",pat:"sq",fat:1,uni:1,ss:"qd"},      // Xero: single leg to standing
+    {n:"Pistol Squats",t:"B",mv:"squat",m:6,myo:0,drop:0,len:"L",pat:"sq",fat:2,uni:1,ss:"qd",region:"quad"},          // Xero: single leg squat
+    {n:"Cossack Squats",t:"B",mv:"squat",m:5,myo:0,drop:0,len:"L",pat:"sq",fat:1,uni:0,ss:"qd",region:"quad"},         // Xero: deep lateral squat
+    {n:"Rolling Scissor Squats",t:"B",mv:"squat",m:5,myo:0,drop:0,len:"L",pat:"sq",fat:1,uni:1,ss:"qd",region:"quad"}, // Xero: alternating lunge flow
+    {n:"Levitation Squats",t:"B",mv:"squat",m:6,myo:0,drop:0,len:"L",pat:"sq",fat:1,uni:1,ss:"qd",region:"rectus-femoris"},      // Xero: single leg to standing
     // ── BAND ──
-    {n:"Banded Spanish Squats",t:"I",mv:"squat",m:5,myo:1,drop:0,len:"L",pat:"sq",fat:1,uni:0,ss:"qd"},  // Beaxst/Elast-X: TKE quad isolation
-    {n:"Banded Split Squats",t:"I",mv:"squat",m:5,myo:0,drop:0,len:"L",pat:"sq",fat:1,uni:1,ss:"qd"},   // Elast-X: band around back, split stance
-    {n:"Banded Goblet Squats",t:"I",mv:"squat",m:5,myo:0,drop:0,len:"M",pat:"sq",fat:1,uni:0,ss:"qd"},  // Elast-X: band under feet, goblet hold
-    {n:"Banded Reverse Lunges",t:"I",mv:"squat",m:5,myo:0,drop:0,len:"L",pat:"sq",fat:1,uni:1,ss:"qd"}, // Elast-X: band around back, reverse step
+    {n:"Banded Spanish Squats",t:"I",mv:"squat",m:5,myo:1,drop:0,len:"L",pat:"sq",fat:1,uni:0,ss:"qd",region:"rectus-femoris"},  // Beaxst/Elast-X: TKE quad isolation
+    {n:"Banded Split Squats",t:"I",mv:"squat",m:5,myo:0,drop:0,len:"L",pat:"sq",fat:1,uni:1,ss:"qd",region:"quad"},   // Elast-X: band around back, split stance
+    {n:"Banded Goblet Squats",t:"I",mv:"squat",m:5,myo:0,drop:0,len:"M",pat:"sq",fat:1,uni:0,ss:"qd",region:"quad"},  // Elast-X: band under feet, goblet hold
+    {n:"Banded Reverse Lunges",t:"I",mv:"squat",m:5,myo:0,drop:0,len:"L",pat:"sq",fat:1,uni:1,ss:"qd",region:"quad"}, // Elast-X: band around back, reverse step
   ],
   hams:[
+    {n:"Lying DB Leg Curl",t:"I",mv:"curl",m:4,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"hd",region:"knee-flexion"},
+    {n:"Nordic Hamstring Curl",t:"B",mv:"curl",m:5,myo:0,drop:0,len:"L",pat:"iso",fat:2,uni:0,ss:"hd",region:"knee-flexion"},
     // ── COMPOUNDS ──
-    {n:"DB RDLs",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"L",pat:"hi",fat:3,uni:0,ss:"hd"},
-    {n:"DB Single Leg RDLs",t:"C",mv:"squat",m:6,myo:0,drop:0,len:"L",pat:"hi",fat:2,uni:1,ss:"hd"},
-    {n:"DB Hip Thrusts",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"M",pat:"hi",fat:3,uni:0,ss:"hd"},
-    {n:"DB Reach-Across SL RDLs",t:"C",mv:"squat",m:5,myo:0,drop:0,len:"L",pat:"hi",fat:2,uni:1,ss:"hd"}, // Jacked: rotational single leg RDL
-    {n:"Band Deadlift",t:"C",mv:"squat",m:4,myo:0,drop:0,len:"L",pat:"hi",fat:2,uni:0,ss:"hd"},           // NerdFitness: stand on band, hinge to grab, stand up
+    {n:"DB RDLs",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"L",pat:"hi",fat:3,uni:0,ss:"hd",region:"hip-extension"},
+    {n:"DB Single Leg RDLs",t:"C",mv:"squat",m:6,myo:0,drop:0,len:"L",pat:"hi",fat:2,uni:1,ss:"hd",region:"hip-extension"},
+    {n:"DB Hip Thrusts",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"M",pat:"hi",fat:3,uni:0,ss:"hd",region:"hip-extension"},
+    {n:"DB Reach-Across SL RDLs",t:"C",mv:"squat",m:5,myo:0,drop:0,len:"L",pat:"hi",fat:2,uni:1,ss:"hd",region:"hip-extension"}, // Jacked: rotational single leg RDL
+    {n:"Band Deadlift",t:"C",mv:"squat",m:4,myo:0,drop:0,len:"L",pat:"hi",fat:2,uni:0,ss:"hd",region:"hip-extension"},           // NerdFitness: stand on band, hinge to grab, stand up
     // ── ISOLATION / BAND ──
-    {n:"Band Pull-Throughs",t:"I",mv:"squat",m:5,myo:1,drop:0,len:"M",pat:"hi",fat:1,uni:0,ss:"hd"},
-    {n:"Band Leg Curls",t:"I",mv:"curl",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"Banded Good Mornings",t:"I",mv:"squat",m:5,myo:1,drop:0,len:"L",pat:"hi",fat:1,uni:0,ss:"hd"},   // Elast-X
+    {n:"Band Pull-Throughs",t:"I",mv:"squat",m:5,myo:1,drop:0,len:"M",pat:"hi",fat:1,uni:0,ss:"hd",region:"hip-extension"},
+    {n:"Band Leg Curls",t:"I",mv:"curl",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso",region:"knee-flexion"},
+    {n:"Banded Good Mornings",t:"I",mv:"squat",m:5,myo:1,drop:0,len:"L",pat:"hi",fat:1,uni:0,ss:"hd",region:"hip-extension"},   // Elast-X
     // ── BODYWEIGHT ──
-    {n:"Slick Floor Bridge Curls",t:"B",mv:"curl",m:5,myo:0,drop:0,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"},  // Xero/Built: sliding hamstring curl
-    {n:"Glute-Ham Raises (BW)",t:"B",mv:"curl",m:6,myo:0,drop:0,len:"L",pat:"iso",fat:2,uni:0,ss:"siso"},   // Beaxst: Nordic curl variation
-    {n:"Single Leg Hip Thrusts",t:"B",mv:"squat",m:5,myo:0,drop:0,len:"M",pat:"hi",fat:1,uni:1,ss:"hd"}, // Xero: unilateral BW thrust
+    {n:"Slick Floor Bridge Curls",t:"B",mv:"curl",m:5,myo:0,drop:0,len:"L",pat:"iso",fat:1,uni:0,ss:"siso",region:"knee-flexion"},  // Xero/Built: sliding hamstring curl
+    {n:"Glute-Ham Raises (BW)",t:"B",mv:"curl",m:6,myo:0,drop:0,len:"L",pat:"iso",fat:2,uni:0,ss:"siso",region:"hip-extension"},   // Beaxst: Nordic curl variation
+    {n:"Single Leg Hip Thrusts",t:"B",mv:"squat",m:5,myo:0,drop:0,len:"M",pat:"hi",fat:1,uni:1,ss:"hd",region:"hip-extension"}, // Xero: unilateral BW thrust
   ],
   core:[
     // ── COMPOUNDS ──
-    {n:"DB Renegade Rows",t:"C",mv:"pull",m:5,myo:0,drop:0,len:"M",pat:"cor",fat:2,uni:0,ss:"none"},
-    {n:"DB Suitcase Carries",t:"C",mv:"press",m:5,myo:0,drop:0,len:"M",pat:"car",fat:2,uni:1,ss:"none"},    // Beaxst: loaded carry, anti-lateral flexion
+    {n:"DB Renegade Rows",t:"C",mv:"pull",m:5,myo:0,drop:0,len:"M",pat:"cor",fat:2,uni:0,ss:"none",region:"flexion"},
+    {n:"DB Suitcase Carries",t:"C",mv:"press",m:5,myo:0,drop:0,len:"M",pat:"car",fat:2,uni:1,ss:"none",region:"flexion"},    // Beaxst: loaded carry, anti-lateral flexion
     // ── ISOLATION / BAND ──
-    {n:"Band Pallof Press",t:"I",mv:"press",m:4,myo:0,drop:0,len:"M",pat:"cor",fat:1,uni:1,ss:"none"},
-    {n:"Band Woodchops",t:"I",mv:"pull",m:4,myo:0,drop:0,len:"M",pat:"cor",fat:1,uni:0,ss:"none"},
-    {n:"Banded Dead Bugs",t:"I",mv:"press",m:4,myo:0,drop:0,len:"M",pat:"cor",fat:1,uni:0,ss:"none"},      // Elast-X: anti-extension with band tension
-    {n:"Banded Crunches",t:"I",mv:"pull",m:4,myo:0,drop:0,len:"S",pat:"cor",fat:1,uni:0,ss:"none"},        // Elast-X: band behind back for loaded crunch
+    {n:"Band Pallof Press",t:"I",mv:"press",m:4,myo:0,drop:0,len:"M",pat:"cor",fat:1,uni:1,ss:"none",region:"obliques"},
+    {n:"Band Woodchops",t:"I",mv:"pull",m:4,myo:0,drop:0,len:"M",pat:"cor",fat:1,uni:0,ss:"none",region:"obliques"},
+    {n:"Banded Dead Bugs",t:"I",mv:"press",m:4,myo:0,drop:0,len:"M",pat:"cor",fat:1,uni:0,ss:"none",region:"anti-extension"},      // Elast-X: anti-extension with band tension
+    {n:"Banded Crunches",t:"I",mv:"pull",m:4,myo:0,drop:0,len:"S",pat:"cor",fat:1,uni:0,ss:"none",region:"flexion"},        // Elast-X: band behind back for loaded crunch
     // ── BODYWEIGHT ──
-    {n:"Hanging Leg Raises",t:"B",mv:"pull",m:4,myo:0,drop:0,len:"L",pat:"cor",fat:1,uni:0,ss:"none"},
-    {n:"Ab Wheel Rollouts",t:"B",mv:"press",m:5,myo:0,drop:0,len:"L",pat:"cor",fat:2,uni:0,ss:"none"},      // Built/Beaxst
-    {n:"Dragon Flags",t:"B",mv:"pull",m:5,myo:0,drop:0,len:"L",pat:"cor",fat:2,uni:0,ss:"none"},            // Xero: advanced lever hold
-    {n:"Cliffhanger Planks",t:"B",mv:"press",m:4,myo:0,drop:0,len:"S",pat:"cor",fat:1,uni:0,ss:"none"},     // Xero: signature plank variation
-    {n:"Mountain Climbers",t:"B",mv:"press",m:4,myo:0,drop:0,len:"M",pat:"cor",fat:1,uni:0,ss:"none"},      // Xero
-    {n:"V-Ups",t:"B",mv:"pull",m:4,myo:0,drop:0,len:"M",pat:"cor",fat:1,uni:0,ss:"none"},                   // Xero/Built
-    {n:"Reverse Crunches",t:"B",mv:"pull",m:4,myo:0,drop:0,len:"S",pat:"cor",fat:1,uni:0,ss:"none"},        // Built: lower ab focused
-    {n:"Dead Bugs (weighted)",t:"I",mv:"press",m:4,myo:0,drop:0,len:"M",pat:"cor",fat:1,uni:0,ss:"none"},   // Built Longevity: DB held
+    {n:"Hanging Leg Raises",t:"B",mv:"pull",m:4,myo:0,drop:0,len:"L",pat:"cor",fat:1,uni:0,ss:"none",region:"flexion"},
+    {n:"Ab Wheel Rollouts",t:"B",mv:"press",m:5,myo:0,drop:0,len:"L",pat:"cor",fat:2,uni:0,ss:"none",region:"anti-extension"},      // Built/Beaxst
+    {n:"Dragon Flags",t:"B",mv:"pull",m:5,myo:0,drop:0,len:"L",pat:"cor",fat:2,uni:0,ss:"none",region:"flexion"},            // Xero: advanced lever hold
+    {n:"Cliffhanger Planks",t:"B",mv:"press",m:4,myo:0,drop:0,len:"S",pat:"cor",fat:1,uni:0,ss:"none",region:"anti-extension"},     // Xero: signature plank variation
+    {n:"Mountain Climbers",t:"B",mv:"press",m:4,myo:0,drop:0,len:"M",pat:"cor",fat:1,uni:0,ss:"none",region:"flexion"},      // Xero
+    {n:"V-Ups",t:"B",mv:"pull",m:4,myo:0,drop:0,len:"M",pat:"cor",fat:1,uni:0,ss:"none",region:"flexion"},                   // Xero/Built
+    {n:"Reverse Crunches",t:"B",mv:"pull",m:4,myo:0,drop:0,len:"S",pat:"cor",fat:1,uni:0,ss:"none",region:"flexion"},        // Built: lower ab focused
+    {n:"Dead Bugs (weighted)",t:"I",mv:"press",m:4,myo:0,drop:0,len:"M",pat:"cor",fat:1,uni:0,ss:"none",region:"anti-extension"},   // Built Longevity: DB held
   ],
   calves:[
+    {n:"Donkey Calf Raise",t:"B",mv:"squat",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso",region:"gastroc"},
+    {n:"Single-Leg Donkey Calf Raise",t:"B",mv:"squat",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:1,ss:"siso",region:"gastroc"},
     // Calves were a phantom muscle (in LEG_MUSCLES + rep tables but zero exercises). DB/band/bodyweight, lengthened-bias where possible.
-    {n:"DB Standing Calf Raise",t:"I",mv:"squat",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"DB Single-Leg Calf Raise",t:"I",mv:"squat",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:1,ss:"siso"},
-    {n:"Deficit Bodyweight Calf Raise",t:"B",mv:"squat",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"},   // stair-edge deep stretch — highest-confidence lengthened translation
-    {n:"DB Seated Calf Raise",t:"I",mv:"squat",m:4,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},           // soleus bias (bent knee)
-    {n:"Band Calf Raise",t:"I",mv:"squat",m:3,myo:1,drop:0,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"},
+    {n:"DB Standing Calf Raise",t:"I",mv:"squat",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso",region:"gastroc"},
+    {n:"DB Single-Leg Calf Raise",t:"I",mv:"squat",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:1,ss:"siso",region:"gastroc"},
+    {n:"Deficit Bodyweight Calf Raise",t:"B",mv:"squat",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso",region:"gastroc"},   // stair-edge deep stretch — highest-confidence lengthened translation
+    {n:"DB Seated Calf Raise",t:"I",mv:"squat",m:4,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"soleus"},           // soleus bias (bent knee)
+    {n:"Band Calf Raise",t:"I",mv:"squat",m:3,myo:1,drop:0,len:"L",pat:"iso",fat:1,uni:0,ss:"siso",region:"gastroc"},
   ],
   glutes:[
+    {n:"DB Sumo Squat",t:"C",mv:"squat",m:5,myo:0,drop:1,len:"M",pat:"iso",fat:2,uni:0,ss:"siso",region:"glute-max"},
+    {n:"Kas Glute Bridge",t:"I",mv:"squat",m:5,myo:1,drop:1,len:"S",pat:"iso",fat:1,uni:0,ss:"siso",region:"glute-max"},
+    {n:"Reverse Hyper",t:"I",mv:"squat",m:4,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"glute-max"},
+    {n:"DB Deficit Reverse Lunge",t:"C",mv:"squat",m:6,myo:0,drop:0,len:"L",pat:"iso",fat:2,uni:1,ss:"siso",region:"glute-max"},
+    {n:"DB Cossack Squats",t:"C",mv:"squat",m:5,myo:0,drop:0,len:"L",pat:"iso",fat:2,uni:1,ss:"siso",region:"glute-medius"},
+    {n:"Single-Leg DB Hip Thrust",t:"I",mv:"squat",m:5,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:1,ss:"siso",region:"glute-max"},
+    {n:"Band Glute Kickback",t:"I",mv:"squat",m:4,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:1,ss:"siso",region:"glute-max"},
     // Glutes were folded into hams/quads with no dedicated pool. DB/band/bodyweight glute-biased.
-    {n:"DB Glute Bridge",t:"I",mv:"squat",m:5,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"DB B-Stance Hip Thrust",t:"I",mv:"squat",m:5,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:1,ss:"siso"},
-    {n:"DB Frog Pump",t:"I",mv:"squat",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"Band Hip Abduction",t:"I",mv:"squat",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},
-    {n:"DB Curtsy Lunge",t:"C",mv:"squat",m:5,myo:0,drop:0,len:"L",pat:"squat",fat:2,uni:1,ss:"none"},
+    {n:"DB Glute Bridge",t:"I",mv:"squat",m:5,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso",region:"glute-max"},
+    {n:"DB B-Stance Hip Thrust",t:"I",mv:"squat",m:5,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:1,ss:"siso",region:"glute-max"},
+    {n:"DB Frog Pump",t:"I",mv:"squat",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso",region:"glute-max"},
+    {n:"Band Hip Abduction",t:"I",mv:"squat",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso",region:"glute-medius"},
+    {n:"DB Curtsy Lunge",t:"C",mv:"squat",m:5,myo:0,drop:0,len:"L",pat:"squat",fat:2,uni:1,ss:"none",region:"glute-max"},
   ],
   cardio:[
-    {n:"Assault Bike Tabata (4 min)",t:"H",mv:"cardio",m:5,len:"N",pat:"cardio",fat:3,uni:0,ss:"none"},
-    {n:"Assault Bike 30/30 Intervals",t:"H",mv:"cardio",m:6,len:"N",pat:"cardio",fat:3,uni:0,ss:"none"},
-    {n:"Jump Rope Intervals",t:"H",mv:"cardio",m:5,len:"N",pat:"cardio",fat:2,uni:0,ss:"none"},
-    {n:"Rope Flow Recovery",t:"R",mv:"cardio",m:6,len:"N",pat:"cardio",fat:1,uni:0,ss:"none"},
-    {n:"Burpees",t:"H",mv:"cardio",m:5,len:"N",pat:"cardio",fat:3,uni:0,ss:"none"},                            // Xero/AX2
-    {n:"Mountain Mules",t:"H",mv:"cardio",m:5,len:"N",pat:"cardio",fat:3,uni:0,ss:"none"},                     // Xero: burpee variation
+    {n:"Assault Bike Tabata (4 min)",t:"H",mv:"cardio",m:5,len:"N",pat:"cardio",fat:3,uni:0,ss:"none",region:"cardio"},
+    {n:"Assault Bike 30/30 Intervals",t:"H",mv:"cardio",m:6,len:"N",pat:"cardio",fat:3,uni:0,ss:"none",region:"cardio"},
+    {n:"Jump Rope Intervals",t:"H",mv:"cardio",m:5,len:"N",pat:"cardio",fat:2,uni:0,ss:"none",region:"cardio"},
+    {n:"Rope Flow Recovery",t:"R",mv:"cardio",m:6,len:"N",pat:"cardio",fat:1,uni:0,ss:"none",region:"cardio"},
+    {n:"Burpees",t:"H",mv:"cardio",m:5,len:"N",pat:"cardio",fat:3,uni:0,ss:"none",region:"cardio"},                            // Xero/AX2
+    {n:"Mountain Mules",t:"H",mv:"cardio",m:5,len:"N",pat:"cardio",fat:3,uni:0,ss:"none",region:"cardio"},                     // Xero: burpee variation
   ],
 };
 
@@ -2649,54 +2892,54 @@ var SPLITS=[
 (function(){
   var ADD={
     hams:[
-      {n:"Nordic Curl (anchored, negatives)",t:"B",mv:"curl",m:6,myo:0,drop:0,len:"L",pat:"iso",fat:2,uni:0,ss:"siso"},
-      {n:"Band-Assisted Nordic Curl",t:"I",mv:"curl",m:5,myo:0,drop:0,len:"L",pat:"iso",fat:2,uni:0,ss:"siso"},
-      {n:"DB Deficit RDL",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"L",pat:"hi",fat:3,uni:0,ss:"hd"},
-      {n:"DB Stiff-Leg Deadlift",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"L",pat:"hi",fat:2,uni:0,ss:"hd"},
-      {n:"Slider Hamstring Curl (bent-knee)",t:"B",mv:"curl",m:5,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"}
+      {n:"Nordic Curl (anchored, negatives)",region:"knee-flexion",t:"B",mv:"curl",m:6,myo:0,drop:0,len:"L",pat:"iso",fat:2,uni:0,ss:"siso"},
+      {n:"Band-Assisted Nordic Curl",region:"knee-flexion",t:"I",mv:"curl",m:5,myo:0,drop:0,len:"L",pat:"iso",fat:2,uni:0,ss:"siso"},
+      {n:"DB Deficit RDL",region:"hip-extension",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"L",pat:"hi",fat:3,uni:0,ss:"hd"},
+      {n:"DB Stiff-Leg Deadlift",region:"hip-extension",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"L",pat:"hi",fat:2,uni:0,ss:"hd"},
+      {n:"Slider Hamstring Curl (bent-knee)",region:"knee-flexion",t:"B",mv:"curl",m:5,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"}
     ],
     glutes:[
-      {n:"Band Fire Hydrant",t:"I",mv:"squat",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:1,ss:"siso"},
-      {n:"Band Lateral Monster Walk",t:"I",mv:"squat",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},
-      {n:"DB Single-Leg Glute Bridge",t:"I",mv:"squat",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:1,ss:"siso"},
-      {n:"DB Kickstand RDL",t:"C",mv:"squat",m:5,myo:0,drop:0,len:"L",pat:"hi",fat:2,uni:1,ss:"hd"},
-      {n:"Band Standing Glute Kickback",t:"I",mv:"squat",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:1,ss:"siso"}
+      {n:"Band Fire Hydrant",region:"glute-medius",t:"I",mv:"squat",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:1,ss:"siso"},
+      {n:"Band Lateral Monster Walk",region:"glute-medius",t:"I",mv:"squat",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},
+      {n:"DB Single-Leg Glute Bridge",region:"glute-max",t:"I",mv:"squat",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:1,ss:"siso"},
+      {n:"DB Kickstand RDL",region:"glute-max",t:"C",mv:"squat",m:5,myo:0,drop:0,len:"L",pat:"hi",fat:2,uni:1,ss:"hd"},
+      {n:"Band Standing Glute Kickback",region:"glute-max",t:"I",mv:"squat",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:1,ss:"siso"}
     ],
     calves:[
-      {n:"DB Standing Single-Leg Calf Raise",t:"I",mv:"squat",m:4,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:1,ss:"siso"},
-      {n:"Band Seated Calf Raise",t:"I",mv:"squat",m:3,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},
-      {n:"Bodyweight Wall Calf Raise",t:"B",mv:"squat",m:4,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},
-      {n:"DB Donkey Calf Raise",t:"I",mv:"squat",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"}
+      {n:"DB Standing Single-Leg Calf Raise",region:"gastroc",t:"I",mv:"squat",m:4,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:1,ss:"siso"},
+      {n:"Band Seated Calf Raise",region:"soleus",t:"I",mv:"squat",m:3,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"},
+      {n:"Bodyweight Wall Calf Raise",region:"gastroc",t:"B",mv:"squat",m:4,myo:1,drop:0,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},
+      {n:"DB Donkey Calf Raise",region:"gastroc",t:"I",mv:"squat",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"}
     ],
     biceps:[
-      {n:"DB Zottman Curl",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},
-      {n:"DB Reverse Curl",t:"I",mv:"curl",m:4,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:0,ss:"siso"},
-      {n:"DB Preacher-Style Curl",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"}
+      
+      
+      {n:"DB Preacher-Style Curl",region:"short-head",t:"I",mv:"curl",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:0,ss:"siso"}
     ],
     triceps:[
-      {n:"DB Half-Kneeling Overhead Extension",t:"I",mv:"press",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:1,ss:"siso"},
-      {n:"Band Triceps Kickback",t:"I",mv:"press",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:1,ss:"siso"}
+      {n:"DB Half-Kneeling Overhead Extension",region:"long-head",t:"I",mv:"press",m:5,myo:1,drop:1,len:"L",pat:"iso",fat:1,uni:1,ss:"siso"},
+      {n:"Band Triceps Kickback",region:"lateral-head",t:"I",mv:"press",m:4,myo:1,drop:0,len:"S",pat:"iso",fat:1,uni:1,ss:"siso"}
     ],
     shoulders:[
-      {n:"DB Leaning Rear Delt Fly",t:"I",mv:"pull",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:1,ss:"siso"},
-      {n:"DB Cuban Press",t:"C",mv:"press",m:5,myo:0,drop:0,len:"M",pat:"vp",fat:2,uni:0,ss:"push"}
+      {n:"DB Leaning Rear Delt Fly",region:"rear-delt",t:"I",mv:"pull",m:5,myo:1,drop:1,len:"M",pat:"iso",fat:1,uni:1,ss:"siso"},
+      {n:"DB Cuban Press",region:"rear-delt",t:"C",mv:"press",m:5,myo:0,drop:0,len:"M",pat:"vp",fat:2,uni:0,ss:"push"}
     ],
     chest:[
-      {n:"DB Decline Floor Press",t:"C",mv:"press",m:5,myo:0,drop:1,len:"M",pat:"hp",fat:2,uni:0,ss:"push"},
-      {n:"DB Svend Press",t:"I",mv:"press",m:4,myo:1,drop:1,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"}
+      {n:"DB Decline Floor Press",region:"lower-chest",t:"C",mv:"press",m:5,myo:0,drop:1,len:"M",pat:"hp",fat:2,uni:0,ss:"push"},
+      {n:"DB Svend Press",region:"mid-chest",t:"I",mv:"press",m:4,myo:1,drop:1,len:"S",pat:"iso",fat:1,uni:0,ss:"siso"}
     ],
     back:[
-      {n:"DB Seal Row",t:"C",mv:"pull",m:6,myo:0,drop:1,len:"M",pat:"hpl",fat:2,uni:0,ss:"pull"},
-      {n:"Band Straight-Arm Pulldown",t:"I",mv:"pull",m:4,myo:1,drop:0,len:"L",pat:"vpl",fat:1,uni:0,ss:"siso"}
+      {n:"DB Seal Row",region:"mid-back",t:"C",mv:"pull",m:6,myo:0,drop:1,len:"M",pat:"hpl",fat:2,uni:0,ss:"pull"},
+      {n:"Band Straight-Arm Pulldown",region:"lats",t:"I",mv:"pull",m:4,myo:1,drop:0,len:"L",pat:"vpl",fat:1,uni:0,ss:"siso"}
     ],
     quads:[
-      {n:"DB Sissy Squat",t:"B",mv:"squat",m:5,myo:1,drop:0,len:"L",pat:"sq",fat:2,uni:0,ss:"qd"},
-      {n:"DB Walking Lunges",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"L",pat:"sq",fat:3,uni:1,ss:"qd"}
+      {n:"DB Sissy Squat",region:"rectus-femoris",t:"B",mv:"squat",m:5,myo:1,drop:0,len:"L",pat:"sq",fat:2,uni:0,ss:"qd"},
+      {n:"DB Walking Lunges",region:"quad",t:"C",mv:"squat",m:6,myo:0,drop:1,len:"L",pat:"sq",fat:3,uni:1,ss:"qd"}
     ],
     core:[
-      {n:"Side Plank Hold",t:"B",mv:"press",m:4,myo:0,drop:0,len:"S",pat:"cor",fat:1,uni:1,ss:"none"},
-      {n:"Side Plank Hip Dip",t:"I",mv:"press",m:4,myo:1,drop:0,len:"M",pat:"cor",fat:1,uni:1,ss:"none"},
-      {n:"DB Side Bend",t:"I",mv:"curl",m:4,myo:1,drop:1,len:"L",pat:"cor",fat:1,uni:1,ss:"none"}
+      {n:"Side Plank Hold",region:"obliques",t:"B",mv:"press",m:4,myo:0,drop:0,len:"S",pat:"cor",fat:1,uni:1,ss:"none"},
+      {n:"Side Plank Hip Dip",region:"obliques",t:"I",mv:"press",m:4,myo:1,drop:0,len:"M",pat:"cor",fat:1,uni:1,ss:"none"},
+      {n:"DB Side Bend",region:"obliques",t:"I",mv:"curl",m:4,myo:1,drop:1,len:"L",pat:"cor",fat:1,uni:1,ss:"none"}
     ]
   };
   for(var mk in ADD){if(EX[mk]){for(var i=0;i<ADD[mk].length;i++){EX[mk].push(ADD[mk][i]);}}}
@@ -3299,6 +3542,7 @@ function getExFamily(exName){
 // ═══ ATHLEANX-INSPIRED PRESET PROGRAMS ═══
 // Each preset maps to FORGE's goal/split/method system but with specific phase progression
 var POSTPARTUM_POOL=["Dead Bugs","Banded Dead Bugs","Side Plank Hold","Side Plank Hip Dip","Band Pallof Press","Band Pallof Hold","Band Woodchops","DB Glute Bridge","DB Single-Leg Glute Bridge","DB Frog Pump","Band Hip Abduction","Band Fire Hydrant","Band Lateral Monster Walk","Band Standing Glute Kickback","Band Pull-Throughs (light)","Band Pull-Throughs","Band Leg Curls","Slick Floor Bridge Curls","Slider Hamstring Curl (bent-knee)","Banded Hip Thrusts (light)","Band Squats","Banded Goblet Squats","Bodyweight Squat Reaches","Incline Pushups","Pushups","Band Crossovers","Single-Arm Band Chest Press","Band One-Arm Row","Inverted Rows","Band Lat Pulldowns","Human Pullovers","Band Straight-Arm Pulldown","Band Face Pulls","Band Overhead Press","Band Calf Raise","Bodyweight Wall Calf Raise","DB Standing Calf Raise"];
+var STATIC_PLANS={"pp1": [{"n": "360 Breathing", "dose": "8-10 breaths", "cue": "Lying down, breathe into your ribs front, sides and back (expand 360). Exhale slowly and let everything recoil up-and-in. Set the pattern first.", "sec": 90, "gif": null}, {"n": "Connection Breath (TvA)", "dose": "8-10 slow reps", "cue": "On the exhale, gently draw the low belly in (hug the baby) and lift the pelvic floor together - a soft elevator up, not a hard brace. Inhale to release. Fingertips on the midline confirm no doming.", "sec": 90, "gif": null}, {"n": "Pelvic-Floor Lift and Release", "dose": "8-10 x 6-8s holds + 10 quick flicks", "cue": "Exhale: lift the pelvic floor up and in. Inhale: fully let go and lengthen - the release matters as much as the lift.", "sec": 120, "gif": null}, {"n": "Heel Slides", "dose": "8-10 per side", "cue": "Supine, knees bent, midline engaged on the exhale. Slide one heel out slowly, low back quiet and midline flat. Return; alternate.", "sec": 90, "gif": "https://workoutlabs.com/train/wp-content/uploads/2023/05/Lying_Heel_Slides_F-c-f-v2-a.gif"}, {"n": "Marching / Toe Taps", "dose": "8-10 per side", "cue": "Supine, knees bent. Exhale, engage the midline, slowly lift and lower one foot without the low back arching or the belly doming.", "sec": 90, "gif": "https://workoutlabs.com/train/wp-content/uploads/2022/10/Pelvic_Tilt_With_Marching_M-1.gif"}, {"n": "Modified Dead Bug", "dose": "6-8 per side (start small)", "cue": "Hips and knees at 90. Exhale and lower ONE limb while keeping ribs down and low back anchored, midline flat. Only the range that stays flat.", "sec": 90, "gif": "https://www.strengthlog.com/wp-content/uploads/2023/01/deadbug.gif"}, {"n": "Bird Dog", "dose": "6-8 per side", "cue": "All-fours, neutral spine, midline engaged. Exhale and reach opposite arm and leg to a flat line - reach long, no rib flare, hip drop, or low-back sag.", "sec": 90, "gif": "https://spotebi.com/wp-content/uploads/2014/10/bird-dogs-exercise-illustration.gif"}, {"n": "Glute Bridge", "dose": "10-12", "cue": "Feet flat. Exhale, engage midline and glutes, lift hips to a straight shoulder-to-knee line (do not hyperextend the low back). Inhale down.", "sec": 90, "gif": "https://www.strengthlog.com/wp-content/uploads/2025/09/glutebridge.gif"}, {"n": "Cat-Cow", "dose": "6-10 slow cycles", "cue": "All-fours: inhale and let the belly drop and gaze lift (cow); exhale and round, drawing the navel up (cat). Match breath to movement.", "sec": 60, "gif": "https://www.strengthlog.com/wp-content/uploads/2025/11/Cat-cow.gif"}], "pp2": [{"n": "360 Breathing + Connection Breath", "dose": "5-8 breaths + 6-8 draw-ins", "cue": "Re-establish the breath and TvA pattern before loading. Midline flat.", "sec": 90, "gif": null}, {"n": "Glute Bridge to Marching Bridge", "dose": "10-12, then 6-8 marches/side", "cue": "From a level bridge, exhale and lift one foot a few inches without the pelvis dropping or rotating. Anti-rotation under single-leg load.", "sec": 150, "gif": "https://www.strengthlog.com/wp-content/uploads/2022/09/One-legged-glute-bridge.gif"}, {"n": "Goblet Squat (light)", "dose": "8-10, slow 3-1-1 tempo", "cue": "Exhale up out of the bottom; ribs stacked over pelvis; midline flat. Control before load.", "sec": 150, "forge": "DB Goblet Squats"}, {"n": "Standing Hip Hinge", "dose": "8-10, slow (unloaded to light DB)", "cue": "Push hips straight back, flat back, ribs stacked, feel a hamstring stretch; exhale to stand. Own the hinge before it becomes a deadlift.", "sec": 150, "gif": "https://www.strengthlog.com/wp-content/uploads/2022/09/romanian-deadlift-with-dumbbells.gif"}, {"n": "Modified Dead Bug (progressed)", "dose": "6-8 per side", "cue": "Larger range now if it stays flat; opposite arm and leg option. Anti-extension is your main ab move - replaces crunches.", "sec": 120, "gif": "https://www.strengthlog.com/wp-content/uploads/2023/01/deadbug.gif"}, {"n": "Pallof Press (anti-rotation)", "dose": "8-10 per side", "cue": "Band at chest height to one side. Exhale, press out, resist the twist; hips square, midline flat. Standing then half-kneeling.", "sec": 150, "gif": "https://www.strengthlog.com/wp-content/uploads/2025/10/pallof-press.gif"}, {"n": "Suitcase / Farmer Carry (light)", "dose": "2-3 x ~30s", "cue": "Stand tall, ribs over pelvis, do not lean; breathe - do not breath-hold. Anti-lateral-flexion core under load.", "sec": 180, "forge": "DB Suitcase Carries"}, {"n": "Light DB Row + Press", "dose": "8-10 each", "cue": "Add an upper-body push and pull with exhale-on-effort and a stable, flat midline.", "sec": 180, "forge": "DB Rows"}, {"n": "Pelvic-Floor Lift and Release (finish)", "dose": "8-10 x 6-8s + 10 flicks", "cue": "Reinforce lift AND full release; make pelvic-floor control reflexive during and after loaded work.", "sec": 120, "gif": null}], "pp3": [{"n": "360 Breathing + Connection Breath", "dose": "warm-up, 5-8 each", "cue": "Set the pressure pattern before loading. Midline flat, exhale on effort throughout.", "sec": 90, "gif": null}, {"n": "Goblet Squat", "dose": "3 x 8-10, add small load weekly", "cue": "Deliberate progressive load - enough to remodel, never enough to dome. Exhale up, ribs over pelvis.", "sec": 240, "forge": "DB Goblet Squats"}, {"n": "Romanian Deadlift (light)", "dose": "3 x 8-10", "cue": "Hip-dominant hinge, flat back, exhale to stand. Add small increments only while the midline stays flat.", "sec": 240, "forge": "DB RDLs"}, {"n": "DB Press", "dose": "3 x 8-10", "cue": "Exhale as you press to lockout; ribs down, no low-back arch.", "sec": 210, "forge": "DB OHP"}, {"n": "DB Row", "dose": "3 x 8-10", "cue": "Hinge and pull to the hip; squeeze the shoulder blade; stable, flat midline.", "sec": 210, "forge": "DB Rows"}, {"n": "Suitcase Carry", "dose": "3 x ~30s/side", "cue": "Tall and level, resist the lean, keep breathing. Anti-lateral-flexion under load.", "sec": 180, "forge": "DB Suitcase Carries"}, {"n": "Pallof Press", "dose": "3 x 8-10 per side", "cue": "Resist rotation, midline flat. The keystone train-the-abs-without-crunching move.", "sec": 150, "gif": "https://www.strengthlog.com/wp-content/uploads/2025/10/pallof-press.gif"}]};
 var PRESETS=[
   {id:"ax1",n:"AX1 Training Camp",desc:"Foundation building. Strength + conditioning. 5 days. 3 months of progressive phases.",icon:"A1",cat:"athletic",days:5,mesoLen:4,cd:2,
     phases:[
@@ -3495,10 +3739,10 @@ var PRESETS=[
     ]},
   {id:"w_postpartum",n:"Postpartum Return",desc:"A phased, criterion-based return to training after birth — reconnect the deep core and pelvic floor, rebuild movement, then load progressively. Diastasis-recti aware. Progresses by how you feel, not the calendar.",icon:"PP",cat:"health",days:3,mesoLen:4,cd:0,designProfile:"women",series:"women",gate:"postpartum",
     phases:[
-      {phase:1,n:"Reconnect & Foundation",goal:"posterior",method:"straight",split:"fb3",exPool:POSTPARTUM_POOL,desc:"A gentle full-body foundation, bodyweight-friendly, leaning on glutes, posterior chain and core. Pair every set with slow 360° breathing and a light pelvic-floor engagement — brace and exhale on the effort. Runs a four-week block; keep it symptom-free and the midline flat, then advance."},
-      {phase:2,n:"Rebuild Movement",goal:"balanced",method:"straight",split:"fb3",exPool:POSTPARTUM_POOL,desc:"Re-learn the movements — squat, hinge, push, pull, carry — across light, controlled full-body sessions. Anti-movement core over crunches. A four-week block; add load only as long as it stays symptom-free and flat through the middle."},
-      {phase:3,n:"Progressive Loading",method:"straight",goal:"balanced",split:"fb3",desc:"Light-to-moderate full-body strength, progressive overload, midline flat and no coning. Generated program unlocks after the clearance and symptom check pass."},
-      {phase:4,n:"Return to Strength",impact:true,method:"straight",goal:"strength",split:"fb3",desc:"Full-body progressive strength — heavier compounds, lower reps, real load. Impact and running stay locked until the readiness screen is passed."}
+      {phase:1,n:"Reconnect",staticPlan:"pp1",goal:"posterior",method:"straight",split:"fb3",exPool:POSTPARTUM_POOL,desc:"Reconnect breath, deep core (TvA) and pelvic floor. One fixed session, repeated most days — consistency is the active ingredient. ~13 min. Advance when the whole session stays flat and symptom-free with full pelvic-floor lift AND release."},
+      {phase:2,n:"Rebuild Movement",staticPlan:"pp2",goal:"balanced",method:"straight",split:"fb3",exPool:POSTPARTUM_POOL,desc:"Re-learn squat, hinge, push, pull and carry under light load, with anti-movement core replacing crunches. Same fixed session, repeated; progress by nudging tempo/reps within it. ~22 min, 2-3×/wk. Advance on clean mechanics with a flat midline."},
+      {phase:3,n:"Intro to Load",staticPlan:"pp3",method:"straight",goal:"balanced",split:"fb3",desc:"A pre-planned loading template — fixed movement slots with a deliberate week-to-week progression. The linea-alba Goldilocks load: enough to remodel, never enough to dome. Advance when the impact-readiness screen passes."},
+      {phase:4,n:"Starter Program",impact:true,method:"straight",goal:"balanced",split:"fb3",exPool:POSTPARTUM_POOL,desc:"The graduation on-ramp: a light, engine-generated program from the safe, symptom-gated pool. Anti-movement core preferred, exhale-on-exertion cued. Impact and running stay locked until the readiness screen passes."}
     ]},
   {id:"w_menopause",n:"Strong Through Menopause",desc:"The one strategy with direct bone-density trial evidence for postmenopausal women: heavy resistance plus impact (LIFTMOR). Heavy compounds for bone and strength, accessories for lean mass, a jump/landing finisher. Track strength and function, not the scale.",icon:"MP",cat:"health",days:3,mesoLen:5,cd:0,designProfile:"women",series:"women",gate:"menopause",
     phases:[
@@ -6311,11 +6555,30 @@ function applyMesoLock(sessions,locked){
   }
   return sessions;
 }
+// ═══ PER-HEAD COVERAGE (System 2f) ═══
+// Flag (default ON). Sim toggles this global to verify OFF==current and ON stays green.
+var _ORDER_COV=1;
+// Neglected-head-first inject priority per muscle (regions are the literal `region` values in EX).
+// When a muscle's picks pile onto ONE head, swap the weakest redundant pick for the best-scored
+// option in the most-neglected uncovered head listed here.
+var HEAD_PRIORITY={
+  glutes:["glute-medius","glute-max"],
+  calves:["soleus","gastroc"],
+  shoulders:["rear-delt","side-delt","front-delt"],
+  triceps:["long-head","lateral-head"],
+  hams:["knee-flexion","hip-extension"],
+  chest:["upper-chest","lower-chest","serratus","mid-chest"],
+  back:["lats","mid-back","lower-traps","traps"],
+  biceps:["brachialis","long-head","short-head"],
+  quads:["rectus-femoris","quad"],
+  core:["anti-extension","obliques","flexion"]
+};
 // ═══ SMART EXERCISE SELECTION (System 2) ═══
 // Replaces inline picking logic with guarantees:
 // 2a: Lengthened-bias guarantee (≥1 len:"L" per muscle per session)
 // 2d: Unilateral distribution for legs
 // 2e: Compound-to-isolation ratio (goal-aware)
+// 2f: Per-head region coverage (gated by _ORDER_COV)
 function selectExercisesForMuscle(scored,numExercises,goalObj,muscle,rng,equipFilter,banned){
   var comps=scored.filter(function(e){return e.t==="C";});
   var isos=scored.filter(function(e){return e.t!=="C"&&e.t!=="B";});
@@ -6409,6 +6672,61 @@ function selectExercisesForMuscle(scored,numExercises,goalObj,muscle,rng,equipFi
           if(picked[wbi].uni!==1&&picked[wbi]._score<wbScore){wbScore=picked[wbi]._score;worstBi=wbi;}
         }
         picked[worstBi]=bestUni;
+      }
+    }
+  }
+  // ═══ 2f: PER-HEAD REGION COVERAGE (gated by _ORDER_COV) ═══
+  // When a muscle gets >=2 exercises AND >=2 real heads exist, make the picks span DISTINCT
+  // `region` values: swap the weakest redundant pick for the best-scored option in the most-
+  // neglected uncovered head. 1-for-1, same muscle ⇒ invariant-safe (mirrors 2a/2d swaps).
+  // Guards: never swap an ANCHOR_EX; never break the compound target; never drop the sole
+  // lengthened pick; degrade gracefully (skip when candidate is much weaker or head is empty).
+  if(_ORDER_COV&&picked.length>=2){
+    var _headsAvail={},_headCount=0;
+    for(var _hi=0;_hi<scored.length;_hi++){
+      var _rg=scored[_hi].region;
+      if(_rg&&_rg!=="cardio"&&!_headsAvail[_rg]){_headsAvail[_rg]=1;_headCount++;}
+    }
+    if(_headCount>=2){
+      var _covered={},_regCount={};
+      for(var _pi=0;_pi<picked.length;_pi++){
+        var _pr=picked[_pi].region;
+        if(_pr){_covered[_pr]=1;_regCount[_pr]=(_regCount[_pr]||0)+1;}
+      }
+      var _dupReg=null,_dupMax=1;
+      for(var _rk in _regCount){if(_regCount[_rk]>_dupMax){_dupMax=_regCount[_rk];_dupReg=_rk;}}
+      if(_dupReg){
+        var _pri=HEAD_PRIORITY[muscle]||null,_targets=[];
+        if(_pri){for(var _ti=0;_ti<_pri.length;_ti++){if(_headsAvail[_pri[_ti]]&&!_covered[_pri[_ti]])_targets.push(_pri[_ti]);}}
+        for(var _ra in _headsAvail){if(!_covered[_ra]){var _sn=false;for(var _tj=0;_tj<_targets.length;_tj++){if(_targets[_tj]===_ra){_sn=true;break;}}if(!_sn)_targets.push(_ra);}}
+        // Eligible victims = picks in the duplicated head, lowest-score first, never an anchor,
+        // never the SOLE lengthened pick. Injected candidate must match the victim's compound-ness
+        // (C-for-C / iso-for-iso) so exTime, the compound target, and the time budget are ALL
+        // preserved — the swap is provably 1-for-1 with zero downstream effect.
+        var _lCount=0;for(var _lc=0;_lc<picked.length;_lc++){if(picked[_lc].len==="L")_lCount++;}
+        var _vlist=[];
+        for(var _vi=0;_vi<picked.length;_vi++){
+          if(picked[_vi].region!==_dupReg)continue;
+          if(ANCHOR_EX&&ANCHOR_EX[picked[_vi].n])continue;
+          if(picked[_vi].len==="L"&&_lCount<=1)continue;
+          _vlist.push(_vi);
+        }
+        _vlist.sort(function(a,b){return picked[a]._score-picked[b]._score;});
+        var _swapped=false;
+        for(var _tt=0;_tt<_targets.length&&!_swapped;_tt++){
+          for(var _vk=0;_vk<_vlist.length&&!_swapped;_vk++){
+            var _vidx=_vlist[_vk],_vC=(picked[_vidx].t==="C");
+            for(var _ci=0;_ci<scored.length;_ci++){
+              var _c=scored[_ci];
+              if(_c.region!==_targets[_tt])continue;
+              if((_c.t==="C")!==_vC)continue;                               // same compound-ness → budget-neutral
+              if(usedNames[_c.n])continue;
+              if(banned&&banned.indexOf&&banned.indexOf(_c.n)>=0)continue;
+              if(_c._score>=picked[_vidx]._score-8){picked[_vidx]=_c;_swapped=true;} // degradation margin
+              break; // first (best) same-type candidate in this head; don't inject a weaker one
+            }
+          }
+        }
       }
     }
   }
@@ -7178,6 +7496,13 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       }
     }
 
+    // Enrich pushed exercises with the metadata the ordering pass needs (len/pat/fat/m/ss/region),
+    // copied from the EX library by name — push sites only carry name/muscle/t/mv otherwise.
+    var _exByName={};
+    for(var _emk in EX){if(EX[_emk]&&EX[_emk].length){for(var _emi=0;_emi<EX[_emk].length;_emi++){_exByName[EX[_emk][_emi].n]=EX[_emk][_emi];}}}
+    for(var _xi=0;_xi<exs.length;_xi++){var _xs=_exByName[exs[_xi].name];if(_xs){var _xe=exs[_xi];
+      if(_xe.len===undefined)_xe.len=_xs.len; if(_xe.pat===undefined)_xe.pat=_xs.pat; if(_xe.fat===undefined)_xe.fat=_xs.fat;
+      if(_xe.m===undefined)_xe.m=_xs.m; if(_xe.ss===undefined)_xe.ss=_xs.ss; if(_xe.region===undefined)_xe.region=_xs.region; if(_xe.t===undefined)_xe.t=_xs.t;}}
     // ═══ SMART EXERCISE ORDERING v2 (System 3) ═══
     // 3a: Priority muscle exercises move up in order
     // 3b: Meadows 4-phase ordering per muscle (activation → heavy compound → pump iso → stretch finisher)
@@ -7201,19 +7526,43 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
     for(var _mk in _muscleExs){
       if(_gvol[_mk]>=1.5){_prioMuscles.push(_mk);}else{_normMuscles.push(_mk);}
     }
-    // 3b: Meadows 4-phase sort within each muscle group
-    function _meadowsSort(arr){
-      arr.sort(function(a,b){
-        var aFat=a.fat||((a.name&&a.name.indexOf("DB ")===0)?3:1);
-        var bFat=b.fat||((b.name&&b.name.indexOf("DB ")===0)?3:1);
-        // Heavy compounds first (fat desc), then stretch finisher last (len==="L" goes last)
-        if(aFat!==bFat)return bFat-aFat;
-        var aL=a.len==="L"?1:0;var bL=b.len==="L"?1:0;
-        return aL-bL;
-      });
+    // 3b: Goal-aware SLOT ordering within each muscle (order-class phase-rank + tie-breaks).
+    //     Replaces the coarse Meadows sort per ORDER-ENGINE-SPEC §1/§2. Permutation-only:
+    //     no membership/set/rep/muscle change, so it has zero simulation-invariant surface.
+    var _ordVariant=(function(){
+      var g=(goalObj&&goalObj.id)||"";
+      var dm=(typeof _dayMid!=="undefined")?_dayMid:"";
+      if(g==="strength"||g==="powerbuild"||g==="power"||g==="str")return "strength";
+      if(g==="shred"||g==="tshirt"||g==="contest"||dm==="density"||dm==="giant")return "shred";
+      return "hyp";
+    })();
+    function _isPrimaryPat(p){return p==="hp"||p==="vp"||p==="hpl"||p==="vpl"||p==="sq"||p==="hi"||p==="squat";}
+    function _phaseRank(ex,variant){
+      var t=ex.t,p=ex.pat,len=ex.len,mm=ex.m||0;
+      if(t==="C"&&mm>=6&&_isPrimaryPat(p))return 10;         // primary compound
+      if(t==="C")return 20;                                  // secondary compound
+      if(t==="B"&&(p==="hp"||p==="vpl"||p==="hpl"))return 25;// bodyweight compound
+      if(t==="I"&&len==="L")return variant==="strength"?70:35; // stretch iso: early for size, finisher for strength
+      if(t==="I"&&len==="M")return 50;                       // mid isolation
+      if(t==="I"&&len==="S")return 60;                       // peak/pump isolation
+      return 80;                                             // bw/stability coda
+    }
+    function _nameHash(n){var h=0,s=n||"";for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))&0x7fffffff;}return (h%1000)/1000;}
+    function _slotKey(ex,variant){
+      var r=_phaseRank(ex,variant);
+      if((ex.tech==="myo"||ex.exMethod==="myo")&&r<50)r=50; // myo sets never lead; keep after compounds
+      var key=r;
+      key-=(ex.m||0)*0.02;            // heavier first within a phase
+      key-=(ex.fat||0)*0.002;         // more fatiguing first within a phase
+      key+=_nameHash(ex.name)*0.001;  // deterministic final tie-break (seed-stable)
+      return key;
+    }
+    function _slotSort(arr,variant){
+      for(var _ski=0;_ski<arr.length;_ski++)arr[_ski]._sk=_slotKey(arr[_ski],variant);
+      arr.sort(function(a,b){return a._sk-b._sk;});
       return arr;
     }
-    for(var _smk in _muscleExs){_meadowsSort(_muscleExs[_smk]);}
+    for(var _smk in _muscleExs){_slotSort(_muscleExs[_smk],_ordVariant);}
     // 3c: Interleave muscle groups (priority first, then normal)
     var _allGroups=_prioMuscles.concat(_normMuscles);
     var _interleaved=[];
@@ -7226,6 +7575,27 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       for(var _ig2=0;_ig2<_allGroups.length;_ig2++){
         var _gexs=_muscleExs[_allGroups[_ig2]]||[];
         if(_round<_gexs.length)_interleaved.push(_gexs[_round]);
+      }
+    }
+    // 3c-2: ADJACENCY REPAIR (ORDER-ENGINE-SPEC §4) — don't fry a synergist isolation right
+    //       before the compound that needs it. Permutation-only single pass; different muscles,
+    //       so swapping positions preserves each muscle's sets/reps. Disabled on pre-exhaust days.
+    var _preExhDay=(typeof _dayMid!=="undefined")&&_dayMid==="preexh";
+    function _synFry(a,b){
+      if(!a||!b||a.muscle===b.muscle)return false;
+      var aIso=(a.t==="I"||a.t==="B"),bC=(b.t==="C");
+      if(!aIso||!bC)return false;
+      var bp=b.pat;
+      if(a.mv==="press"&&a.ss==="siso"&&(bp==="hp"||bp==="vp"))return true;                 // triceps iso before a press
+      if(a.mv==="curl"&&(bp==="hpl"||bp==="vpl"))return true;                                // biceps iso before a pull
+      if((a.region==="side-delt"||a.region==="front-delt")&&a.t==="I"&&bp==="vp")return true;// delt raise before OHP
+      return false;
+    }
+    if(!_preExhDay){
+      for(var _ai=0;_ai<_interleaved.length-1;_ai++){
+        if(_synFry(_interleaved[_ai],_interleaved[_ai+1])){
+          var _tmp=_interleaved[_ai];_interleaved[_ai]=_interleaved[_ai+1];_interleaved[_ai+1]=_tmp;
+        }
       }
     }
     // 3d: Stamp intra-session RIR gradient
@@ -7542,6 +7912,10 @@ function Forge(props){
   var _ep=useState(null),editPick=_ep[0],setEditPick=_ep[1];
   var _ci=useState(""),customIn=_ci[0],setCI=_ci[1];
   var _pg=useState([]),program=_pg[0],setProgram=_pg[1];
+  // ═══ POSTPARTUM ACTIVE-PLAN STATE (static plan set as the dashboard program) ═══
+  var _ppA=useState(null),ppActive=_ppA[0],setPpActive=_ppA[1];   // {planKey,phase} or null
+  var _ppR=useState(false),ppRunOpen=_ppR[0],setPpRunOpen=_ppR[1];
+  var _ppL=useState(null),ppLog=_ppL[0],setPpLog=_ppL[1];         // {start, sessions:[]}
   // ═══ DRAG-TO-REORDER STATE ═══
   var _dragIdx=useState(null),dragIdx=_dragIdx[0],setDragIdx=_dragIdx[1];
   var _dragOverIdx=useState(null),dragOverIdx=_dragOverIdx[0],setDragOverIdx=_dragOverIdx[1];
@@ -8183,6 +8557,7 @@ function Forge(props){
           if(cfg.specMuscles&&Array.isArray(cfg.specMuscles)&&cfg.specMuscles.length>0) setSpecMuscles(cfg.specMuscles);
           if(cfg.specBudget&&typeof cfg.specBudget==="object") setSpecBudget(cfg.specBudget); // V2 #6
           if(cfg.dbKit&&KIT_PRESETS[cfg.dbKit]) setDbKit(cfg.dbKit); // C8
+          if(cfg.ppPlan){ setPpActive({planKey:cfg.ppPlan,phase:cfg.ppPhase||1}); sGet("forge_pp_"+cfg.ppPlan,null).then(function(v){setPpLog(v||{start:null,sessions:[]});}); }
         }
       });
       // V2 #4: load preset phase and transition weight overrides
@@ -9469,6 +9844,31 @@ function Forge(props){
     return viable;
   }
 
+  // ═══ POSTPARTUM: activate a static plan AS the dashboard program (persists; no weekly rebuild) ═══
+  function ppPlanName(ph){return ph===1?"Reconnect":ph===2?"Rebuild Movement":ph===3?"Intro to Load":"Postpartum";}
+  function activatePP(pk,phase){
+    var plan=(typeof STATIC_PLANS!=="undefined"&&STATIC_PLANS[pk])?STATIC_PLANS[pk]:[];
+    var exs=plan.map(function(e){return {name:e.n,muscle:"core",tech:"straight",sets:1,reps:e.dose,time:Math.round((e.sec||0)/6)/10,mv:"iso",note:e.cue,gif:e.gif,forge:e.forge,ppItem:true};});
+    var est=Math.round(plan.reduce(function(a,e){return a+(e.sec||0);},0)/60);
+    var ppProg=[{label:"Phase "+phase+" · "+ppPlanName(phase),exercises:exs,est:est,ppPlan:pk}];
+    setProgram(ppProg);
+    setPpActive({planKey:pk,phase:phase});
+    setGoal("posterior");setSplit("fb3");setMethod("straight");setMins(30);setMesoLen(4);setNumDays(3);
+    setPresetPick("w_postpartum");setPresetPhase(phase);
+    sSet("forge_program",ppProg);
+    sSet("forge_config",{goal:"posterior",split:"fb3",method:"straight",mins:30,mesoLen:4,weekNum:1,numDays:3,genCount:genCount,presetCd:0,specMuscles:[],dbKit:dbKit,presetPick:"w_postpartum",ppPlan:pk,ppPhase:phase});
+    sGet("forge_pp_"+pk,null).then(function(v){setPpLog(v||{start:null,sessions:[]});});
+    setScreen("dashboard");
+    setPpRunOpen(true);
+  }
+  function logPPSession(){
+    if(!ppActive)return;
+    var pk=ppActive.planKey;var now=new Date();var day=now.toISOString().slice(0,10);
+    var st=ppLog||{start:null,sessions:[]};
+    var ns={start:st.start||day,sessions:(st.sessions||[]).concat([now.toISOString()])};
+    setPpLog(ns);sSet("forge_pp_"+pk,ns);
+  }
+  function exitPP(){setPpActive(null);setPpRunOpen(false);setProgram([]);sSet("forge_program",[]);setScreen("setup");setSetupMode("choose");setPresetPick(null);}
   function generateProg(){
     if(!goal||!split||!method)return;
     // Apply a curated exercise whitelist if the selected preset phase defines one (postpartum-safe pool).
@@ -10749,6 +11149,7 @@ function Forge(props){
               {(function(){
                 var _selPh=null;for(var _pi=0;_pi<p.phases.length;_pi++){if(p.phases[_pi].phase===presetPhase)_selPh=p.phases[_pi];}
                 var _selGuid=!!(_selPh&&_selPh.guidance),_selImpact=!!(_selPh&&_selPh.impact),_selLocked=_selImpact&&!symptomPass;
+                var _selStatic=(_selPh&&_selPh.staticPlan&&typeof STATIC_PLANS!=="undefined"&&STATIC_PLANS[_selPh.staticPlan])?STATIC_PLANS[_selPh.staticPlan]:null;
                 if(p.gate&&!gateAck){
                   return <div>
                     <div style={{background:C.red+"10",border:"1px solid "+C.red+"40",borderRadius:12,padding:14,marginBottom:12}}>
@@ -10769,18 +11170,18 @@ function Forge(props){
                   {p.gate&&<div style={{fontSize:10,color:C.dim,marginBottom:10,lineHeight:1.5}}>{"Cleared ✓ — progress by how you feel, not the calendar. Impact and heavy phases stay locked until the readiness check passes. "}<span onClick={function(){setGateAck(false);setSymptomPass(false);}} style={{color:C.blu,cursor:"pointer"}}>Review safety</span></div>}
                   <div style={{fontSize:12,fontWeight:700,fontFamily:FD,letterSpacing:2,color:C.acc,marginBottom:8}}>CHOOSE YOUR PHASE (MESO)</div>
                   <div style={{fontSize:11,color:C.dim,marginBottom:12}}>Each phase is a {p.mesoLen}-week block. Start with Phase 1 if new.</div>
-                  {p.phases.map(function(ph){var sel=presetPhase===ph.phase;var _g=!!ph.guidance;var _im=!!ph.impact;var _lk=_im&&!symptomPass;return <button key={ph.phase} onClick={function(){setPresetPhase(ph.phase);setGoal(ph.goal);setSplit(ph.split);setMethod(ph.method);setNumDays(p.days);setMesoLen(p.mesoLen);setPresetCd(typeof p.cd==="number"?p.cd:null);}} style={{width:"100%",textAlign:"left",padding:"14px 16px",marginBottom:8,background:sel?(catC+"12"):C.bar,border:"1px solid "+(sel?(catC+"50"):C.bdr),borderRadius:12,cursor:"pointer"}}>
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{fontSize:15,fontWeight:700,color:sel?catC:C.txt,fontFamily:FD}}>{"PHASE "+ph.phase+": "+ph.n}</div><span style={{fontSize:9,fontWeight:700,fontFamily:FD,color:_g?C.blu:_lk?C.red:C.dim}}>{_g?"GUIDANCE":_lk?"LOCKED":p.mesoLen+" wks"}</span></div>
+                  {p.phases.map(function(ph){var sel=presetPhase===ph.phase;var _g=!!ph.guidance;var _im=!!ph.impact;var _lk=_im&&!symptomPass;var _st=!!ph.staticPlan;return <button key={ph.phase} onClick={function(){setPresetPhase(ph.phase);setGoal(ph.goal);setSplit(ph.split);setMethod(ph.method);setNumDays(p.days);setMesoLen(p.mesoLen);setPresetCd(typeof p.cd==="number"?p.cd:null);}} style={{width:"100%",textAlign:"left",padding:"14px 16px",marginBottom:8,background:sel?(catC+"12"):C.bar,border:"1px solid "+(sel?(catC+"50"):C.bdr),borderRadius:12,cursor:"pointer"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{fontSize:15,fontWeight:700,color:sel?catC:C.txt,fontFamily:FD}}>{"PHASE "+ph.phase+": "+ph.n}</div><span style={{fontSize:9,fontWeight:700,fontFamily:FD,color:_g?C.blu:_st?C.grn:_lk?C.red:C.dim}}>{_g?"GUIDANCE":_st?"FIXED PLAN":_lk?"LOCKED":p.mesoLen+" wks"}</span></div>
                     <div style={{fontSize:11,color:C.mid,marginTop:3,lineHeight:1.4}}>{ph.desc}</div>
                   </button>;})}
-                  {_selGuid?<div style={{background:C.blu+"10",border:"1px solid "+C.blu+"30",borderRadius:12,padding:14,marginTop:8,marginBottom:8}}><div style={{fontSize:11,color:C.mid,lineHeight:1.6}}>This phase is <b>guidance</b>, not a generated workout — follow the steps in the description at your own pace, and move on only when you can do it symptom-free.</div></div>:<div>
+                  {_selStatic?<StaticPlanView plan={_selStatic} color={catC} planKey={_selPh.staticPlan} phase={_selPh.phase} mesoLen={p.mesoLen} onActivate={activatePP}/>:_selGuid?<div style={{background:C.blu+"10",border:"1px solid "+C.blu+"30",borderRadius:12,padding:14,marginTop:8,marginBottom:8}}><div style={{fontSize:11,color:C.mid,lineHeight:1.6}}>This phase is <b>guidance</b>, not a generated workout — follow the steps in the description at your own pace, and move on only when you can do it symptom-free.</div></div>:<div>
                     <div style={{fontSize:12,fontWeight:700,fontFamily:FD,letterSpacing:2,color:C.acc,marginTop:16,marginBottom:8}}>SESSION LENGTH</div>
                     <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:16}}>{[30,45,60,75,90].map(function(t){return pill(t+" min",mins===t,C.grn,function(){setMins(t);},"pt"+t);})}</div>
                   </div>}
                   {_selLocked&&<div style={{background:C.red+"10",border:"1px solid "+C.red+"40",borderRadius:12,padding:14,marginBottom:10}}><div style={{fontSize:12,color:C.mid,lineHeight:1.5,marginBottom:10}}>{"This phase adds "+(p.gate==="postpartum"?"running and impact":"impact and heavier axial loading")+". Pass a quick readiness check to unlock it."}</div>{mainBtn("START READINESS CHECK",function(){setShowSympt(true);})}</div>}
                   <div style={{display:"flex",gap:10,marginTop:4}}>
                     {secBtn("BACK",function(){setPresetPick(null);setGoal(null);setSplit(null);setMethod(null);})}
-                    {mainBtn("GENERATE",function(){generateProg();setReviewMode(true);setEditDay(0);setEditPick(null);setScreen("workout");setView("edit");},!goal||!split||!method||_selGuid||_selLocked)}
+                    {!_selStatic&&mainBtn("GENERATE",function(){generateProg();setReviewMode(true);setEditDay(0);setEditPick(null);setScreen("workout");setView("edit");},!goal||!split||!method||_selGuid||_selLocked)}
                   </div>
                 </div>;
               })()}
@@ -10894,7 +11295,7 @@ function Forge(props){
       </div>)}
 
       {/* ═══ DASHBOARD ═══ */}
-      {screen==="dashboard"&&program.length>0&&(<div className="view-slide">
+      {screen==="dashboard"&&program.length>0&&!ppActive&&(<div className="view-slide">
         <div style={{textAlign:"center",padding:"30px 0 14px"}}>
           <div style={{fontSize:36,fontFamily:FD,letterSpacing:6,color:C.acc,display:"flex",alignItems:"center",justifyContent:"center"}}><ForgeF size={36}/>{"ORGE"}</div>
           <div style={{fontSize:12,color:C.dim,marginTop:4}}>{"Week "+weekNum+" of "+mesoLen+"  •  "+getPhaseLabel(weekNum,mesoLen).toUpperCase()}</div>
@@ -11058,6 +11459,48 @@ function Forge(props){
         })()}
         <div style={{height:80}}/>
       </div>)}
+
+      {/* ═══ POSTPARTUM DASHBOARD (static plan as active program) ═══ */}
+      {screen==="dashboard"&&program.length>0&&ppActive&&(function(){
+        var pk=ppActive.planKey, ph=ppActive.phase;
+        var plan=(typeof STATIC_PLANS!=="undefined"&&STATIC_PLANS[pk])?STATIC_PLANS[pk]:[];
+        var ppMins=Math.round(plan.reduce(function(a,e){return a+(e.sec||0);},0)/60);
+        var started=!!(ppLog&&ppLog.start), ppWeek=1,totalS=0,weekS=0;
+        if(started){var sd=new Date(ppLog.start+"T00:00:00");var days=Math.floor((Date.now()-sd.getTime())/86400000);ppWeek=Math.max(1,Math.min(4,Math.floor(days/7)+1));totalS=(ppLog.sessions||[]).length;var ws=sd.getTime()+(ppWeek-1)*7*86400000;for(var z=0;z<(ppLog.sessions||[]).length;z++){if(new Date(ppLog.sessions[z]).getTime()>=ws)weekS++;}}
+        return <div className="view-slide">
+          <div style={{textAlign:"center",padding:"30px 0 14px"}}>
+            <div style={{fontSize:36,fontFamily:FD,letterSpacing:6,color:C.grn,display:"flex",alignItems:"center",justifyContent:"center"}}><ForgeF size={36}/>{"ORGE"}</div>
+            <div style={{fontSize:12,color:C.dim,marginTop:4}}>{"Postpartum Return  •  WEEK "+ppWeek+" OF 4"}</div>
+          </div>
+          {cd(<div>
+            {hd("CURRENT PROGRAM")}
+            <div style={{fontSize:16,fontWeight:700,fontFamily:FD,color:C.txt}}>{"Postpartum · Phase "+ph+": "+ppPlanName(ph)}</div>
+            <div style={{fontSize:12,color:C.dim,marginTop:4}}>{"Fixed daily session · ~"+ppMins+" min · "+plan.length+" moves"}</div>
+            <div style={{fontSize:10,color:C.dim,marginTop:4}}>{started?(weekS+" this week · "+totalS+" total · progress by how you feel, not the calendar"):"Not started yet — aim for most days"}</div>
+            {authUser&&<div style={{display:"flex",alignItems:"center",gap:4,marginTop:6}}><div style={{width:6,height:6,borderRadius:"50%",background:C.grn}}/><span style={{fontSize:10,color:C.grn}}>{"Cloud synced • "+authUser.email}</span></div>}
+          </div>)}
+          {cd(<div>
+            {hd("TODAY'S SESSION")}
+            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+              <div style={{width:48,height:48,borderRadius:12,background:C.grn+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:700,color:C.grn,fontFamily:FD}}>{"P"+ph}</div>
+              <div><div style={{fontSize:16,fontWeight:700,fontFamily:FD}}>{ppPlanName(ph)}</div><div style={{fontSize:11,color:C.dim}}>{"~"+ppMins+" min · "+plan.length+" moves · same session each time"}</div></div>
+            </div>
+            {mainBtn("START TODAY'S SESSION",function(){setPpRunOpen(true);})}
+            <button onClick={logPPSession} style={{marginTop:8,width:"100%",padding:"9px",background:"transparent",border:"1px solid "+C.bdr,borderRadius:10,color:C.mid,fontFamily:FD,fontSize:11,fontWeight:700,letterSpacing:1,cursor:"pointer"}}>+ LOG A SESSION I DID OFFLINE</button>
+          </div>,C.grn+"20")}
+          {cd(<div>
+            {hd("THE PLAN")}
+            {plan.map(function(e,idx){return <div key={idx} style={{display:"flex",gap:10,padding:"8px 0",borderTop:idx>0?("1px solid "+C.bdr):"none",alignItems:"center"}}>
+              <div style={{fontSize:11,fontFamily:FD,color:C.grn,width:14,flexShrink:0}}>{idx+1}</div>
+              <StaticExMedia gif={e.gif} forge={e.forge} size={40}/>
+              <div style={{flex:1,minWidth:0}}><div style={{fontSize:12.5,fontWeight:700,color:C.txt,fontFamily:FD,lineHeight:1.2}}>{e.n}</div><div style={{fontSize:10,color:C.grn,fontWeight:700,marginTop:1}}>{e.dose}</div></div>
+            </div>;})}
+          </div>)}
+          <button onClick={exitPP} style={{width:"100%",padding:"11px",background:"transparent",border:"1px solid "+C.bdr,borderRadius:10,color:C.dim,fontFamily:FD,fontSize:11,fontWeight:700,letterSpacing:1,cursor:"pointer"}}>SWITCH PHASE OR CHANGE PROGRAM</button>
+          <div style={{fontSize:10,color:C.red,textAlign:"center",marginTop:12,lineHeight:1.5,padding:"0 10px"}}>Progress by symptoms, not the calendar. Stop and regress if you see coning, feel heaviness or a bulge, leak, or have pain. Education, not medical advice.</div>
+          <div style={{height:80}}/>
+        </div>;
+      })()}
 
       {/* ═══ CALENDAR ═══ */}
       {screen==="calendar"&&program.length>0&&(<div className="view-slide">
@@ -12986,6 +13429,9 @@ function Forge(props){
         return null;
       })()}
 
+      {/* ═══ POSTPARTUM TIMED RUNNER (Forge-level; opened from dashboard or phase view) ═══ */}
+      {ppRunOpen&&ppActive&&(typeof STATIC_PLANS!=="undefined")&&STATIC_PLANS[ppActive.planKey]&&<PPRunner plan={STATIC_PLANS[ppActive.planKey]} color={C.grn} onClose={function(){setPpRunOpen(false);}} onDone={function(){logPPSession();setPpRunOpen(false);}}/>}
+
       {/* ═══ BOTTOM NAVIGATION BAR ═══ */}
       {(screen==="dashboard"||screen==="calendar"||screen==="stats"||screen==="settings")&&<div style={{position:"fixed",bottom:0,left:0,right:0,height:60,background:C.sf,borderTop:"1px solid "+C.bdr,display:"flex",justifyContent:"space-around",alignItems:"center",maxWidth:440,margin:"0 auto"}}>
         <button onClick={function(){setScreen("dashboard");}} style={{flex:1,height:"100%",background:"transparent",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",color:screen==="dashboard"?C.acc:C.dim}}>
@@ -12997,6 +13443,7 @@ function Forge(props){
           <div style={{fontSize:9,marginTop:2}}>Calendar</div>
         </button>
         <button onClick={function(){
+          if(ppActive){setPpRunOpen(true);return;}
           if(program.length===0){setScreen("setup");return;}
           var nextD=aDay;
           for(var i=0;i<program.length;i++){if(!isDayCompleted(weekNum,i)){nextD=i;break;}}
