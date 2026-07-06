@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-42";
+  window.FORGE_BUILD="2026.07.03-43";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -3163,6 +3163,7 @@ function getExFamily(exName){
 
 // ═══ ATHLEANX-INSPIRED PRESET PROGRAMS ═══
 // Each preset maps to FORGE's goal/split/method system but with specific phase progression
+var POSTPARTUM_POOL=["Dead Bugs","Banded Dead Bugs","Side Plank Hold","Side Plank Hip Dip","Band Pallof Press","Band Pallof Hold","Band Woodchops","DB Glute Bridge","DB Single-Leg Glute Bridge","DB Frog Pump","Band Hip Abduction","Band Fire Hydrant","Band Lateral Monster Walk","Band Standing Glute Kickback","Band Pull-Throughs (light)","Band Pull-Throughs","Band Leg Curls","Slick Floor Bridge Curls","Slider Hamstring Curl (bent-knee)","Banded Hip Thrusts (light)","Band Squats","Banded Goblet Squats","Bodyweight Squat Reaches","Incline Pushups","Pushups","Band Crossovers","Single-Arm Band Chest Press","Band One-Arm Row","Inverted Rows","Band Lat Pulldowns","Human Pullovers","Band Straight-Arm Pulldown","Band Face Pulls","Band Overhead Press","Band Calf Raise","Bodyweight Wall Calf Raise","DB Standing Calf Raise"];
 var PRESETS=[
   {id:"ax1",n:"AX1 Training Camp",desc:"Foundation building. Strength + conditioning. 5 days. 3 months of progressive phases.",icon:"A1",cat:"athletic",days:5,mesoLen:4,cd:2,
     phases:[
@@ -3359,8 +3360,8 @@ var PRESETS=[
     ]},
   {id:"w_postpartum",n:"Postpartum Return",desc:"A phased, criterion-based return to training after birth — reconnect the deep core and pelvic floor, rebuild movement, then load progressively. Diastasis-recti aware. Progresses by how you feel, not the calendar.",icon:"PP",cat:"health",days:3,mesoLen:4,cd:0,designProfile:"women",series:"women",gate:"postpartum",
     phases:[
-      {phase:1,n:"Reconnect & Foundation",goal:"posterior",method:"straight",split:"fb3",desc:"A gentle full-body foundation, bodyweight-friendly, leaning on glutes, posterior chain and core. Pair every set with slow 360° breathing and a light pelvic-floor engagement — brace and exhale on the effort. Runs a four-week block; keep it symptom-free and the midline flat, then advance."},
-      {phase:2,n:"Rebuild Movement",goal:"balanced",method:"straight",split:"fb3",desc:"Re-learn the movements — squat, hinge, push, pull, carry — across light, controlled full-body sessions. Anti-movement core over crunches. A four-week block; add load only as long as it stays symptom-free and flat through the middle."},
+      {phase:1,n:"Reconnect & Foundation",goal:"posterior",method:"straight",split:"fb3",exPool:POSTPARTUM_POOL,desc:"A gentle full-body foundation, bodyweight-friendly, leaning on glutes, posterior chain and core. Pair every set with slow 360° breathing and a light pelvic-floor engagement — brace and exhale on the effort. Runs a four-week block; keep it symptom-free and the midline flat, then advance."},
+      {phase:2,n:"Rebuild Movement",goal:"balanced",method:"straight",split:"fb3",exPool:POSTPARTUM_POOL,desc:"Re-learn the movements — squat, hinge, push, pull, carry — across light, controlled full-body sessions. Anti-movement core over crunches. A four-week block; add load only as long as it stays symptom-free and flat through the middle."},
       {phase:3,n:"Progressive Loading",method:"straight",goal:"balanced",split:"fb3",desc:"Light-to-moderate full-body strength, progressive overload, midline flat and no coning. Generated program unlocks after the clearance and symptom check pass."},
       {phase:4,n:"Return to Strength",impact:true,method:"straight",goal:"strength",split:"fb3",desc:"Full-body progressive strength — heavier compounds, lower reps, real load. Impact and running stay locked until the readiness screen is passed."}
     ]},
@@ -5785,6 +5786,8 @@ function isBandExercise(ex){
 // buildProgram hooks so AthleanX and Nippard programs are GENERATED with different logic
 // (core divergence, not flare). Defaults to "neutral" → identical to today's behavior.
 var _FORGE_DESIGN_PROFILE="neutral";
+var _FORGE_EX_POOL=null; // optional exercise-name whitelist (e.g. postpartum-safe pool) restricting generation
+function _setExPool(p){_FORGE_EX_POOL=(p&&p.length)?p.slice():null;return _FORGE_EX_POOL;}
 function _setDesignProfile(p){_FORGE_DESIGN_PROFILE=(p==="athleanx"||p==="nippard"||p==="women")?p:"neutral";return _FORGE_DESIGN_PROFILE;}
 function getDesignProfile(){return _FORGE_DESIGN_PROFILE;}
 // Per-engine coaching cue appended to working-exercise notes — reflects each philosophy in original words.
@@ -6495,6 +6498,9 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       var pool=EX[muscle];if(!pool)return;pool=pool.filter(function(e){return banned.indexOf(e.n)<0;});
       // Equipment filter: restrict exercises to matching equipment type
       if(equipFilter&&EQUIP_FILTERS[equipFilter]){pool=pool.filter(EQUIP_FILTERS[equipFilter]);}
+      // Curated exercise whitelist (e.g. postpartum-safe pool): restrict to allowed movements; if a
+      // muscle has no allowed exercise, skip it (postpartum programs simply don't train that muscle).
+      if(_FORGE_EX_POOL){var _epf=pool.filter(function(e){return _FORGE_EX_POOL.indexOf(e.n)>=0;});if(_epf.length===0)return;pool=_epf;}
       if(pool.length===0)return;
       // ── ANTI-REPETITION (hard pool filter, respected by every selection path) ──
       // Cap any exercise at 2 distinct days/week; once a muscle hits its distinct-exercise budget
@@ -7252,6 +7258,23 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       }
     }
   })();
+  // ── CURATED-POOL enforcement (path-independent): if a whitelist is active (postpartum-safe pool),
+  // swap any non-whitelisted working exercise to a whitelisted same-muscle alternative, or drop it.
+  if(_FORGE_EX_POOL){
+    for(var _wpi=0;_wpi<sessions.length;_wpi++){
+      var _wpex=sessions[_wpi].exercises||[];
+      for(var _wpj=_wpex.length-1;_wpj>=0;_wpj--){
+        var _wpe=_wpex[_wpj];
+        if(!_wpe||!_wpe.name||!_wpe.muscle||!EX[_wpe.muscle])continue;
+        if(_wpe.tier==="primer"||_wpe.tier==="corrective"||_wpe.tier==="grit"||_wpe.tier==="carry"||_wpe.isCardio)continue;
+        if(_FORGE_EX_POOL.indexOf(_wpe.name)>=0)continue;
+        var _wdn={};for(var _wdk=0;_wdk<_wpex.length;_wdk++)if(_wpex[_wdk]&&_wpex[_wdk].name)_wdn[_wpex[_wdk].name]=1;
+        var _wsa=null,_wsmp=EX[_wpe.muscle]||[];
+        for(var _wsk=0;_wsk<_wsmp.length;_wsk++){var _wsc=_wsmp[_wsk];if(_FORGE_EX_POOL.indexOf(_wsc.n)<0)continue;if(banned.indexOf(_wsc.n)>=0)continue;if(_wdn[_wsc.n])continue;_wsa=_wsc;break;}
+        if(_wsa){_wpe.name=_wsa.n;_wpe.mv=_wsa.mv;_wpe.t=_wsa.t;}else{_wpex.splice(_wpj,1);}
+      }
+    }
+  }
   // ── ANTI-REPETITION post-pass (path-independent guarantee): cap any working exercise at 2 distinct
   // days/week; swap surplus occurrences to an unused same-muscle alternative. Runs after all selection.
   (function(){
@@ -7266,6 +7289,7 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
           for(var _ai=0;_ai<_mp.length;_ai++){var _c=_mp[_ai];
             if(banned.indexOf(_c.n)>=0)continue;
             if(equipFilter&&EQUIP_FILTERS[equipFilter]&&!EQUIP_FILTERS[equipFilter](_c))continue;
+            if(_FORGE_EX_POOL&&_FORGE_EX_POOL.indexOf(_c.n)<0)continue;
             if((_seen[_c.n]||0)>=2)continue;if(_dayHas[_c.n])continue;if(_c.n===_e.name)continue;
             _alt=_c;break;}
           if(_alt){_e.name=_alt.n;_e.mv=_alt.mv;_e.t=_alt.t;}
@@ -9312,6 +9336,8 @@ function Forge(props){
 
   function generateProg(){
     if(!goal||!split||!method)return;
+    // Apply a curated exercise whitelist if the selected preset phase defines one (postpartum-safe pool).
+    if(typeof _setExPool==="function"){var _gpEx=null;if(presetPick){var _gpP=PRESETS.find(function(x){return x.id===presetPick;});var _gpPh=_gpP&&_gpP.phases&&_gpP.phases.find(function(p){return p.phase===presetPhase;});if(_gpPh&&_gpPh.exPool)_gpEx=_gpPh.exPool;}_setExPool(_gpEx);}
 
     // Check if selected method fits the time budget
     var splitObjCheck=SPLITS.find(function(s){return s.id===split;});
