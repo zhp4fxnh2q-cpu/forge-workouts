@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-40";
+  window.FORGE_BUILD="2026.07.03-41";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -1972,6 +1972,51 @@ var TECH_INFO={
 
 // ═══ EXERCISE DESCRIPTIONS (how to do it + rep counting) ═══
 var EX_INFO={
+  // ── Sprint 5: how-to for the 44 newer exercises (writer + red-team + UX verified) ──
+  "DB Standing Calf Raise":"Stand tall holding DBs, balls of feet on a step, legs straight. 1 rep = drive up onto the toes as high as you can, then lower the heels below the step. Straight knees bias the gastrocnemius.",
+  "DB Single-Leg Calf Raise":"Balance on one foot, ball of foot on a step, DB in the same-side hand, other foot tucked. 1 rep = press up onto the toes, then lower the heel below the step. Do all reps, then switch.",
+  "Deficit Bodyweight Calf Raise":"Balls of feet on a step edge, heels free, hold something for balance. 1 rep = rise onto the toes as high as you can, then lower slowly until the heels sink below the step. Keep the stretch controlled.",
+  "DB Seated Calf Raise":"Sit with knees bent about 90 degrees, balls of feet on a block, DBs resting on the thighs. 1 rep = press up onto the toes, squeeze, then lower the heels below the block. Bent knees bias the soleus.",
+  "Band Calf Raise":"Stand tall, loop a band under the balls of both feet, hold the ends taut. 1 rep = press up onto the toes against the band, then lower the heels with control. Keep knees straight, pause at the top.",
+  "DB Standing Single-Leg Calf Raise":"Stand on one foot, ball of foot on a step, DB in the same-side hand, other foot lifted. 1 rep = drive up onto the toes, then lower the heel below the step. Keep the leg straight; do all reps, then switch.",
+  "Band Seated Calf Raise":"Sit with knees bent about 90 degrees, balls of feet on a block, a band looped over the knees and held down. 1 rep = press up onto the toes, squeeze, then lower the heels. Bent knees target the soleus.",
+  "Bodyweight Wall Calf Raise":"Stand facing a wall, hands on it for balance, feet flat and hip-width. 1 rep = rise onto the balls of both feet as high as you can, then lower the heels slowly to the floor. Use the wall for balance only.",
+  "DB Donkey Calf Raise":"Hinge forward about 90 degrees with forearms on a bench, balls of feet on a step, DB against a hip. 1 rep = press up onto the toes, then lower the heels below the step. The bent angle deepens the stretch.",
+  "DB Glute Bridge":"Lie on your back, knees bent, feet flat, DB across the hips. 1 rep = drive through the heels and squeeze the glutes to lift the hips in line from shoulders to knees, then lower. Do not arch the back.",
+  "DB B-Stance Hip Thrust":"Upper back on a bench, DB across the hips, one foot planted flat, the other slid forward as a light kickstand. 1 rep = drive through the planted heel to lock out the hips, then lower. Kickstand assists about 30%.",
+  "DB Frog Pump":"Lie on your back, soles of the feet together and knees flared wide, DB on the hips. 1 rep = squeeze the glutes to drive the hips up until ribs and hips line up, then lower to a light touch. Feet-together isolates glutes.",
+  "Band Hip Abduction":"Sit or stand with a mini band around both thighs just above the knees. 1 rep = push the knees apart against the band as wide as you can, squeeze, then return slowly. Keep band tension the whole set.",
+  "DB Curtsy Lunge":"Stand tall holding DBs. 1 rep = step one foot diagonally back and across behind the standing leg, bend both knees to lower, then drive through the front heel to stand. Torso upright; do all reps, then switch.",
+  "Band Fire Hydrant":"On all fours, mini band around both thighs above the knees, working knee bent about 90 degrees. 1 rep = lift the knee out to the side against the band to near parallel, then lower. Keep hips square; switch sides.",
+  "Band Lateral Monster Walk":"Stand in a half-squat, band around the legs above the knees or ankles. 1 rep = step one foot out to the side against the band, then bring the trailing foot in to reset. Keep tension and hips level.",
+  "DB Single-Leg Glute Bridge":"Lie on your back, one foot flat with knee bent, other leg extended, DB on the working hip. 1 rep = drive through the planted heel to lift the hips level, squeeze, then lower. Finish the set, then switch.",
+  "DB Kickstand RDL":"Stand with one foot planted, the other back on its toes as a light kickstand, DBs in hand. 1 rep = hinge at the hips with a soft front-knee bend to a hamstring stretch, then stand. Keep back-toe weight minimal.",
+  "Band Standing Glute Kickback":"Stand tall, band around both ankles, hold a wall or chair, weight on one leg. 1 rep = drive the other leg straight back against the band, squeeze, then return without touching down. Keep the torso still.",
+  "Nordic Curl (anchored, negatives)":"Kneel on a pad with the heels anchored under something solid, hips extended, torso upright. 1 rep = lower the torso toward the floor as slowly as you can, catch with the hands, then push up. Keep the hips straight.",
+  "Band-Assisted Nordic Curl":"Kneel with heels anchored and hips extended, a band anchored in front at chest height across the chest. 1 rep = lower the torso slowly, let the band help at the bottom, then pull to upright. Keep the hips extended.",
+  "DB Deficit RDL":"Stand on a plate or low block, DBs in front of the thighs, soft knee bend. 1 rep = hinge at the hips, sliding the DBs down to a deep stretch below foot level, then stand. The deficit adds range; keep the back flat.",
+  "DB Stiff-Leg Deadlift":"Stand with DBs in front, knees nearly straight with only a slight bend throughout. 1 rep = hinge at the hips, lower the DBs down the legs for a deep hamstring stretch, then stand. Straight knees stretch more than an RDL.",
+  "Slider Hamstring Curl (bent-knee)":"Lie on your back, heels on sliders, knees bent, hips lifted into a bridge. 1 rep = slide the heels out until the legs are nearly straight, then drag them back to the glutes. Keep the hips lifted throughout.",
+  "DB Leaning Lateral Raises":"Hold a post and lean away so the working arm hangs across the body, DB in the outside hand. 1 rep = raise the DB out to the side to parallel, then lower slowly. Leaning loads the side delt low in the range.",
+  "DB Y-Raises":"Face-down on an incline bench, light DBs hanging, thumbs up. 1 rep = raise both arms up and out to form a Y in line with the torso, then lower with control. Squeeze the lower traps at the top.",
+  "DB Leaning Rear Delt Fly":"Bent-over or chest-supported, arms hanging with a slight elbow bend. 1 rep = fly the DBs out to the sides to parallel, then lower slowly. Lead with the pinkies, no swing.",
+  "DB Cuban Press":"Standing, light DBs, palms facing you. 1 rep = upright-row to elbows-high, externally rotate the forearms up into a goalpost, then press overhead and reverse down. Go light, lead with the elbows.",
+  "DB Rolling Extensions":"Lie on a bench, DBs pressed over the chest. 1 rep = lower like a skullcrusher to the forehead, roll the elbows back so the DBs go overhead into a stretch, then extend to the top. Roll under control.",
+  "Band Overhead Extensions":"Anchor a band low behind you, hold the ends overhead, upper arms by the ears. 1 rep = extend the arms straight overhead against the band, then lower behind the head. Only the elbows move.",
+  "DB Half-Kneeling Overhead Extension":"Half-kneel, DB held overhead with both hands, elbows bent, upper arms by the ears. 1 rep = extend to full lockout overhead, then lower behind the head. Keep the ribs down and the low back flat.",
+  "Band Triceps Kickback":"Anchor a band in front at waist height, hinge over, upper arms pinned to the sides. 1 rep = extend the elbows straight back to lockout against the band, then return. Keep the upper arms still.",
+  "DB Zottman Curl":"Standing, palms up. 1 rep = curl up supinated, rotate to palms-down at the top, then lower slowly pronated to full extension. Biceps on the way up, forearms on the way down.",
+  "DB Reverse Curl":"Standing, palms facing down (pronated) throughout. 1 rep = curl from full extension to full contraction, then lower with control. No swinging; keep the wrists straight to hit the brachialis.",
+  "DB Preacher-Style Curl":"Brace the back of the upper arm on an incline pad or thigh so the elbow cannot move. 1 rep = curl from full extension to full contraction, then lower with 2-3 sec control. Stay strict, arm pinned.",
+  "DB Decline Floor Press":"Lie on the floor, hips raised slightly for a decline angle, DBs at lower-chest level. 1 rep = press to lockout, then lower until the upper arms touch the floor. The angle biases the lower chest.",
+  "DB Svend Press":"Standing, crush two light plates (or one DB) together between the palms at chest level. 1 rep = press straight out to full extension while squeezing the hands together, then return to the chest.",
+  "DB Seal Row":"Lie face-down (prone) on a bench raised off the floor so the DBs hang straight down. 1 rep = row both DBs up to the bench, squeeze, then lower to a full stretch. Chest stays down, zero body english.",
+  "Band Straight-Arm Pulldown":"Anchor a band overhead, hold the ends with straight arms out front. 1 rep = drive the arms down to the thighs keeping the elbows locked, then return. Arms stay straight; pull with the lats.",
+  "DB Sissy Squat":"Stand tall on the balls of the feet, hold a DB at the chest. 1 rep = let the knees travel forward as you lean the torso back, lower deep, then drive up. Keep hips extended and knee-to-head in line.",
+  "DB Walking Lunges":"Stand tall, a DB in each hand at the sides. 1 rep = step forward into a lunge until the back knee nearly touches, then drive up and step through into a lunge on the other leg. Keep the torso upright.",
+  "Side Plank Hold":"On your side, forearm under the shoulder, body straight, hips lifted. 1 rep = hold the raised position for the target time without letting the hips sag. Brace the side abs, stack shoulders and hips.",
+  "Side Plank Hip Dip":"Set up in a side plank, forearm down, hips lifted and stacked. 1 rep = lower the bottom hip toward the floor with control, then raise it back up past neutral. Move only at the hips, body in one line.",
+  "DB Side Bend":"Stand tall holding one DB at your side, other hand on the hip. 1 rep = bend sideways toward the DB, then contract the opposite obliques to pull back up to tall. Bend only side to side, no leaning.",
   "DB Bench Press":"Lie flat, press DBs from chest to lockout. 1 rep = lower to chest, press up. Control the descent (2-3 sec), pause briefly at chest, drive up.",
   "DB Incline Press":"Bench at 30-45 degrees. Press from upper chest. 1 rep = lower to upper chest, press to lockout. Slightly narrower grip than flat.",
   "DB Floor Press":"Lie on floor, press DBs. Floor limits range of motion at bottom. 1 rep = lower until triceps touch floor, pause 1s, press up. Great for lockout strength.",
