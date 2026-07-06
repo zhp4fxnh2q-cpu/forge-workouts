@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-38";
+  window.FORGE_BUILD="2026.07.03-39";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -10456,7 +10456,7 @@ function Forge(props){
           <div style={{display:"flex",flexWrap:"wrap",gap:10,marginBottom:20}}>
             {[{id:"athleanx",mode:"preset",c:C.acc,t:"ATHLEANX",d:"Athletic, joint-friendly sessions built in tiers with a metabolic finisher and corrective work every day. Jacked, Max Shred, All American Muscle and more."},
               {id:"nippard",mode:"preset",c:C.grn,t:"NIPPARD",d:"Evidence-based and periodized — weekly volume ramps to a ceiling, effort managed by RIR, blocks build toward a peak. Pure Bodybuilding, Powerbuilding."},
-              {id:"women",mode:"preset",c:C.red,t:"WOMEN",d:"Andrea's programs — glute and lower-body focus, high lower frequency, wave-loaded effort. Foundation and Specialization."},
+              {id:"women",mode:"preset",c:C.red,t:"WOMEN",d:"Seven programs on a women's engine built from confirmed physiology — full progressive overload, glute and posterior focus, denser sessions. Includes gated postpartum-return and menopause tracks."},
               {id:"custom",mode:"custom",c:C.blu,t:"CUSTOM",d:"Build your own from scratch — choose goal, split, training method, and session length. Neutral engine, every call is yours."}
             ].map(function(o){return <button key={o.id} onClick={function(){if(o.mode==="custom"){setSetupMode("custom");setStep(0);setPresetCd(null);setPresetPick(null);}else{setSetupMode("preset");setPresetTab(o.id);setPresetPick(null);}}} style={{flex:"1 1 44%",minWidth:220,padding:"18px 16px",background:o.c+"12",border:"2px solid "+o.c+"50",borderRadius:16,cursor:"pointer",textAlign:"left"}}>
               <div style={{fontSize:19,fontFamily:FD,letterSpacing:2,color:o.c}}>{o.t}</div>
