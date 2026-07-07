@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-66";
+  window.FORGE_BUILD="2026.07.03-67";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -1786,17 +1786,20 @@ function fmtMMSS(s){s=Math.max(0,Math.round(s));var m=Math.floor(s/60);var x=s%6
 // pelvic-floor moves (which have no clip). Coaches the 360 breath + exhale-on-effort mechanism.
 function BreathPacer(props){
   var cc=props.color||C.grn;var sz=props.size||190;
-  return <div style={{width:sz,height:sz,position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
-    <div style={{position:"absolute",width:Math.round(sz*0.92),height:Math.round(sz*0.92),borderRadius:"50%",border:"2px solid "+cc+"44"}}/>
-    <div style={{position:"absolute",width:Math.round(sz*0.92),height:Math.round(sz*0.92),borderRadius:"50%",background:"radial-gradient(circle,"+cc+"3a 0%,"+cc+"12 58%,transparent 72%)",animation:"fBreathe 11s ease-in-out infinite,fBreatheGlow 11s ease-in-out infinite",transformOrigin:"center center"}}/>
-    <div style={{position:"relative",zIndex:2,textAlign:"center"}}>
-      <div style={{position:"relative",height:22}}>
-        <div style={{position:"absolute",left:0,right:0,fontSize:15,fontWeight:700,fontFamily:FD,letterSpacing:2,color:cc,animation:"fBreatheIn 11s ease-in-out infinite"}}>INHALE</div>
-        <div style={{position:"absolute",left:0,right:0,fontSize:15,fontWeight:700,fontFamily:FD,letterSpacing:2,color:cc,animation:"fBreatheOut 11s ease-in-out infinite"}}>EXHALE</div>
+  var ring=Math.round(sz*0.9);
+  return <div style={{width:sz,height:sz,position:"relative"}}>
+    <div style={{position:"absolute",top:"50%",left:"50%",width:ring,height:ring,marginTop:-Math.round(ring/2),marginLeft:-Math.round(ring/2),borderRadius:"50%",border:"2px solid "+cc+"33"}}/>
+    <div style={{position:"absolute",top:0,left:0,right:0,bottom:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div style={{width:ring,height:ring,borderRadius:"50%",background:"radial-gradient(circle,"+cc+"3a 0%,"+cc+"12 56%,transparent 72%)",animation:"fBreathe 11s ease-in-out infinite,fBreatheGlow 11s ease-in-out infinite"}}/>
+    </div>
+    <div style={{position:"absolute",top:0,left:0,right:0,bottom:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:2,pointerEvents:"none"}}>
+      <div style={{position:"relative",width:"100%",height:24}}>
+        <div style={{position:"absolute",top:0,left:0,right:0,textAlign:"center",fontSize:17,fontWeight:700,fontFamily:FD,letterSpacing:3,color:cc,animation:"fBreatheIn 11s ease-in-out infinite"}}>INHALE</div>
+        <div style={{position:"absolute",top:0,left:0,right:0,textAlign:"center",fontSize:17,fontWeight:700,fontFamily:FD,letterSpacing:3,color:cc,animation:"fBreatheOut 11s ease-in-out infinite"}}>EXHALE</div>
       </div>
-      <div style={{position:"relative",height:16,marginTop:6}}>
-        <div style={{position:"absolute",left:0,right:0,fontSize:10,color:C.mid,animation:"fBreatheIn 11s ease-in-out infinite"}}>breathe wide · 360°</div>
-        <div style={{position:"absolute",left:0,right:0,fontSize:10,color:C.mid,animation:"fBreatheOut 11s ease-in-out infinite"}}>{props.soft?"let the ribs settle":"lift up and in"}</div>
+      <div style={{position:"relative",width:"100%",height:15,marginTop:5}}>
+        <div style={{position:"absolute",top:0,left:0,right:0,textAlign:"center",whiteSpace:"nowrap",fontSize:10.5,color:C.mid,animation:"fBreatheIn 11s ease-in-out infinite"}}>breathe wide, 360°</div>
+        <div style={{position:"absolute",top:0,left:0,right:0,textAlign:"center",whiteSpace:"nowrap",fontSize:10.5,color:C.mid,animation:"fBreatheOut 11s ease-in-out infinite"}}>{props.soft?"let the ribs settle":"lift up and in"}</div>
       </div>
     </div>
   </div>;
