@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-69";
+  window.FORGE_BUILD="2026.07.03-70";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -1822,7 +1822,7 @@ function PelvicPacer(props){
   var S=props.sec||0,sl=(props.secLeft==null?S:props.secLeft),run=props.running;
   var label="LIFT & HOLD",sub="8 holds, then 10 flicks",big=false;
   if(run){
-    if(sl<=12&&sl>0){ if(sl>10){label="FLICKS NEXT";sub="quick lifts coming";} else {var fn=11-sl;label="QUICK FLICK";sub=fn+" / 10";big=(sl%2===1);} }
+    if(sl<=24&&sl>0){ if(sl>20){label="FLICKS NEXT";sub="quick lifts coming";} else {var fn=Math.min(10,Math.floor((20-sl)/2)+1);label="QUICK FLICK";sub=fn+" / 10";big=(sl%2===0);} }
     else { var el=S-sl;var m=el%11; if(m>=1&&m<=7){label="LIFT & HOLD";sub="hold "+(8-m)+"s";big=true;} else {label="RELEASE";sub="let go, and rest";big=false;} }
   }
   var scale=big?1:0.55;
@@ -1880,10 +1880,10 @@ function PPRunner(props){
     var sp=_spokenRef.current||{};var S=ex.sec||0;
     if(_isPelvic){                                        // holds → flicks voice sequence, synced to the timer
       var _el=S-secLeft;
-      if(secLeft<=12&&secLeft>0){
-        if(secLeft===12&&!sp.fi){sp.fi=1;if(ppHas("pp_flicks_intro"))ppCue("pp_flicks_intro");}
-        else if(secLeft<=10&&secLeft>=1){var _pk="pu"+secLeft;if(!sp[_pk]){sp[_pk]=1;if(ppHas("pp_pulse"))ppCue("pp_pulse");}}
-      } else if(secLeft>13){
+      if(secLeft<=24&&secLeft>0){                          // flick set — the last 24s (intro + 10 pulses every 2s)
+        if(secLeft===24&&!sp.fi){sp.fi=1;if(ppHas("pp_flicks_intro"))ppCue("pp_flicks_intro");}
+        else if(secLeft<=20&&secLeft>=2&&secLeft%2===0){var _pk="pu"+secLeft;if(!sp[_pk]){sp[_pk]=1;if(ppHas("pp_pulse"))ppCue("pp_pulse");}}
+      } else if(secLeft>25){
         var _m=_el%11;
         if(_m===1){var _hk="h"+_el;if(!sp[_hk]){sp[_hk]=1;if(ppHas("pp_lift_hold"))ppCue("pp_lift_hold");}}
         else if(_m===8){var _rk="r"+_el;if(!sp[_rk]){sp[_rk]=1;if(ppHas("pp_release"))ppCue("pp_release");}}
