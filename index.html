@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-63";
+  window.FORGE_BUILD="2026.07.03-64";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -1795,7 +1795,8 @@ function PPRunner(props){
   var _s=useState(plan[0]?plan[0].sec:0),secLeft=_s[0],setSecLeft=_s[1];
   var _r=useState(true),running=_r[0],setRunning=_r[1];
   var _el=useState(0),elapsed=_el[0],setElapsed=_el[1];
-  var _pv=useState(true),ppVoice=_pv[0],setPpVoice=_pv[1];
+  var _pv=useState("full"),ppVoiceMode=_pv[0],setPpVoiceMode=_pv[1]; // "full" (narrate+pace) / "pace" (breath+count only) / "off"
+  var _vOn=ppVoiceMode!=="off",_vFull=ppVoiceMode==="full";
   var _spokenRef=useRef({});
   var _startedRef=useRef(false);
   var ex=plan[idx]||{};
@@ -1812,19 +1813,19 @@ function PPRunner(props){
   // session is voice-coached regardless of the global metronome-voice setting. Gentle clip
   // subset only — no "push/work/go", which are wrong for pelvic-floor rehab.
   useEffect(function(){
-    if(!ppVoice)return undefined;
-    _spokenRef.current={};
+    _spokenRef.current={};                               // reset per-move cue flags regardless of mode
+    if(!_vFull)return undefined;                          // move name + how-to narration only in FULL
     if(!_startedRef.current){_startedRef.current=true;ppCue(ppHas("pp_welcome")?"pp_welcome":"lets_go");}
     var mk=ppMoveKey(ex.n);
-    if(mk&&ppHas(mk))ppCue(mk); else ppCue("begin");   // speak the move name + how-to (or a neutral start cue)
+    if(mk&&ppHas(mk))ppCue(mk); else ppCue("begin");
     if(idx>=plan.length-1&&plan.length>1&&ppHas("pp_last"))ppCue("pp_last");
     return undefined;
-  },[idx,ppVoice]);
+  },[idx,ppVoiceMode]);
   useEffect(function(){
-    if(!ppVoice||!running)return undefined;
+    if(!_vOn||!running)return undefined;
     var sp=_spokenRef.current||{};var S=ex.sec||0;
     if(secLeft>0&&!_isBreath){
-      if(S>=26&&!sp.b&&secLeft===(S-9)&&secLeft>12){sp.b=1;var _bc=(idx%2===0)?"pp_flat":"pp_breathe";if(ppHas(_bc))ppCue(_bc);} // gentle mid-move breath/alignment cue
+      if(_vFull&&S>=26&&!sp.b&&secLeft===(S-9)&&secLeft>12){sp.b=1;var _bc=(idx%2===0)?"pp_flat":"pp_breathe";if(ppHas(_bc))ppCue(_bc);} // alignment cue = narration (FULL only)
       else if(S>=20&&!sp.h&&secLeft<=Math.round(S/2)&&secLeft>11){sp.h=1;ppCue("halfway");}
       else if(S>=14&&secLeft===10&&!sp.t){sp.t=1;ppCue("ten_seconds");}
       else if(S>=8&&secLeft===5&&!sp.f5){sp.f5=1;ppCue("n_five");}
@@ -1832,20 +1833,20 @@ function PPRunner(props){
       else if(S>=6&&secLeft===3&&!sp.f3){sp.f3=1;ppCue("n_three");}
       else if(S>=6&&secLeft===2&&!sp.f2){sp.f2=1;ppCue("n_two");}
       else if(S>=6&&secLeft===1&&!sp.f1){sp.f1=1;ppCue("n_one");}
-    } else if(secLeft===0&&!sp.d){sp.d=1;if(!atLast)ppCue(ppHas("pp_next")?"pp_next":"rest");}
+    } else if(secLeft===0&&!sp.d){sp.d=1;if(!atLast&&_vFull)ppCue(ppHas("pp_next")?"pp_next":"rest");}
     _spokenRef.current=sp;
     return undefined;
-  },[secLeft,running,ppVoice]);
-  // Breath-move voice cadence: say "breathe in" then "exhale, lift" on the same 11s loop as the
-  // visual pacer, so the chosen voice paces the breath. Only on breath/pelvic-floor moves.
+  },[secLeft,running,ppVoiceMode]);
+  // Breath-move voice cadence: "breathe in" then "exhale, lift" on the same 11s loop as the visual
+  // pacer. Plays in FULL and PACE (it IS the pace); silent only when voice is off.
   useEffect(function(){
-    if(!_isBreath||!running||!ppVoice||!ppHas("pp_inhale"))return undefined;
+    if(!_isBreath||!running||!_vOn||!ppHas("pp_inhale"))return undefined;
     var tos=[];
     function cyc(){ppCue("pp_inhale");tos.push(setTimeout(function(){ppCue("pp_exhale");},5300));}
     cyc();
     var iv=setInterval(cyc,11000);
     return function(){clearInterval(iv);for(var _ti=0;_ti<tos.length;_ti++)clearTimeout(tos[_ti]);};
-  },[idx,running,ppVoice]);
+  },[idx,running,ppVoiceMode]);
   function jump(n){if(n<0||n>=plan.length)return;setIdx(n);setSecLeft(plan[n].sec||0);setRunning(true);}
   var timeUp=secLeft===0, atLast=idx>=plan.length-1;
   var frac=ex.sec?(1-secLeft/ex.sec):1;var pctDone=Math.round((idx+Math.max(0,Math.min(1,frac)))/plan.length*100);
@@ -1855,7 +1856,7 @@ function PPRunner(props){
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
         <div style={{fontSize:11,fontFamily:FD,letterSpacing:2,color:cc}}>{"MOVE "+(idx+1)+" / "+plan.length}</div>
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          <button onClick={function(){var nv=!ppVoice;setPpVoice(nv);if(!nv){try{sarahStop();}catch(e){}}}} style={{background:ppVoice?cc+"22":"transparent",border:"1px solid "+(ppVoice?cc+"66":C.bdr),borderRadius:8,color:ppVoice?cc:C.dim,fontFamily:FD,fontSize:11,letterSpacing:1,padding:"6px 11px",cursor:"pointer"}}>{ppVoice?"VOICE ON":"VOICE OFF"}</button>
+          <button onClick={function(){var nm=ppVoiceMode==="full"?"pace":(ppVoiceMode==="pace"?"off":"full");setPpVoiceMode(nm);if(nm==="off"){try{sarahStop();}catch(e){}}}} style={{background:_vOn?cc+"22":"transparent",border:"1px solid "+(_vOn?cc+"66":C.bdr),borderRadius:8,color:_vOn?cc:C.dim,fontFamily:FD,fontSize:11,letterSpacing:1,padding:"6px 11px",cursor:"pointer"}}>{ppVoiceMode==="full"?"VOICE: FULL":(ppVoiceMode==="pace"?"VOICE: PACE":"VOICE: OFF")}</button>
           <button onClick={props.onClose} style={{background:"transparent",border:"1px solid "+C.bdr,borderRadius:8,color:C.dim,fontFamily:FD,fontSize:11,padding:"6px 12px",cursor:"pointer"}}>CLOSE</button>
         </div>
       </div>
@@ -1868,7 +1869,7 @@ function PPRunner(props){
         <div style={{fontSize:11,color:timeUp?C.grn:C.dim,fontFamily:FD,letterSpacing:1,marginTop:4}}>{timeUp?"DONE — NEXT WHEN READY":(running?"IN PROGRESS":"PAUSED")}</div>
       </div>
       <div style={{display:"flex",gap:8,marginBottom:12}}>
-        <button onClick={function(){var nr=!running;setRunning(nr);if(ppVoice)ppCue(nr?"resuming":"paused");}} style={ctlBtn}>{running?"PAUSE":"RESUME"}</button>
+        <button onClick={function(){var nr=!running;setRunning(nr);if(_vOn)ppCue(nr?"resuming":"paused");}} style={ctlBtn}>{running?"PAUSE":"RESUME"}</button>
         <button onClick={function(){setSecLeft(secLeft+30);setRunning(true);}} style={ctlBtn}>+30s</button>
         <button onClick={function(){setSecLeft(ex.sec||0);setRunning(true);}} style={ctlBtn}>RESET</button>
       </div>
@@ -1877,7 +1878,7 @@ function PPRunner(props){
         <button onClick={function(){jump(idx-1);}} disabled={idx===0} style={{flex:1,padding:"13px 0",background:"transparent",border:"1px solid "+C.bdr,borderRadius:12,color:idx===0?C.dim:C.txt,fontFamily:FD,fontSize:13,fontWeight:700,letterSpacing:1,cursor:idx===0?"default":"pointer",opacity:idx===0?0.5:1}}>BACK</button>
         <button onClick={function(){jump(idx+1);}} disabled={atLast} style={{flex:2,padding:"13px 0",background:atLast?C.bar:cc,border:"none",borderRadius:12,color:atLast?C.dim:"#0d0d10",fontFamily:FD,fontSize:13,fontWeight:700,letterSpacing:1,cursor:atLast?"default":"pointer"}}>NEXT MOVE</button>
       </div>
-      <button onClick={function(){if(ppVoice){try{ppCue(ppHas("pp_done")?"pp_done":"session_done");}catch(e){}}if(props.onDone)props.onDone();}} style={{width:"100%",padding:"14px",background:C.grn,border:"none",borderRadius:12,color:"#0d0d10",fontFamily:FD,fontSize:14,fontWeight:700,letterSpacing:2,cursor:"pointer"}}>{"FINISH & LOG SESSION"}</button>
+      <button onClick={function(){if(_vFull){try{ppCue(ppHas("pp_done")?"pp_done":"session_done");}catch(e){}}if(props.onDone)props.onDone();}} style={{width:"100%",padding:"14px",background:C.grn,border:"none",borderRadius:12,color:"#0d0d10",fontFamily:FD,fontSize:14,fontWeight:700,letterSpacing:2,cursor:"pointer"}}>{"FINISH & LOG SESSION"}</button>
       <div style={{textAlign:"center",fontSize:10,color:C.dim,marginTop:12,fontFamily:FD,letterSpacing:1}}>{"ELAPSED "+fmtMMSS(elapsed)+"  ·  PLAN ~"+Math.round(total/60)+" MIN"}</div>
       <div style={{textAlign:"center",fontSize:10,color:C.red,marginTop:8,lineHeight:1.5}}>Stop and regress if you see coning, feel heaviness or a bulge, leak, or have pain.</div>
     </div>
@@ -11662,7 +11663,8 @@ function Forge(props){
               <div style={{flex:1,minWidth:0}}><div style={{fontSize:12.5,fontWeight:700,color:C.txt,fontFamily:FD,lineHeight:1.2}}>{e.n}</div><div style={{fontSize:10,color:C.grn,fontWeight:700,marginTop:1}}>{e.dose}</div></div>
             </div>;})}
           </div>)}
-          <button onClick={exitPP} style={{width:"100%",padding:"11px",background:"transparent",border:"1px solid "+C.bdr,borderRadius:10,color:C.dim,fontFamily:FD,fontSize:11,fontWeight:700,letterSpacing:1,cursor:"pointer"}}>SWITCH PHASE OR CHANGE PROGRAM</button>
+          <DiastasisTracker color={C.grn}/>
+          <button onClick={exitPP} style={{width:"100%",padding:"11px",marginTop:14,background:"transparent",border:"1px solid "+C.bdr,borderRadius:10,color:C.dim,fontFamily:FD,fontSize:11,fontWeight:700,letterSpacing:1,cursor:"pointer"}}>SWITCH PHASE OR CHANGE PROGRAM</button>
           <div style={{fontSize:10,color:C.red,textAlign:"center",marginTop:12,lineHeight:1.5,padding:"0 10px"}}>Progress by symptoms, not the calendar. Stop and regress if you see coning, feel heaviness or a bulge, leak, or have pain. Education, not medical advice.</div>
           <div style={{height:80}}/>
         </div>;
