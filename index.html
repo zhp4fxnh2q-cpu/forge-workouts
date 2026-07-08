@@ -834,7 +834,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.03-70";
+  window.FORGE_BUILD="2026.07.03-71";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -1942,7 +1942,7 @@ function PPRunner(props){
       <div style={{height:4,background:C.bar,borderRadius:2,marginBottom:16,overflow:"hidden"}}><div style={{height:"100%",width:pctDone+"%",background:cc,transition:"width 0.3s"}}/></div>
       <div style={{display:"flex",justifyContent:"center",marginBottom:14}}>{_isPelvic?<PelvicPacer color={cc} size={190} sec={ex.sec} secLeft={secLeft} running={running}/>:(_isBreath?<BreathPacer color={cc} size={190} soft={_breathSoft} conn={_isConn}/>:<StaticExMedia gif={ex.gif} forge={ex.forge} size={190}/>)}</div>
       <div style={{textAlign:"center",fontSize:20,fontWeight:700,fontFamily:FD,color:C.txt,lineHeight:1.2}}>{ex.n}</div>
-      <div style={{textAlign:"center",fontSize:13,fontWeight:700,color:cc,marginTop:4}}>{ex.dose}</div>
+      <div style={{textAlign:"center",fontSize:13,fontWeight:700,color:cc,marginTop:4}}>{ex.dose}{props.progBump?<span style={{color:C.pur,marginLeft:6}}>{"· "+props.progBump}</span>:null}</div>
       <div style={{textAlign:"center",margin:"14px 0 6px"}}>
         <div style={{fontSize:54,fontFamily:FD,fontWeight:700,letterSpacing:2,color:preCount>0?cc:(timeUp?C.grn:C.txt),lineHeight:1}}>{preCount>0?preCount:fmtMMSS(secLeft)}</div>
         <div style={{fontSize:11,color:preCount>0?cc:(timeUp?C.grn:C.dim),fontFamily:FD,letterSpacing:1,marginTop:4}}>{preCount>0?"GET READY…":(timeUp?"DONE — NEXT WHEN READY":(running?"IN PROGRESS":(_started?"PAUSED":"TAP START WHEN READY")))}</div>
@@ -2030,7 +2030,69 @@ function DiastasisTracker(props){
       <button onClick={save} style={{width:"100%",padding:"11px",background:cc,border:"none",borderRadius:10,color:"#0d0d10",fontFamily:FD,fontSize:12,fontWeight:700,letterSpacing:1,cursor:"pointer"}}>SAVE THIS CHECK</button>
     </div>:<button onClick={function(){if(last){setVAbove(last.above);setVAt(last.at);setVBelow(last.below);setVDome(false);}setFormOpen(true);}} style={{width:"100%",padding:"10px",background:"transparent",border:"1px solid "+cc+"55",borderRadius:10,color:cc,fontFamily:FD,fontSize:11,fontWeight:700,letterSpacing:1,cursor:"pointer"}}>{checks.length?"+ LOG A NEW CHECK":"LOG YOUR FIRST CHECK"}</button>}
     {saved?<div style={{fontSize:10,color:C.grn,textAlign:"center",marginTop:8,fontFamily:FD,letterSpacing:1}}>CHECK SAVED ✓</div>:null}
-    {checks.length>=2?<div style={{fontSize:9,color:C.dim,marginTop:10,lineHeight:1.5}}>{checks.length+" checks logged. Finger-widths are a rough home measure, not a diagnosis — a pelvic-floor PT can assess the gap and its tension properly."}</div>:null}
+    {checks.length?(function(){
+      var mxAt=1;for(var _q=0;_q<checks.length;_q++){var _v=Math.max(checks[_q].above,checks[_q].at,checks[_q].below);if(_v>mxAt)mxAt=_v;}
+      var _mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      function _fd(ts){var d=new Date(ts);return _mo[d.getMonth()]+" "+d.getDate();}
+      return <div style={{marginTop:14}}>
+        <div style={{fontSize:10,fontWeight:700,fontFamily:FD,letterSpacing:1,color:cc,marginBottom:8}}>{"EVERY CHECK ("+checks.length+")"}</div>
+        <div style={{display:"flex",alignItems:"flex-end",gap:3,height:46,marginBottom:4,padding:"0 1px"}}>
+          {checks.map(function(ck,ci){var wid=Math.max(ck.above,ck.at,ck.below);var bh=Math.round(8+(wid/mxAt)*36);return <div key={ci} style={{flex:1,minWidth:3,display:"flex",flexDirection:"column",justifyContent:"flex-end",alignItems:"center"}}><div style={{width:"100%",maxWidth:16,height:bh+"px",background:ck.dome?C.red:cc,borderRadius:"2px 2px 0 0",opacity:0.9}}/></div>;})}
+        </div>
+        <div style={{fontSize:8,color:C.dim,textAlign:"center",marginBottom:10,letterSpacing:1}}>WIDEST FINGER-GAP EACH CHECK — SHORTER IS BETTER</div>
+        {checks.slice().reverse().map(function(ck,ri){return <div key={ri} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,padding:"7px 0",borderTop:ri>0?("1px solid "+C.bdr):"none"}}>
+          <div style={{fontSize:11,color:C.mid,fontFamily:FD,width:52,flexShrink:0,letterSpacing:0.5}}>{_fd(ck.ts)}</div>
+          <div style={{fontSize:12,color:C.txt,flex:1,fontFamily:FD}}>{"above "+ck.above+"  ·  at "+ck.at+"  ·  below "+ck.below}</div>
+          <div style={{fontSize:9,fontFamily:FD,fontWeight:700,letterSpacing:1,color:ck.dome?C.red:C.grn,flexShrink:0}}>{ck.dome?"DOME":"FLAT"}</div>
+        </div>;})}
+        <div style={{fontSize:9,color:C.dim,marginTop:10,lineHeight:1.5}}>Finger-widths are a rough home measure, not a diagnosis — a pelvic-floor PT can assess the gap and its tension properly.</div>
+      </div>;
+    })():null}
+  </div>;
+}
+// ── 2-week progression blocks within a postpartum phase (Foundation → Build → Load → Progress) ──
+var PP_PROG=[
+  {t:"WEEKS 1-2 · FOUNDATION",d:"Learn the pattern. Base reps, slow and controlled — nail the breath and the flat brace before you add anything.",b:""},
+  {t:"WEEKS 3-4 · BUILD",d:"Add a little range and 1-2 reps to each move. Same control, same flat midline — no doming.",b:"+1-2 reps"},
+  {t:"WEEKS 5-6 · LOAD",d:"Add a second set on the strength moves, or hold a light dumbbell and lengthen the holds.",b:"+ set / light load"},
+  {t:"WEEKS 7-8 · PROGRESS",d:"Push the top of each range and add a slow 3-second lower. Add load only while the midline stays flat.",b:"+ tempo / load"}
+];
+function ppBlock(w){return PP_PROG[Math.min(3,Math.max(0,Math.floor((Math.max(1,w||1)-1)/2)))];}
+function ProgressBlock(props){
+  var cc=props.color||C.grn;var pr=ppBlock(props.week);
+  return <div style={{marginBottom:12,padding:"11px 14px",background:cc+"10",border:"1px solid "+cc+"33",borderRadius:12}}>
+    <div style={{fontSize:11,fontWeight:700,fontFamily:FD,letterSpacing:1,color:cc,marginBottom:4}}>{"THIS BLOCK — "+pr.t}</div>
+    <div style={{fontSize:11,color:C.mid,lineHeight:1.55}}>{pr.d}</div>
+  </div>;
+}
+// ── Dedicated deep-core "ab session of the week" — short standalone routine, aim 3x/week ──
+var PP_ABS=[
+  {n:"Connection Breath (TvA)",dose:"6-8 slow reps",sec:60,gif:null,cue:"Exhale: draw the low belly in and lift the pelvic floor. Inhale to release. Wake up the deep core first."},
+  {n:"Pelvic-Floor Lift and Release",dose:"6-8 x 6-8s holds + 10 flicks",sec:90,gif:null,cue:"Exhale to lift up and in and hold; inhale to fully release. Finish with 10 quick flicks."},
+  {n:"Modified Dead Bug",dose:"6-8 per side",sec:75,gif:"https://www.strengthlog.com/wp-content/uploads/2023/01/deadbug.gif",cue:"Ribs down, low back anchored. Lower one arm and the opposite leg only as far as you stay flat."},
+  {n:"Bird Dog",dose:"6-8 per side",sec:75,gif:"https://spotebi.com/wp-content/uploads/2014/10/bird-dogs-exercise-illustration.gif",cue:"Reach opposite arm and leg to a long, flat line. No rib flare, no hip drop, no sag."},
+  {n:"Modified Dead Bug (progressed)",dose:"6-8 per side",sec:75,gif:"https://www.strengthlog.com/wp-content/uploads/2023/01/deadbug.gif",cue:"A little more range now, as long as the midline stays flat. This replaces crunches."},
+  {n:"Pallof Press (anti-rotation)",dose:"8-10 per side",sec:90,gif:"https://www.strengthlog.com/wp-content/uploads/2025/10/pallof-press.gif",cue:"Band at chest height to one side. Exhale, press out, resist the twist. Hips square, midline flat."},
+  {n:"Cat-Cow",dose:"6-8 slow cycles",sec:45,gif:"https://www.strengthlog.com/wp-content/uploads/2025/11/Cat-cow.gif",cue:"Inhale, belly drops and gaze lifts; exhale and round, drawing the navel up. Ease the low back to finish."}
+];
+function CoreOfWeek(props){
+  var cc=props.color||C.grn;var AK="forge_ppabs";
+  var _o=useState(false),open=_o[0],setOpen=_o[1];
+  var _l=useState(null),log=_l[0],setLog=_l[1];
+  var _t=useState(false),tst=_t[0],setTst=_t[1];
+  useEffect(function(){var live=true;sGet(AK,null).then(function(v){if(live)setLog(v&&v.sessions?v:{sessions:[]});});return function(){live=false;};},[]);
+  function logAbs(){var st=log||{sessions:[]};var ns={sessions:(st.sessions||[]).concat([new Date().toISOString()])};setLog(ns);sSet(AK,ns);setTst(true);setTimeout(function(){setTst(false);},2600);}
+  var wk=0;if(log&&log.sessions){var wa=Date.now()-7*86400000;for(var i=0;i<log.sessions.length;i++){if(new Date(log.sessions[i]).getTime()>=wa)wk++;}}
+  var tot=0;for(var q=0;q<PP_ABS.length;q++)tot+=(PP_ABS[q].sec||0);var mn=Math.round(tot/60);
+  return <div style={{marginTop:14,padding:14,background:C.pur+"0d",border:"1px solid "+C.pur+"2e",borderRadius:12}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+      <div style={{fontSize:12,fontWeight:700,fontFamily:FD,letterSpacing:1,color:C.pur}}>CORE OF THE WEEK</div>
+      <div style={{fontSize:11,fontFamily:FD,fontWeight:700,color:wk>=3?C.grn:C.mid}}>{wk+" / 3 this week"}</div>
+    </div>
+    <div style={{fontSize:11,color:C.mid,lineHeight:1.55,marginBottom:10}}>{"A short deep-core session ("+mn+" min, "+PP_ABS.length+" moves) — do it 3x a week on non-consecutive days (e.g. Mon / Wed / Fri), on top of your main sessions. This is where the ab-gap work compounds."}</div>
+    <button onClick={function(){setOpen(true);}} style={{width:"100%",padding:"12px",background:C.pur,border:"none",borderRadius:10,color:"#0d0d10",fontFamily:FD,fontSize:13,fontWeight:700,letterSpacing:1,cursor:"pointer"}}>{"START CORE SESSION · ~"+mn+" MIN"}</button>
+    {tst?<div style={{fontSize:10,color:C.grn,textAlign:"center",marginTop:8,fontFamily:FD,letterSpacing:1}}>CORE SESSION LOGGED ✓</div>:null}
+    {open?<PPRunner plan={PP_ABS} color={C.pur} onClose={function(){setOpen(false);}} onDone={function(){logAbs();setOpen(false);}}/>:null}
   </div>;
 }
 function StaticPlanView(props){
@@ -2057,6 +2119,7 @@ function StaticPlanView(props){
     var wkStart=startD.getTime()+(weekNum-1)*7*86400000;
     for(var z=0;z<(ppState.sessions||[]).length;z++){if(new Date(ppState.sessions[z]).getTime()>=wkStart)weekSessions++;}
   }
+  var _prog=ppBlock(weekNum);
   return <div style={{marginTop:14}}>
     {started?<div style={{background:cc+"12",border:"1px solid "+cc+"38",borderRadius:12,padding:"11px 14px",marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
       <div><div style={{fontSize:12,fontWeight:700,fontFamily:FD,letterSpacing:1,color:cc}}>{"WEEK "+weekNum+" OF "+mesoLen}</div>
@@ -2067,11 +2130,12 @@ function StaticPlanView(props){
     {started?null:<div style={{fontSize:10,color:C.dim,textAlign:"center",marginBottom:8,marginTop:-2}}>Saves to your dashboard — one tap from Home next time.</div>}
     {started?<button onClick={logSession} style={{width:"100%",padding:"10px",background:"transparent",border:"1px solid "+C.bdr,borderRadius:10,color:C.mid,fontFamily:FD,fontSize:11,fontWeight:700,letterSpacing:1,cursor:"pointer",marginBottom:14}}>+ LOG A SESSION I DID OFFLINE</button>:<div style={{height:6}}/>}
     {toast?<div style={{background:C.grn+"18",border:"1px solid "+C.grn+"44",borderRadius:10,padding:"9px 12px",marginBottom:12,fontSize:11,color:C.grn,fontFamily:FD,letterSpacing:1,textAlign:"center"}}>SESSION LOGGED ✓</div>:null}
+    <ProgressBlock week={weekNum} color={cc}/>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
-      <div style={{fontSize:12,fontWeight:700,fontFamily:FD,letterSpacing:2,color:cc}}>YOUR FIXED PLAN</div>
+      <div style={{fontSize:12,fontWeight:700,fontFamily:FD,letterSpacing:2,color:cc}}>YOUR PLAN</div>
       <div style={{fontSize:12,fontFamily:FD,fontWeight:700,color:C.txt,background:cc+"18",border:"1px solid "+cc+"40",borderRadius:20,padding:"3px 12px"}}>{"~"+mins+" min · "+plan.length+" moves"}</div>
     </div>
-    <div style={{fontSize:11,color:C.dim,lineHeight:1.5,marginBottom:12}}>Same session every time — this phase is learned, not shuffled. Do it in order; progress by symptoms, not the calendar. Regress any move (less range or reps) the instant the midline domes.</div>
+    <div style={{fontSize:11,color:C.dim,lineHeight:1.5,marginBottom:12}}>Same moves each session — learned, not shuffled — but the dose steps up every 2 weeks (see the block above). Progress by symptoms, not the calendar; regress any move the instant the midline domes.</div>
     {plan.map(function(e,idx){return <div key={idx} style={{display:"flex",gap:12,padding:"12px 0",borderTop:idx>0?("1px solid "+C.bdr):"none"}}>
       <div style={{fontSize:13,fontFamily:FD,fontWeight:700,color:cc,width:16,flexShrink:0,paddingTop:2}}>{idx+1}</div>
       <StaticExMedia gif={e.gif} forge={e.forge} size={68}/>
@@ -2080,7 +2144,7 @@ function StaticPlanView(props){
           <div style={{fontSize:14,fontWeight:700,color:C.txt,fontFamily:FD,lineHeight:1.25}}>{e.n}</div>
           <div style={{fontSize:10,fontFamily:FD,color:C.mid,flexShrink:0,whiteSpace:"nowrap"}}>{"~"+(Math.round(e.sec/6)/10)+" min"}</div>
         </div>
-        <div style={{fontSize:11,fontWeight:700,color:cc,marginTop:3}}>{e.dose}</div>
+        <div style={{fontSize:11,fontWeight:700,color:cc,marginTop:3}}>{e.dose}{_prog.b?<span style={{color:C.pur,marginLeft:6}}>{"· "+_prog.b}</span>:null}</div>
         <div style={{fontSize:11,color:C.mid,marginTop:4,lineHeight:1.5}}>{e.cue}</div>
       </div>
     </div>;})}
@@ -2089,13 +2153,14 @@ function StaticPlanView(props){
       <div style={{fontSize:11,color:C.mid,lineHeight:1.6}}>Exhale on the effort ("blow before you go"). Inhale expands the ribs 360°; keep the ribs stacked over the hips. Fingertips on the midline confirm no doming.</div>
       <div style={{fontSize:11,color:C.red,lineHeight:1.6,marginTop:8}}><b>STOP</b> and regress if you see coning/doming, feel heaviness or a bulge, leak, or have pain — and see a pelvic-floor PT if it persists. Education, not medical advice.</div>
     </div>
+    <CoreOfWeek color={cc}/>
     <DiastasisTracker color={cc}/>
     <div style={{marginTop:14,padding:12,background:C.bar,border:"1px solid "+C.bdr,borderRadius:12}}>
       <div style={{fontSize:10,fontWeight:700,fontFamily:FD,letterSpacing:1,color:C.dim,marginBottom:6}}>WHY THESE EXERCISES</div>
       <div style={{fontSize:11,color:C.mid,lineHeight:1.6}}>Training the deep core (transversus abdominis), pelvic floor and breath first, then adding progressive load, is the evidence-based standard for postpartum recovery. Reviews show it narrows the ab-gap and improves core function — the effect is modest and the research is moderate-quality, so this is smart, safe training, not a guaranteed fix. The real goal is restoring <b>tension and pressure control</b> along the midline, which is why every rep is breath-led (exhale on effort) with no doming.</div>
       <div style={{fontSize:9,color:C.dim,lineHeight:1.5,marginTop:7}}>Gluppe 2021 · Goom, Donnelly &amp; Brockwell 2019 (return-to-running) · Int Urogynecol J scoping review 2024. Education, not medical advice — a pelvic-floor PT assessment is the highest-value step.</div>
     </div>
-    {runOpen?<PPRunner plan={plan} color={cc} onClose={function(){setRunOpen(false);}} onDone={function(){logSession();setRunOpen(false);}}/>:null}
+    {runOpen?<PPRunner plan={plan} color={cc} progBump={_prog.b} onClose={function(){setRunOpen(false);}} onDone={function(){logSession();setRunOpen(false);}}/>:null}
   </div>;
 }
 // Helper: standing stick person at position (cx, headY)
@@ -11729,11 +11794,12 @@ function Forge(props){
             <div style={{fontSize:10,color:C.dim,marginTop:4}}>{started?(weekS+" this week · "+totalS+" total · progress by how you feel, not the calendar"):"Not started yet — aim for most days"}</div>
             {authUser&&<div style={{display:"flex",alignItems:"center",gap:4,marginTop:6}}><div style={{width:6,height:6,borderRadius:"50%",background:C.grn}}/><span style={{fontSize:10,color:C.grn}}>{"Cloud synced • "+authUser.email}</span></div>}
           </div>)}
+          <ProgressBlock week={ppWeek} color={C.grn}/>
           {cd(<div>
             {hd("TODAY'S SESSION")}
             <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
               <div style={{width:48,height:48,borderRadius:12,background:C.grn+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:700,color:C.grn,fontFamily:FD}}>{"P"+ph}</div>
-              <div><div style={{fontSize:16,fontWeight:700,fontFamily:FD}}>{ppPlanName(ph)}</div><div style={{fontSize:11,color:C.dim}}>{"~"+ppMins+" min · "+plan.length+" moves · same session each time"}</div></div>
+              <div><div style={{fontSize:16,fontWeight:700,fontFamily:FD}}>{ppPlanName(ph)}</div><div style={{fontSize:11,color:C.dim}}>{"~"+ppMins+" min · "+plan.length+" moves · dose steps up every 2 weeks"}</div></div>
             </div>
             {mainBtn("START TODAY'S SESSION",function(){setPpRunOpen(true);})}
             <button onClick={logPPSession} style={{marginTop:8,width:"100%",padding:"9px",background:"transparent",border:"1px solid "+C.bdr,borderRadius:10,color:C.mid,fontFamily:FD,fontSize:11,fontWeight:700,letterSpacing:1,cursor:"pointer"}}>+ LOG A SESSION I DID OFFLINE</button>
@@ -11743,9 +11809,10 @@ function Forge(props){
             {plan.map(function(e,idx){return <div key={idx} style={{display:"flex",gap:10,padding:"8px 0",borderTop:idx>0?("1px solid "+C.bdr):"none",alignItems:"center"}}>
               <div style={{fontSize:11,fontFamily:FD,color:C.grn,width:14,flexShrink:0}}>{idx+1}</div>
               <StaticExMedia gif={e.gif} forge={e.forge} size={40}/>
-              <div style={{flex:1,minWidth:0}}><div style={{fontSize:12.5,fontWeight:700,color:C.txt,fontFamily:FD,lineHeight:1.2}}>{e.n}</div><div style={{fontSize:10,color:C.grn,fontWeight:700,marginTop:1}}>{e.dose}</div></div>
+              <div style={{flex:1,minWidth:0}}><div style={{fontSize:12.5,fontWeight:700,color:C.txt,fontFamily:FD,lineHeight:1.2}}>{e.n}</div><div style={{fontSize:10,color:C.grn,fontWeight:700,marginTop:1}}>{e.dose}{ppBlock(ppWeek).b?<span style={{color:C.pur,marginLeft:5}}>{"· "+ppBlock(ppWeek).b}</span>:null}</div></div>
             </div>;})}
           </div>)}
+          <CoreOfWeek color={C.grn}/>
           <DiastasisTracker color={C.grn}/>
           <button onClick={exitPP} style={{width:"100%",padding:"11px",marginTop:14,background:"transparent",border:"1px solid "+C.bdr,borderRadius:10,color:C.dim,fontFamily:FD,fontSize:11,fontWeight:700,letterSpacing:1,cursor:"pointer"}}>SWITCH PHASE OR CHANGE PROGRAM</button>
           <div style={{fontSize:10,color:C.red,textAlign:"center",marginTop:12,lineHeight:1.5,padding:"0 10px"}}>Progress by symptoms, not the calendar. Stop and regress if you see coning, feel heaviness or a bulge, leak, or have pain. Education, not medical advice.</div>
@@ -13681,7 +13748,7 @@ function Forge(props){
       })()}
 
       {/* ═══ POSTPARTUM TIMED RUNNER (Forge-level; opened from dashboard or phase view) ═══ */}
-      {ppRunOpen&&ppActive&&(typeof STATIC_PLANS!=="undefined")&&STATIC_PLANS[ppActive.planKey]&&<PPRunner plan={STATIC_PLANS[ppActive.planKey]} color={C.grn} onClose={function(){setPpRunOpen(false);}} onDone={function(){logPPSession();setPpRunOpen(false);}}/>}
+      {ppRunOpen&&ppActive&&(typeof STATIC_PLANS!=="undefined")&&STATIC_PLANS[ppActive.planKey]&&<PPRunner plan={STATIC_PLANS[ppActive.planKey]} color={C.grn} progBump={(function(){if(!ppLog||!ppLog.start)return "";var _d=Math.floor((Date.now()-new Date(ppLog.start+"T00:00:00").getTime())/86400000);return ppBlock(Math.max(1,Math.min(4,Math.floor(_d/7)+1))).b;})()} onClose={function(){setPpRunOpen(false);}} onDone={function(){logPPSession();setPpRunOpen(false);}}/>}
 
       {/* ═══ BOTTOM NAVIGATION BAR ═══ */}
       {(screen==="dashboard"||screen==="calendar"||screen==="stats"||screen==="settings")&&<div style={{position:"fixed",bottom:0,left:0,right:0,height:60,background:C.sf,borderTop:"1px solid "+C.bdr,display:"flex",justifyContent:"space-around",alignItems:"center",maxWidth:440,margin:"0 auto"}}>
