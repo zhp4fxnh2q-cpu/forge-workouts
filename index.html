@@ -830,7 +830,7 @@ var EX_MP4S={
 <script>
 /* ===== FORGE delivery & version integrity (Phase 1) ===== */
 (function(){
-  window.FORGE_BUILD="2026.07.08-74";
+  window.FORGE_BUILD="2026.07.08-75";
   try{console.log("FORGE build "+window.FORGE_BUILD);}catch(e){}
   function nukeAndReload(){
     var done=function(){try{window.location.reload(true);}catch(e){window.location.reload();}};
@@ -7241,8 +7241,10 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
       // Graceful fallback to the full pool if the filter would leave nothing to pick.
       (function(){var _mUsed=_weekMuscleEx[muscle]||{};var _distinctN=0;for(var _mk in _mUsed)_distinctN++;
         var _maxDistinct=Math.max(2,Math.floor((((VOL_LM[muscle]&&VOL_LM[muscle].mrv)||16)-2)/2));
+        // Cap any exercise at 2 days/week; once the muscle hits its distinct-exercise budget (~MRV/2 so
+        // summed distinct volume stays within MRV) block NEW distinct and reuse instead. Cross-day DISTINCTNESS
+        // (so Pull A ≠ Pull B) is enforced by the budget-aware anti-repetition post-pass after all selection.
         var _fp=pool.filter(function(e){var _wu=_mUsed[e.n]||0;if(_wu>=2)return false;if(_distinctN>=_maxDistinct&&_wu===0)return false;return true;});
-        if(typeof process!=="undefined"&&muscle==="back")process.stderr.write("[back di="+di+"] used="+JSON.stringify(_mUsed)+" fpLen="+_fp.length+" poolLen="+pool.length+"\n");
         if(_fp.length>0)pool=_fp;});
       // ── VOLUME: weekly target ÷ frequency = session target (FIX: divide AMONG exercises, not per-exercise) ──
       var weeklyTarget=Math.min(weeklyVols[muscle]||10,(VOL_LM[muscle]&&VOL_LM[muscle].mrv)||99);
@@ -8063,22 +8065,31 @@ function buildProgram(splitObj,methodObj,goalObj,mins,weekNum,mesoLen,fbAdj,exHi
   // ── ANTI-REPETITION post-pass (path-independent guarantee): cap any working exercise at 2 distinct
   // days/week; swap surplus occurrences to an unused same-muscle alternative. Runs after all selection.
   (function(){
-    var _seen={};
+    var _seen={};var _setsMus={};
     var _work=function(e){return e&&e.name&&e.muscle&&EX[e.muscle]&&e.tier!=="primer"&&e.tier!=="corrective"&&e.tier!=="grit"&&e.tier!=="carry"&&!e.isCardio;};
+    // How many days per week does each muscle appear? Only force cross-day distinctness on 2×/week muscles
+    // (e.g. Pull A vs Pull B) where distinct-set volume fits within MRV; 3+×/week muscles keep some reuse.
+    var _musFreq={};for(var _mfi=0;_mfi<sessions.length;_mfi++){var _mfd={};var _mfx=sessions[_mfi].exercises||[];for(var _mfj=0;_mfj<_mfx.length;_mfj++){var _mfe=_mfx[_mfj];if(_work(_mfe)&&!_mfd[_mfe.muscle]){_mfd[_mfe.muscle]=1;_musFreq[_mfe.muscle]=(_musFreq[_mfe.muscle]||0)+1;}}}
     for(var _si=0;_si<sessions.length;_si++){
       var _exl=sessions[_si].exercises||[];var _dayHas={};
       for(var _ei=0;_ei<_exl.length;_ei++){
         var _e=_exl[_ei];if(!_work(_e)){if(_e&&_e.name)_dayHas[_e.name]=1;continue;}
-        if((_seen[_e.name]||0)>=2){
+        // Accessories: force DISTINCT across repeated day-types (Pull A vs Pull B, chest across Push A/B)
+        // WHILE under the muscle's distinct budget (~MRV/2, keeps weekly distinct-set volume within MRV);
+        // once at budget, allow reuse (cap 2). Anchor lifts may always repeat — frequent progression is intended.
+        var _mrvM=(VOL_LM[_e.muscle]&&VOL_LM[_e.muscle].mrv)||16;var _eSets=_e.sets||3;
+        var _capE=ANCHOR_EX[_e.name]?2:(((_musFreq[_e.muscle]||0)<=2&&(_setsMus[_e.muscle]||0)+_eSets<=_mrvM)?1:2);
+        if((_seen[_e.name]||0)>=_capE){
           var _alt=null,_mp=EX[_e.muscle]||[];
           for(var _ai=0;_ai<_mp.length;_ai++){var _c=_mp[_ai];
             if(banned.indexOf(_c.n)>=0)continue;
             if(equipFilter&&EQUIP_FILTERS[equipFilter]&&!EQUIP_FILTERS[equipFilter](_c))continue;
             if(_FORGE_EX_POOL&&_FORGE_EX_POOL.indexOf(_c.n)<0)continue;
-            if((_seen[_c.n]||0)>=2)continue;if(_dayHas[_c.n])continue;if(_c.n===_e.name)continue;
+            if((_seen[_c.n]||0)>=(ANCHOR_EX[_c.n]?2:1))continue;if(_dayHas[_c.n])continue;if(_c.n===_e.name)continue;
             _alt=_c;break;}
           if(_alt){_e.name=_alt.n;_e.mv=_alt.mv;_e.t=_alt.t;}
         }
+        if(!_seen[_e.name])_setsMus[_e.muscle]=(_setsMus[_e.muscle]||0)+_eSets;
         _seen[_e.name]=(_seen[_e.name]||0)+1;_dayHas[_e.name]=1;
       }
     }
